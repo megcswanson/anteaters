@@ -1,0 +1,555 @@
+---
+title: "DAPR2 Coursework 1"
+author: "B155926"
+output:
+  html_document: default
+---
+```{r include=FALSE}
+library(tidyverse)
+library(sjPlot)
+library(car)
+library(psych)
+library(knitr)
+library(cowplot)
+library(interactions)
+library(sandwich)
+
+df <-read.csv("https://uoepsy.github.io/data/dapr2_report1.csv") 
+knitr::opts_chunk$set(warning=FALSE, message = FALSE, echo=FALSE)
+```
+
+# Analysis Strategy
+Three multiple linear regression models with z-scored self-rated health ($M$ = 0, $SD$ = 1) as outcome variable will be fitted to answer the research questions. Model utility  will be presented for all models by the adjusted multiple correlation coefficient ($\hat{R^2}$), amount of variance accounted for, and single-model F-test, the overall significance of the model. $\hat{R^2}$ is used as this adjusts for possible inflation of variance accounted for from multiple predictors. For each model, partial regression coefficients with associated standard error, confidence interval and significance tested by t-test will be presented. The assumptions of multiple linear regression will be checked for all models. Likewise, they will all be investigated for cases of high influence, leverage and model outliers.  
+The sections below outline strategy for further analyses and interpretation of model coefficients specific to each model as well as checking assumptions and case diagnostics for all models.
+
+## Model 1: Self-Rated Health and Location
+```{r include=FALSE}
+loc_stat <- df %>%
+  group_by(location) %>%
+  summarise(
+  mean_srh = mean(srh),
+  number = n(),
+  min = min(srh),
+  max = max(srh))
+```
+Before fitting a linear model a box plot of self-rated health for each level of location is plotted to visually investigate the possible linear association.   
+To formally investigate the differences in self-rated health across location, and between suburban and countryside residents, a linear regression model is fitted with self-rated health as the outcome variable, and location, a categorical variable with `r nlevels(df$location)` levels (city, suburb, countryside), as the predictor. This results in a multiple linear regression model with 2 dummy-coded predictor variables.  
+City will be used as baseline in the linear model as it is the largest group (city: $n$ = `r loc_stat[3,3]`, suburb: $n$ = `r loc_stat[2,3]`, countryside: $n$ = `r loc_stat[1,3]`), so the fitted model becomes:   
+$$\widehat {self-rated \ healh_z} = \hat \beta_0 + \hat \beta_1 · location_{suburb} + \hat \beta_2·location_{countryside}+\hat\epsilon$$
+Where $\hat \beta_1$ is the mean difference of self-rated health in standard deviations between city and suburb, and $\hat \beta_2$ is the mean self-rated health difference in standard deviations between city and countryside. $\hat \beta_0$ is the mean self-rated health in standard deviations for city residents.  
+Assumptions of multiple linear regression is checked and case diagnostics for influential cases is run before interpreting the final model according to the research strategy sections on assumptions and diagnostics.  
+To answer if there is a significant difference between self-rated health dependent on the location of the respondent, the significance($\alpha = 0.05$) of the $F$-test of the model will be evaluated. An F-test test's null-hypothesis is that all regression slopes are 0, i.e. $\hat \beta_1=m_{city}-m_{suburb}=0$ and $\hat \beta_2=m_{city}-m_{countryside}=0$. Failing to reject the null would suggest that the mean self-rated health differences by location are insignificant. Adjusted coefficient of determination($R^2$) and the significance($\alpha = 0.05$) of the individual slopes will also be examined to investigate possible sources of (in)significance.  
+To clarify the difference between suburban residents' mean self-rated health and countryside residents' mean self-rated health, the baseline will be refitted to suburb($n$ = `r loc_stat[2,3]`). The new baseline will give the following fitted model:  
+$$\widehat {self-rated \ healh_z}= \hat \beta_0 + \hat \beta_1 · location_{city} + \hat \beta_2·location_{countryside}+\hat\epsilon$$
+Where $\hat \beta_1$ will be the difference of the mean self-rated health between suburban and city residents in standard deviations (i.e. $m_{suburb}-m_{city}$), and $\hat \beta_2$ will be the mean difference in self-rated health between suburb and countryside in standard deviations  (i.e. $m_{city}-m_{countryside}$), which is the coefficient of interest. $\hat \beta_0$ will then be the mean of self-rated health in standard deviations for suburban residents.  
+As this does not change the variables included in the model, the assumption checks and diagnostics as well as F-test and $\hat{R^2}$ from the previous model still hold true.
+To evaluate if there is a significant difference between countryside and suburban residents in terms of self-rated health, the size and significance of $\hat \beta_2$ will be considered against a confidence level of $\alpha = 0.05$.  
+
+## Model 2: Personality Traits and Self-Rated Health
+```{r echo=FALSE}
+df <- df %>%
+  mutate(zN = scale(N, center = TRUE, scale = TRUE),
+         zE = scale(E, center = TRUE, scale = TRUE),
+         zO = scale(O, center = TRUE, scale = TRUE),
+         zA = scale(A, center = TRUE, scale = TRUE),
+         zC = scale(C, center = TRUE, scale = TRUE),
+         location = factor(location, levels = c("city", "suburb", "countryside")),
+         age_mc = scale(age, center = TRUE, scale = FALSE))
+```
+The variables associated with each personality trait, openness ($M$ = `r round(mean(df$O),2)`, SD = `r round(sd(df$O))`), conscientiousness ($M$ = `r round(mean(df$C),2)`, $SD$ = `r round(sd(df$C))`), extraversion ($M$= `r round(mean(df$E),2)`, $SD$ = `r round(sd(df$E))`), agreeableness ($M$ = `r round(mean(df$A),2)`, $SD$ = `r round(sd(df$A))`), and neuroticism ($M$  =`r round(mean(df$N),2)`, $SD$ = `r round(sd(df$N))`), has been obtained through summation of responses to a 6-point Likert scale. Hence, the units of these variables are arbitrary for interpretation of partial regression coefficients as an increase by 1 or a value of 0 is not meaningful. Therefore, they will all be standardised by z-scoring (M = 0, SD = 1) and denoted zO, zC, zE, zA, and zN.  
+Furthermore, age (range: `r round(range(df$age)[1], 2)`-`r round(range(df$age)[2], 2)` , $M$ = `r round(mean(df$age),2)`, $SD$ = `r round(sd(df$age))`) will be mean-centered for the interpretation of the other partial regression coefficients in the model to be based on the average age rather than age = 0 years. Mean-centered age is denoted age~mc~.  
+Before fitting the model the marginal distributions of each personality trait and self-rated health is ploted with a histogram and density plot as well as the marginal relationships of each trait with self-rated health plotted via a scatterplot and a fitted line. Pearson correlations for each of these variables are also calculated to give an intuitive understanding of the data before fitting the model.    
+City will be baseline for the predictors related to location for the same reason as stated in previous section. The fitted model is:  
+$$\widehat {self-rated \ health_{z}} =\hat\beta_0+\hat\beta_1·zN+\hat\beta_2·zE+\hat\beta_3·zO+\hat\beta_4·zA+\hat\beta_5·zC+\hat\beta_6·age_{mc}+\hat\beta_7·location_{suburb}+\hat\beta_8·location_{countryside}+\hat\epsilon$$
+Assumptions of multiple linear regression is checked and case diagnostics for influential cases is run before interpreting the final model according to the research strategy sections on assumptions and diagnostics.  
+Interpretations of the partial regression coefficients are in table 1.  
+**Table 1**  
+*Interpretation of Partial Regression Coefficients in Model 2*
+```{r echo=FALSE}
+exp.tab.2 <- data.frame(Coefficient = c("$\\hat\\beta_0$", "$\\hat\\beta_1$-$\\hat\\beta_5$", "$\\hat\\beta_6$", "$\\hat\\beta_7$", "$\\hat\\beta_8$"), 
+                       Interpretation = c("Predicted self-rated health in standard deviations for a participant living in the city on the average age with an average score for all personality traits (i.e. when all $\\hat\\beta$s = 0)", 
+                                          "The partial Pearson's correlation coefficients; the number of standard deviations predicted self-rated health changes when a given personality trait increases by 1 standard deviation for a participant living in the city where all other personality traits and age are at their mean.", 
+                                          "The number of standard deviations predicted self-rated health changes from an increase of age with 1 year.", 
+                                          "The mean predicted self-rated health difference in standard deviations between city and suburban residents.", 
+                                          "The mean predicted self-rated health difference in standard deviations between city and countryside residents.")
+                       )
+kable(exp.tab.2, escape=FALSE)
+```
+
+The strongest association with self-rated health among the five personality traits will be determined by the partial Pearson correlation coefficient 
+
+## Model 3: Healthy Neuroticism 
+To investigate healthy neuroticism, a multivariate linear regression model will be fitted to encompass location and age (as covariates), standardised neuroticism and conscientiousness and an interaction term, C:N. The interaction term is needed to  underpin the hypothesized buffering effect of conscientiousness on neurotic ism's negative impact on self-rated health.  
+All variables are standardised, mean-centered, and baselined as done in model 2 with the same arguments.  
+To visualize a possible moderation of neuroticism by conscientiousness, the marginal relationship between neuroticism and self-rated health is plotted for four different intervals of conscientiousness as scatter plots with best-fit lines to informally observe difference of slope.
+The fitted model to be examined is:  
+<center>$\widehat{self-rated \ health_z} = \hat\beta_0 + \hat\beta_1· zN+\hat\beta_2·zC+\hat\beta_3· age_{mc}+ \hat\beta_4·location_{suburb}+ \hat\beta_5·location_{countryside}+\hat\beta_6·zN·zC+\hat\epsilon$</center>
+The commented model will have been through the assumption check and case diagnostics as outlined in the section below. The partial regression coefficients are interpreted as seen in table 2.  
+**Table 2**  
+*Interpretation of Partial Regression Coefficients in Model 3*
+```{r echo=FALSE}
+exp.tab.3 <- data.frame(Coefficient = c("$\\hat\\beta_0$", "$\\hat\\beta_1$", "$\\hat\\beta_2$", "$\\hat\\beta_3$ - $\\hat\\beta_5$", "$\\hat\\beta_6$"), 
+                       Interpretation = c("Predicted self-rated health in standard deviations for a participant living in the city aged the mean of sample with average conscientiousness, and neuroticism, and no moderation (i.e. when all independent variables are 0)", 
+                                          "The marginal effect of neuroticism on predicted self-rated health; the number of standard deviations predicted self-rated health changes when neuroticism increases by 1 standard deviation for a participant with average conscientiousness and age living in the city and no interaction.", 
+                                          "The marginal effect of conscientiousness on predicted self-rated health; the number of standard deviations predicted self-rated health changes when conscientiousness increase by 1 standard deviation for a participant with average neuroticism and age living in the city and no interaction.", 
+                                          "See table 1,  $\\hat\\beta_6$ - $\\hat\\beta_8$.",
+                       "The interaction term; the number of standard deviations that a 1-standard deviation increase in conscientiousness moderates the change in predicted self-rated health by a 1 standard deviation increase in neuroticism given the participant is at the mean age and live in the city.")
+                       )
+kable(exp.tab.3, escape=FALSE)
+```
+Analysis of the interaction term will be done with conscientiousness as a moderator of neuroticism's impact on self-rated health, i.e. considering the simple slope $(\hat\beta_2+\hat\beta_6·zC)zN$, as suggested by theory. To support the hypothesis of healthy neuroticism, the marginal effect of neuroticism must be significant and negative, the marginal effect of conscientiousness must be positive and significant, and the interaction term must be positive and significant, as this would imply the positive effect of conscientiousness buffers for the negative effect of neuroticism (see table 2 for detailed coefficient interpretations).
+To assess the moderating effect of high values of conscientiousness vs. low values, the following analyses will be performed:  
+(1) A simple slope analysis of neuroticism for three values of conscientiousness ( +/- 1 standard deviation and the mean) keeping other variables constant, i.e. examining and plotting the following simple slopes:  
+a. $(\hat\beta_2+\hat\beta_6·(-1))zN$   b. $(\hat\beta_2+\hat\beta_6·0)zN$ 
+  c. $(\hat\beta_2+\hat\beta_6·1)zN$  
+Healthy neuroticism would surface as a larger moderation of conscientiousness on neuroticism, i.e. flattening neuroticism's simple slope, as neuroticism and conscientiousness increases.  
+(2) A region of significance analysis for values of conscientiousness where the estimation of self-rated health from the simple slope of neuroticism changes from significant to non-significant ($\alpha$ = 0.05) by Johnson-Neyman plot and interval. To support healthy neuroticism, the slope of neuroticism when moderated by conscientiousness should decrease in steepness and significance as this would imply a dampening effect. The interval limits of z-scored conscientiousness are also evaluated against the observed values to assess practical relevance.  
+(3) An analysis of crossing points of simple slopes to determine ordinality. A crossing point outside the Johnson-Neyman interval (disordinal) would indicate a rank-order change in self-rated health across simple slopes. A crossing point outside the significant region (ordinal) would suggest a stable rank-order in self-rated health for all values of conscientiousness. Both outcomes could comply with or deviate from healthy neuroticism; for an ordinal interaction, the higher values of conscientiousness should result in higher self-rated health across values of neuroticism. For a disordinal interaction, it must be the case that for high values of neuroticism self-rated health must be higher 
+
+## Checking Assumptions and Case Diagnostics
+For model 2, the assumption of linearity is checked with a component+residuals plot with a loess line and is said to be met when there is not more than slight deviance between the loess and linear least-squared lines for continuous predictors and when the residual mean is close to 0 for categorical predictors. For model 1 and model 3, the assumption is examined by checking if the residual mean is 0 with a residuals vs. fitted values plot. Likewise, slight deviance will be accepted.  
+Multicollinearity, i.e. correlation among predictors, affects the interpretation of partial regression coefficients as these depend on predictor variables being completely uncorrelated. This is tested by the variance inflation factor (VIF) which must be less than 5 for multicollinearity to be negligible. Model 1 is not tested for multicollinearity as it only has one underlying variable.
+The assumption of normally distributed errors will be tested using a QQPlot. The assumption is satisfied when the points mostly adhere to the diagonal line. A Shapiro-Wilks test will also be performed. If the null hypothesis of normality is not rejected ($\alpha$ = 0.05), the assumption is sufficiently satisfied.  
+Constant variance across residuals will be checked for categorical variables by plotting the $\sqrt{|standardised \ residuals|}$ across fitted values. The assumption is said to be met when the spread of plot points is fairly even and the red line between groups is flat (indicating equal variance). For continuous predictors, the assumption is checked by partial Pearson residuals plotted against each predictor and is said to be met when the plot points are randomly spread with no clear pattern, and the blue line is close to flat. If the model has slight deviations a non-constant variance (ncv) test will be performed to test if the deviance is enough to reject the null hypothesis of homeostaticity of residuals ($\alpha$ = 0.05). If the ncv test is non-significant the assumption is said to be met.  
+The assumption of independence of errors is largely a matter of study design, e.g. that participants are not related. However, auto correlation of residual terms, the correlation between adjacent cases, can be tested with a Durbin-Watson test. The assumption is said to be satisfied when the test is insignificant ($\alpha$ = 0.05) and the D.W. statistic is between 1.5 and 2.5 with values closer to 2 indicating less auto correlation.
+In the case of violated assumptions, the data of the predictor(s) and/or outcome variables can be log-transformed, this might ease violation of non-normality or homoescedasticity of residuals. Otherwise, if specific cases appear to cause the violation, e.g. one value lying far off the diagonal of the QQplot, this might be windsorized and the model refitted. However, this is only for extreme violations, minor violations will be noted as a limitation of generalisability.  
+Regression outlier cases, data points with an unusual self-rated health z-score given the combination of predictors, will be detected by studentised residuals of more than 2 or less than -2.   
+High leverage cases, cases with a unusual value for a predictor or combination of predictors, will be identified by calculating hat-values. Cases are said to be high leverage if hat-values are larger than $2\bar{h}=2\frac{k+1}n$. High leverage cases cause the variance within a predictor to increase which decreases its standard error. A data point detected as a regression outlier or high leverage will be windsorized if it strongly influences the estimation of the model coefficients or the associated standard error.  
+High influence on standard error will be defined as COVRATIOS larger than $1+3\frac{k+1}{n}$ or less than $1-3\frac{k+1}{n}$. To determine individual cases influence on model coefficients the Cook's Distance will be used as an overall measure showing the average change of predicted values by exclusion of a given case. Cook's distances will be plotted for each case and considered influential if they are larger than 1. For model 2 and 3, DFbeta terms for each partial regression coefficient will be examined for possible influential cases. For a case to be windsorized or excluded, its influence should be very large. Moderate influences will be considered as a limitation of results' generalisability.
+
+# Results
+## Model 1: Location and self-rated health
+```{r echo=FALSE}
+q1mdl <- lm(srh ~ location, data=df)
+betas1 <- coef(q1mdl)
+fq1<-anova(q1mdl)
+sw1<- shapiro.test(q1mdl$residuals)
+ncv1<-ncvTest(q1mdl)
+dw1<-durbinWatsonTest(q1mdl)
+```
+The distribution of means across locations imply a possible relationship between location and self-rated health. Specifically, self-rated health for countryside appear to be highest, and self-rated health in the suburbs lowest.  
+**Figure 1**  
+*Marginal Relationship between Self-Rated Health and Location*  
+```{r echo=FALSE, fig.height =2}
+ggplot(data = df, mapping = aes(x = location, y = srh, col=location)) +
+    geom_boxplot(alpha = 0) +
+    geom_jitter(alpha = 0.3, size=0.5)+
+  labs( x = "Reported Location", y="Self-rated Health (z-scored)")
+```
+
+A linear model was fitted providing the coefficients displayed in table 3.  
+**Table 3**  
+*Regression Coefficient Table for Model 1; Baseline: City*  
+```{r echo=FALSE}
+tab_model(q1mdl, show.se=TRUE, dv.labels="Self-rated health")
+```
+*Note*. Self-rated health is standardised. Bold: $p$ < 0.05
+
+The coefficients gives rise to the following multivariate linear regression model:
+<center>$\widehat {self-rated \ healh_z}= `r round(betas1[1], 2)` `r round(betas1[2], 2)` · location_{suburb} + `r round(betas1[3], 2)`·location_{countryside}+\hat\epsilon$</center>
+The model met assumptions of linearity (figure 6), and equal variance (figure 8; $\chi^2$(`r ncv1$Df`) = `r round(ncv1$ChiSquare,2)`, $p$ = `r round(ncv1$p,3)`), normal distribution of(figure 7; $W$ = `r round(sw1$statistic, 2)`, $p$ = `r round(sw1$p, 3)`) and independence of residuals(no auto correlation, $D-W$ = `r round(dw1$dw,2)` $p$ = `r dw1$p`). There were no highly influential cases (figure 9; table 8). The data was not manipulated to achieve this.
+  Overall, this model, i.e. location, accounted for 6 % ($\hat {R^2}$) of the variance in self-rated health, a significant amount ($F$(`r fq1$Df[1]`, `r fq1$Df[2]`) = `r round(fq1$'F value'[1],2)`, $p$ = `r round(fq1$'Pr(>F)'[1],3)`).  
+Compared to the mean self-rated health in the city of `r round(betas1[1],2)` (95% $CI$[-0.07,0.11], $p$ = 0.65), suburban residents are on average significantly below by 0.22 standard deviations (95% $CI$: [-0.42,-0.02], $p$ = 0.031). Countryside residents' self-rated health is 0.09 (95% $CI$[-0.1,0.29], $p$ = 0.354) standard deviations above the city mean. Suburb is the only significant predictor and, thus, the main driver in the variance accounted for by location.
+```{r echo=FALSE}
+contrasts(df$location)<-contr.treatment(3,base=2)
+
+q2mdl <- lm(srh ~ location, data=df)
+betas1A <- coef(q2mdl)
+```
+Figure 1 implies that there is a mean self-rated health difference between countryside and suburb. A multivariate linear regression model fitted with suburb as baseline provides the partial regression coefficients displayed in table 4.  
+**Table 4**  
+*Regression Coefficient Table for Model 1; Baseline: Suburb*
+```{r echo=FALSE}
+tab_model(q2mdl, show.se=TRUE, dv.labels="Self-rated health",pred.labels = c("(Intercept)", "Location [city]", "Location [countryside]"))
+```
+*Note*. Self-rated health is z-scored. Bold: $p$ < 0.05
+
+Which provides the following functional expression:  
+<center>$\widehat {self-rated \ healh_z}= `r round(betas1A[1], 2)` +`r round(betas1A[2], 2)` · location_{city} +`r round(betas1A[3], 2)`·location_{countryside}+\hat\epsilon$</center>
+There is a significant mean self-rated health difference between suburb and countryside of 0.31 standard deviations (95% $CI$[0.06,0.57], $p$ = 0.016), and between suburb and city of 0.22 standard deviations (95% $CI$[0.02,0.42], $p$ = 0.031).
+
+## Model 2: Big Five Personality Traits and Self-Rated Health
+```{r echo=FALSE}
+contrasts(df$location)<-contr.treatment(3,base=1)
+q3mdl <- lm(srh ~ zN + zE + zO + zA + zC + age_mc + location, data = df)
+betas2<-coef(q3mdl)
+statq3mdl <- summary(q3mdl)
+sw2<- shapiro.test(q3mdl$residuals)
+ncv2<-ncvTest(q3mdl)
+dw2<-durbinWatsonTest(q3mdl)
+```
+The first column of plots in figure 2 suggests neuroticism and conscientiousness has largest impacts on self-rated health. Likewise, these variables have the highest correlations with self-rated health ($r_{zC}$ = 0.37 and $r_{zN}$ = -0.44).  
+**Figure 2**  
+*Marginal distributions, relationships and correlations of personality traits and self-rated health*
+```{r echo=FALSE, fig.height=3}
+pairs.panels(df%>% select( srh, zN,zC,zE,zA,zO ))
+```
+  \
+*Note*. Outcome variable and personality trait variables are standardised. Age is mean-centered.
+
+A fitted multivariate linear model taking into account self-rated health differences across location and age provides the regression coefficients seen in table 5.  
+**Table 5**  
+*Regression Table for Model 2*
+```{r echo=FALSE}
+tab_model(q3mdl, show.se = T, dv.labels="Self-Rated Health", pred.labels=c(
+  zN= "Neuroticism",
+  zC= "Conscientiousness",
+  zE = "Extraversion",
+  zA = "Agreeableness",
+  zO = "Openness",
+  age_mc = "Age",
+  location2= "Location[suburb]",
+  location3 = "Location[countryside]"))
+```
+*Note*. Outcome variable and personality trait variables are standardised. Age is mean-centered. For full interpretation see table 1. Bold: $p$ < 0.05.
+
+The functional expression is:
+<center>$\widehat {self-rated \ health_{z}} =`r round(betas2[1], 2)` `r round(betas2[2], 2)`·zN+`r round(betas2[3], 2)`·zE `r round(betas2[4], 2)`·zO +`r round(betas2[5], 2)`·zA +`r round(betas2[6], 2)`·zC `r round(betas2[7], 2)`·age_{mc} `r round(betas2[8], 2)`·location_{suburb} +`r round(betas2[9], 2)`·location_{countryside}+\hat\epsilon$ </center>
+This model fulfills the assumptions of linearity (figure 10A, figure 10B), normally distributed errors (figure 11; $W$ = `r round(sw2$statistic,2)`, $p$ = `r round(sw2$p,3)`) and homeostaticity (figure figure 12; $\chi^2$(`r ncv2$Df`) = `r round(ncv2$ChiSquare,2)`, $p$ = `r round(ncv2$p,3)`). No significant amount of auto correlation was detected ($D-W$ = `r round(dw2$dw,2)` $p$ = `r dw2$p`) nor multicollinearity (table 10). While, there were no influential cases on the overall model (measured by Cook's distance; figure 13; table 9), some cases were found to have some influence on individual predictors and/or standard error (table 9). No cases were excluded or moderated, however, this should be noted as a limitation of the results. 
+The full model predicts around 36 % ($\hat{R^2}$ = 0.359) of the variance within self-rated health which is significant ($F$(`r statq3mdl$fstatistic[2]`,`r statq3mdl$fstatistic[3]`) = `r round(statq3mdl$fstatistic[1],2)`, $p$ < 0.001).  
+All personality traits' partial Pearson coefficients are significant($p$ < 0.001) aside from openness (95% $CI$[-0.07,0.06]; $p$ = 0.874) meaning they are all associated with self-rated health. Neuroticism has the largest assocation with a partial pearson coefficient of -0.31(95% $CI$[-0.38,-0.24]; $p$ < 0.001). For further interpretation of coefficients see table 1. 
+
+## Model 3: Healthy Neurotiscism
+```{r include=FALSE}
+q4mdl <- lm(srh ~ zC*zN + age_mc + location, data = df) #fitting model
+betas3<-coef(q4mdl) #extracting betas
+statq4mdl <- summary(q4mdl) #Saving statistics
+df <-
+  df %>%
+  mutate(zC_group = cut(zC, 4)) # grouping C
+sw3<-shapiro.test(q4mdl$residuals) # SW test
+ncv3<-ncvTest(q4mdl)
+dw3<-durbinWatsonTest(q4mdl)
+#Probing interation
+interaction <- probe_interaction(q4mdl,
+                  pred = zN, modx = zC, cond.int=TRUE, interval=TRUE, jnplot=TRUE )
+plot <- interact_plot(q4mdl,
+                  pred = zN, modx = zC, cond.int=TRUE, interval=TRUE, x.label= "Neuroticism (z-scored)", y.label= "Self-Rated Health (z-scored)", main = "Simple Slope Plot" )
+interaction.ssa <- interaction$simslopes$slopes %>%
+  mutate(p= ifelse(p<0.001, "<0.001",p))
+jn<-interaction$simslopes$jn
+# for zN as moderator - not used
+pi <-probe_interaction(q4mdl,
+                  pred = zC, modx = zN, modx.values= c(min(df$zN),-1,0,1, max(df$zN)), cond.int=TRUE, interval=TRUE, jnplot=TRUE, x.label = "Neuroticism", y.label= "Self-rated health", pred.labels = "Conscientiousness")
+jn.c<-pi$simslopes$jn
+
+# Crossing points
+cp1 <- round(-q4mdl$coef[2]/q4mdl$coef[7],2)
+
+
+```
+While the unequal split makes it less clear, it does appear from figure 3 that the slope of zN, i.e. the impact of each standard deviation increase in neuroticism on self-rated health in standard deviations, becomes less steep as the conscientiousness gets higher.  
+**Figure 3**  
+*Self-rated health across neuroticism for 4 intervals of conscientiousness*  
+```{r echo=FALSE, fig.height=2}
+ggplot(data = df, aes(x = zN, y = srh, col = zC_group)) + 
+  geom_point(size=0.5) + 
+  geom_smooth(method="lm", formula = y ~ x)+
+  facet_grid(~zC_group) +
+  labs(x= "Neuroticism(z-scored)", y= "Self-Rated Health(z-scored)")+
+  theme(legend.position = "none")
+```
+  \
+*Note*. Outcome variable and personality trait variables are standardised.
+
+The coefficients of a multiple regression linear model exploring this possible interaction in the relationship between self-rated health, neuroticism and conscientiousness can be seen in table 6.  
+**Table 6**  
+*Regression Table for Model 3*
+```{r echo=FALSE}
+tab_model(q4mdl, show.se = T, dv.labels="Self-Rated health",pred.labels=c(
+  zN= "Neuroticism",
+  zC= "Conscientiousness",
+  age_mc = "Age",
+  location2= "Location[suburb]",
+  "zC:zN" = "Conscientiousness:Neuroticism",
+  location3 = "Location[countryside]"))
+```
+*Note*. Outcome variable and personality trait variables are standardised. Age is mean-centered. For full interpretation of each coefficient see table 2.  Bold imply $p$ < 0.05.
+Functionally, these coefficients gives rise to the following relationship:  
+<center>$\widehat {self-rated \ healh_z}= `r round(betas3[1], 2)` + `r round(betas3[2], 2)` · zC `r round(betas3[3], 2)`·zN  `r round(betas3[4], 2)`·age_{mc}  `r round(betas3[5], 2)` ·location_{suburb}+ `r round(betas3[6], 2)`·location_{countryside}+ `r round(betas3[7], 2)`·zC·zN +\hat\epsilon$</center>
+The assumptions of linearity (figure 14), no multicollinearity (table 12), normally distributed residuals (figure 15; $W$ = `r round(sw3$statistic, 3)`, p = `r round(sw3$p, 3)`) and homeostaticity of residuals(figure 16; $\chi^2$(`r ncv3$Df`) = `r round(ncv3$ChiSquare,2)`, $p$ = `r round(ncv3$p,3)`) were satisfied. No significant amount of auto correlation was detected (($D-W$ = `r round(dw3$dw,2)` $p$ = `r dw3$p`). Some amount of influence was detected (table 11), however, no data was excluded as there was no overall model influence (figure 17), but result generalisability might be limited.
+This model account for 32 % ($\hat{R^2}$ = 0.319) of the variance within self-rated health which makes it significant ($F$(`r statq4mdl$fstatistic[2]`, `r statq4mdl$fstatistic[3]`) = `r round(statq4mdl$fstatistic[1],2)`, $p$ < 0.001).  
+The significant marginal effects on self-rated health of neuroticism of -0.38 standard deviations (95% $CI$[-0.44,-0.31], $p$ < 0.001) and conscientiousness of 0.26 standard deviations (95% $CI$[0.19,0.32], $p$ < 0.001), and the interaction term of 0.11 standard deviations(95% $CI$[0.05,0.16], $p$ < 0.001) suggest a buffering interaction. In other words, for each standard deviation conscientiousness increases the negative effect of neuroticism on self-rated health is reduced by 0.11 standard deviations as shown in the simple slope analysis table 7 and figure 4.  
+**Table 7**  
+*Simple slope analysis*
+```{r echo=FALSE}
+kable(interaction.ssa,col.names = c("zC", "Estimated Simple Slope", "S.E.",  "95 % CI lower limit", "95 % CI upper limit", "t-statistic", "p-value"))
+```
+The slope of neuroticism seem to flatten as conscientiousness increase indicating a dampening effect. The Johnson-Neyman plot in figure 4 supports this trend, and further shows that for values of conscientiousness(range: `r round(range(df$zC)[1], 2)`-`r round(range(df$zC)[2], 2)`) above 2.21 standard deviations the effect of neuroticism becomes insignificant for predicting self-rated health (figure 4), i.e. the negative impact of neuroticism is effectively offset. According to the Johnson-Neyman interval, the slope becomes significant again at 7.85 standard deviations of conscientiousness (figure 4, note), however this is not practically relevant due to the distance from the observed range.  
+**Figure 4**  
+*Simple Slopes for +/- 1 SD and mean of conscientiousness, and Johnson-Neyman Plot*  
+```{r echo=FALSE, fig.height=3}
+plot_grid(plot, interaction$simslopes$jnplot)
+```
+  \
+*Note*. The full Johnson-Neyman interval (where $p$ > 0.05)  is zC[2.21, 7.85]
+
+Figure 4 also indicate a crossing point within the relevant cue region of significance at `r cp1 ` standard deviations of neuroticism. From the plot, it is clear that for any value of neuroticism below this a high value (e.g. 1 standard deviation) of conscientiousness actually decreases self-rated health compared to a low value (e.g. -1 standard deviation).
+
+# Discussion
+Overall, the results suggests that self-rated health does depend on location, and that the self-rated health of suburban residents is lower than that of countryside residents on average. Neuroticism's negative effect on self-rated health was the strongest association among the big five, however, for high levels of conscientiousness and neuroticism this impact is weakened to the point of being completely offset, providing support for healthy neuroticism
+
+# Appendix
+## Assumption Checks and Case Diagnostics
+### Model 1
+The assumption checks, case diagnostics, and possible modification of the data below are related to model 1 regardless of baseline chosen.
+**Figure 6**  
+*Residuals vs. Fitted Values Plot for Model 1*  
+```{r echo=FALSE}
+plot(q1mdl, which = 1)
+```
+  \
+*Note*. The assumption of linearity is fulfilled as the read line diverges only the slightest (the mean residual of the middle group seems to be slightly above 0).
+
+**Figure 7**   
+*Normal QQPlot of Residuals for Model 1*  
+```{r echo=FALSE}
+plot(q1mdl, which=2)
+```
+  \
+*Note*. The case 395 seem to cause a slight skew, however, overall the assumption of normally distributed residuals seems to be met. 
+
+**Figure 8**  
+*Scale-Location Plot for Model 1*  
+```{r echo=FALSE}
+plot(q1mdl, which=3)
+```
+  \
+*Note*. There is some deviance from the assumption of equal variance as the spread is slightly uneven, e.g. case 395 and especially the last group. The red lines is slightly bend indicating a possible violation, but very minor. Overall, the plot does not provide enough evidence to reject equal variance without further analysis (see ncv test in results.)
+
+**Figure 9**  
+*Cook's Distances for Model 1*  
+```{r echo=FALSE}
+plot(q1mdl, which=4)
+```
+  \
+*Note*. None of these Cook's distances are larger 1, implying no highly influential cases.
+
+**Table 8**  
+*Number of Cases Detected with Case Diagnostics Measures for Model 1*  
+```{r echo=FALSE}
+inf.tab1 <-tibble( q1mdl$model[1], fitted_values=q1mdl$fitted.values, residuals = q1mdl$residuals, studentised_residuals = rstudent(q1mdl), hat_values = hatvalues(q1mdl), Cooks_distance = cooks.distance(q1mdl), COVRATIO = covratio(q1mdl))
+
+
+
+n.hat1 <- inf.tab1 %>%
+count(hat_values > (2*(1+2)/750))%>%
+  select(n)
+n.cov1 <- inf.tab1 %>%
+count(COVRATIO < 1-(3*(2+1)/750) | COVRATIO  > 1+(3*(2+1)/750))%>%
+  select(n)
+n.stud1 <-inf.tab1 %>%
+  count(studentised_residuals < (-2) | studentised_residuals >2)%>%
+  select(n)
+  
+n.cookd1<-inf.tab1 %>%
+  count(Cooks_distance>1)%>%
+  select(n)
+
+
+kable(tibble("High leverage (hat-values)"=n.hat1$n[2], "Covratio"=n.cov1$n[2],"Model outliers (stud. residuals) "= n.stud1$n[2],"Model influence (Cook's distance)" = 0))
+```
+  \
+*Note*. There were no cases with a cook's distance of more than 1 indicating that while many cases might express high leverage or be outliers this does not significantly affect the estimation of the model. A possible reason for the high counts across values might be due to the large sample size and small number of predictors for this overall model which shrinks the cut-off values defined for COVRATIO, studentised residuals and hat-values. After examining the values of COVRATIOs, it was decided that they were not large enough to moderate the data.
+
+
+```{r include=FALSE}
+inf.tab1 %>%
+  select(Cooks_distance) %>%
+  filter(Cooks_distance> 1)
+
+inf.tab1 %>%
+  filter(COVRATIO < 1-(3*(2+1)/750) | COVRATIO  > 1+(3*(2+1)/750))
+
+inf.tab1 %>%
+  filter(studentised_residuals < (-2) | studentised_residuals >2)
+
+inf.tab1 %>%
+  filter(hat_values > (2*(1+2)/750))
+```
+
+### Model 2
+**Figure 10A**  
+*Component Residual Plot for Continuous Predictors of Model 2*  
+```{r echo=FALSE}
+crPlots(q3mdl, 
+main= NULL, 
+terms = ~ . -location)
+```
+  \
+*Note*. The loess (pink) lines follows the linear least-squares lines (blue) with only slight deviance for all the continuous predictors. For comment on the linearity of location see note for figure 6. Based on this, the assumption of linearity for model 2 is satisfied.
+
+**Figure 10B**  
+*Residuals vs. Fitted Values Plot for Location in Model 2*  
+```{r echo=FALSE}
+crPlots(q3mdl, 
+main= NULL, 
+terms = ~ location)
+```
+  \
+*Note*. The residual means of countryside and suburb slightly deviate from 0 in this model, but not enough to assume non-linearity. 
+
+**Figure 11**   
+*Normal QQPlot of Residuals for Model 2*  
+```{r echo=FALSE}
+plot(q3mdl, which=2)
+```
+  \
+*Note*. The case 395 seem to cause a slight skew, however, overall the assumption of normally distributed residuals seems to be met. 
+
+**Figure 12**  
+*Partial Residual Plots for Model 2*  
+```{r echo=FALSE}
+residualPlots(q3mdl, tests = FALSE)
+```
+  \
+*Note* Neither the spread of residuals nor the blue lines indicate any serious violation to the assumptions of homeoscedasticity, although it is clear that variance is not perfectly equal. According to the ncv test (see results, model 2), there is not enough evidence to reject the null hypothesis of homeoscedasticity. Overall, however, the assumption is met. 
+
+
+```{r include=FALSE}
+infq3 <- data.frame(influence.measures(q3mdl)$infmat)
+
+infq3 <- infq3 %>%
+  mutate(studentised_residuals = rstudent(q3mdl))
+
+infq3 %>%
+  filter(cook.d > 1)
+
+
+infq3 %>%
+  filter(cov.r < 1-(3*(7+1)/750) | cov.r  > 1+(3*(7+1)/750))
+
+infq3 %>%
+  filter(studentised_residuals < (-2) | studentised_residuals >2) 
+
+infq3 %>%
+  filter(hat > (2*(1+7)/750))
+
+```
+
+**Table 9**  
+*Number of Cases Detected with Case Diagnostics Measures for Model 2*
+```{r echo=FALSE}
+n.hat2 <- infq3 %>%
+count(hat > (2*(1+7)/750))
+n.cov2 <-infq3 %>%
+  count(cov.r < 1-(3*(7+1)/750) | cov.r  > 1+(3*(7+1)/750))
+n.stud2 <-infq3 %>%
+  count(studentised_residuals < (-2) | studentised_residuals >2)
+n.cookd2<-infq3 %>%
+  count(cook.d>1)
+n.dfb.zC2<-infq3 %>%
+  count(abs(dfb.zC) > 0.021)
+n.dfb.zA2<-infq3 %>%
+  count(abs(dfb.zA) > 0.02)
+n.dfb.zE2<-infq3 %>%
+  count(abs(dfb.zE) > 0.018)
+n.dfb.zO2<-infq3 %>%
+  count(abs(dfb.zO) > 0.001)
+n.dfb.zN2<-infq3 %>%
+  count(abs(dfb.zN) > 0.031)
+
+kable(tibble("High leverage (hat-values)"=n.hat2$n[2], "Covratio"=n.cov2$n[2],"Model outliers (stud. residuals) "= n.stud2$n[2],"Model influence (Cook's distance)" = 0, "dfBeta zC"= n.dfb.zC2$n[2], "dfBeta zA"=n.dfb.zA2$n[2], "dfBeta zE"=n.dfb.zE2$n[2], "dfBeta zO"=n.dfb.zO2$n[2], "dfBeta zN"=n.dfb.zN2$n[2]))
+
+```
+*Note*. While there are some influential cases by the cut off values set in the research strategy the large number of cases identified as possible influencers sugguests these values might have been too strict. There also were no overall model influencers (Cook's distances > 1). A case was counted under the dfBeta of a coefficnet if it influenced the coefficient by more than 10 % of its initial slope. Openness has a high value because its effect in the model was minor and very insignificant so 10 % of that is a very small number. Given that so many values had an impact only the largest were inspected, and while there were some cases of high influence, none were removed to avoid excluding cases which belongs in the population. This does, however, limit the results. 
+
+
+**Figure 13**  
+*Cook's Distances for Model 2*  
+```{r echo=FALSE}
+plot(q3mdl, which=4)
+```
+  \
+*Note*. None of these Cook's distances are larger 1, implying no highly influential cases. The highest cook's distance at around 0.02 implies that by excluding the case (395) the average self-rated health would change by 0.02 standard deviations. 
+
+
+**Table 10**  
+*Variance Inflation Factor for Model 2 Coefficients*  
+```{r echo=FALSE}
+kable(vif(q3mdl)[,1:2])
+```
+*Note*. VIF < 2 for all coefficients suggesting multicollinearity is not a problem for the interpretation of model 2.
+
+### Model 3
+**Figure 14**  
+*Residuals vs Fitted Values Model 3*  
+```{r echo=FALSE}
+plot(q4mdl, which=1)
+```
+  \
+*Note*. The mean of the residuals are very close to 0 as indicated by the red line. The assumption is satisfied.
+
+**Figure 15**  
+*QQPlot of Standardised Residuals for Model 3*  
+```{r echo=FALSE}
+plot(q4mdl, which=2) 
+```
+  \
+*Note*. The cases 395 and 685 seem to be slightly out of line, however, overall the assumption of normally distributed residuals seems to be met. 
+
+**Figure 16**  
+*Partial Residual Plots for Model 3*  
+```{r echo=FALSE}
+residualPlots(q4mdl, tests = FALSE)
+```
+  \
+*Note*. While the blue line is almost flat for all continuous predictors, however, the Pearson residuals against fitted values are moderately right-skewed. Likewise, the variance within location appear slightly unequal as suburb has less spread than the other two predictors. However, the ncv $p$ is just below 20 for this model (see results, model 3), meaning there is not enough evidence to reject the null hypothesis of constant variance of residuals. Therefore, the assumption is satisfied although notably to a smaller extent than previous models.
+
+```{r include=FALSE}
+infq4 <- data.frame(influence.measures(q4mdl)$infmat)
+
+infq4 <- infq4 %>%
+  mutate(studentised_residuals = rstudent(q4mdl))
+
+infq4 %>%
+  filter(cook.d > 1)
+
+
+infq4 %>%
+  filter(cov.r < 1-(3*(5+1)/750) | cov.r  > 1+(3*(5+1)/750))
+
+infq4 %>%
+  filter(studentised_residuals < (-2) | studentised_residuals >2) 
+
+infq4 %>%
+  filter(hat > (2*(1+5)/750))
+```
+
+**Table 11**  
+*Number of Cases Detected with Case Diagnostics Measures for Model 3*
+```{r echo=FALSE}
+n.hat3 <- infq4 %>%
+count(hat > (2*(1+5)/750))
+n.cov3 <-infq4 %>%
+  count(cov.r < 1-(3*(5+1)/750) | cov.r  > 1+(3*(5+1)/750))
+n.stud3 <-infq4 %>%
+  count(studentised_residuals < (-2) | studentised_residuals >2)
+n.cookd3<-infq4 %>%
+  count(cook.d>1)
+n.dfb.zC3<-infq4 %>%
+  count(abs(dfb.zC) > 0.026)
+n.dfb.zN3<-infq3 %>%
+  count(abs(dfb.zN) > 0.038)
+
+kable(tibble("High leverage (hat-values)"=n.hat3$n[2], "Covratio"=n.cov3$n[2],"Model outliers (stud. residuals) "= n.stud3$n[2],"Model influence (Cook's distance)" = 0, "10% dfBeta zC"= n.dfb.zC3$n[2], "10 % dfBeta zN"=n.dfb.zN3$n[2]))
+
+```
+*Note*. While there are some high leverage cases and some model outliers, the cook's distance indicating no effect of influential cases on average predicted values. There are some cases of high covratio as well, however, not extreme enough for exclusion. The dfBeta were counted if they affected the coefficent by more than 10 % of its value. The large number implies, however, that this value might have been too strict as more than 150 cases were marked as influential. By closer examination of the dfBeta terms no cases were exlcuded or moderated. However, this might limit results.
+
+
+**Figure 17**  
+*Cook's Distances for Model 3*  \
+```{r echo=FALSE}
+plot(q4mdl, which=4)
+```
+  \
+*Note*. None of these Cook's distances are larger 1, implying no highly influential cases on the overall model. The highest cook's distance a little above 0.03 implies that by excluding the case (395) the average self-rated health would change by a little more 0.03 standard deviations. 
+
+
+**Table 12**  
+*Variance Inflation Factor for Model 3 Coefficients*
+```{r echo=FALSE}
+kable(vif(q4mdl)[,1:2])
+```
+*Note*. VIF < 2 for all coefficients suggesting multicollinearity is not a problem for the interpretation of model 3.

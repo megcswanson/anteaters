@@ -1,0 +1,506 @@
+---
+title: "Report 2"
+author: "B155926"
+date: "11/03/2021"
+output: html_document
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(warning=FALSE, message = FALSE, echo=FALSE)
+library(tidyverse)
+library(patchwork)
+#library(interactions)
+library(sjPlot)
+library(car)
+library(psych)
+library(emmeans)
+library(knitr)
+library(kableExtra)
+
+sleep <- read_csv("https://uoepsy.github.io/data/dapr2_report2.csv")
+```
+
+# Analysis Strategy
+```{r}
+# tidying
+sleep <- sleep %>%
+  mutate(sleep_dep = factor(sleep_dep),
+        sleep_qual = factor(sleep_qual, labels =c("high","low","medium")),
+         sex = as.factor(sex), 
+         age_mc = scale(age, scale = F))
+
+# Relevelling and coding
+sleep$sleep_dep <- fct_relevel(sleep$sleep_dep, "non-deprived")
+sleep$sleep_qual <- fct_relevel(sleep$sleep_qual, "high" ,"medium","low")
+contrasts(sleep$sleep_qual)<- "contr.sum"
+contrasts(sleep$sex)<- "contr.sum"
+
+d1 <- c(0,0,0,1,1,1)
+e3 <- c(1,1, 1,-1, -1, -1)
+e1 <- c(0,1,-1,0,1,-1)
+e2 <- c(1,0,-1,1,0,-1)
+sleepq_lev <- c(levels(sleep$sleep_qual), levels(sleep$sleep_qual))
+sleepd_lev <- c("non-sleep deprived", "non-sleep deprived", "non-sleep deprived", "sleep deprived", "sleep deprived", "sleep deprived")
+sex_lev <- c("female","female", "female", "male", "male", "male")
+
+# Coefficient table
+coef.tab <- data.frame(Coefficient = c("$\\hat\\beta_0$", "$\\hat\\beta_1$", "$\\hat\\beta_2$", "$\\hat\\beta_3$", "$\\hat\\beta_4$", "$\\hat\\beta_5$", "$\\hat\\beta_6$", "$\\hat\\beta_7$", "$\\hat\\beta_8$"), 
+                       Interpretation = c("The predicted number of errors made on the UNRAVEL task for a non-sleep deprived participant at the mean age and cognitive ability of the sample across levels of sleep quality and sex.", 
+                                          "The change to the predicted number of errors made on the UNRAVEL task, $\\hat\\beta_0$, if the participant had been sleep deprived. Equivalent to the estimated mean difference in number of errors ($\\mu_{deprived}-\\mu_{non-deprived}$)", 
+                                          "The change to the number of errors made on the UNRAVEL task, $\\hat\\beta_0$, if the participant had high quality sleep. Equivalent to the estimated mean difference between the marginal mean of number of errors made on the UNRAVEL task and the mean of high sleep quality for a non-deprived participant ($\\mu_{high, non-deprived}-\\mu_{non-deprived}$).", 
+                                          "Like $\\hat\\beta_2$, but for medium quality sleep. $\\mu_{medium, non-deprived}-\\mu_{non-deprived}$", 
+                                          "The predicted change to the number of errors made on the UNRAVEL task, $\\hat\\beta_0$, from a one standard deviation increase in cognitive test score.",
+                                          "The predicted effect of being female compared to the grand mean: $\\mu_{female, non-deprived}-\\mu_{non-deprived}$", 
+                                          "The amount the predicted number of errors made on the UNRAVEL task, $\\hat\\beta_0$, changes for each increase in age by 1 year above the mean.", 
+                                          "M2 only. The additional change in the number of errors made on the UNRAVEL task for a participant with the combination of levels, sleep-deprived and high sleep quality. Equivalent to $(\\mu_{deprived, high} - \\mu_{deprived} - \\mu_{non-deprived, high}+\\mu_{non-deprived})$.", 
+                                          "M2 only. The additional change in the number of errors on the UNRAVEL task for a participant with the combination of levels; sleep-deprived and medium sleep quality. Equivalent to $(\\mu_{deprived, medium} - \\mu_{deprived} - \\mu_{non-deprived, medium}+\\mu_{non-deprived})$."))
+
+# Hypothesis testing constrast
+qual_coef  <- c("high" = 1, "medium" = -0.5, "low" = -0.5)
+dep_coef  <- c("non-sleep deprived" = -1, "sleep deprived" = 1)
+contr_coef <- outer(dep_coef, qual_coef)  
+```
+
+To answer the research questions, one multiple linear regression model is fitted with the number of errors on the UNRAVEL task (also referred to as UNRAVEL errors) as the outcome variable. Experimental group (non-sleep deprived or sleep deprived) and sleep quality are treated as independent variables of interest while standardised cognitive test score, sex and age are included as predictor variables to account for possible covariation.  
+Before fitting the model, sleep quality is recoded as a factor with `r nlevels(sleep$sleep_qual)` levels ordered as `r levels(sleep$sleep_qual)`. Likewise, experimental condition is recoded as a factor with `r nlevels(sleep$sleep_dep)` levels in the order `r levels(sleep$sleep_dep)`. The age variable is mean-centered (referred to as age~mc~) since the model regression coefficients for other predictors and the intercept are estimated when age = 0. By mean-centering, these estimations are based on the mean age of the sample which makes the interpretation of the model more meaningful.
+
+The distribution of participants in each pair of levels for sleep quality and experimental group, e.g. non-sleep deprived participants reporting medium sleep quality, is investigated with a bar plot to examine the sample size overall and for each group. These six groups of level-pairs and their relationship with the number of errors made on the UNRAVEL task is visualized with a box plot to get an indication of the spread between groups and explore the possible interaction between experimental group and sleep quality.
+
+## Model fitting
+
+The effect of being sleep deprived on the number of errors made on the UNRAVEL task must be investigated, therefore, the sleep deprivation variable is dummy-coded with non-sleep deprived as reference level. Sleep quality and sex will be effect coded. In so doing, the regression coefficient associated with sleep deprivation will be the effect across levels of sex and sleep quality. Table 1 shows the coding for all factorial variables. The names of the dummy and effect variables (D1, E1-E3) are referred to in model equations.
+
+**Table 1**  
+*Dummy and Effect Coded Variables where A(left) is Combinations for Sleep Quality and Experimental Condition, and B(right) is for Sex*  
+```{r}
+kable(tibble(sleepd_lev, sleepq_lev, d1,e2, e1), col.names = c("Experimental condition","Sleep quality","D1", "E1", "E2"), caption = "A")%>% 
+  kable_styling(full_width = FALSE, position = "float_left")
+
+kable(tibble(sex_lev, e3), col.names=c("Sex","E3"), caption= "B", escape=F)%>%
+  kable_styling(position = "left", full_width = F)
+```
+\ *Note*. Not all combinations of sleep quality, experimental condition and sex are presented, the interaction between sex and experimental level or sleep quality is not investigated in this study. 
+
+The research questions regarding the effect of sleep deprivation for high sleep quality implies the need to test the possibility of an interaction between experimental group and reported sleep quality.  
+To test the hypothesis, that a model with an interaction between experimental condition and sleep quality accounts for significantly more variance than a purely additive model, an incremental F-test is performed at $\alpha$ = 0.05. All analysis will be conducted with the regression model that best fits the data as measured by an incremental F-test. The models to be compared are:
+
+$$ M1: \widehat {UNRAVEL} = \hat\beta_0 + \hat\beta_1 ·D1_{condition} + \hat\beta_2 · E1_{sleep \ quality} + \hat\beta_3 ·E2_{sleep \ quality}  +\hat\beta_4·cognitive \ score  + \hat\beta_5 · E3_{sex}+ \hat\beta_6 · age_{mc} +\hat\epsilon$$
+$$ M2:\widehat {UNRAVEL} = \hat\beta_0 + \hat\beta_1 · D1_{condition} + \hat\beta_2 ·E1_{sleep \ quality} + \hat\beta_3 · E2_{sleep \ quality} + \hat\beta_4 · cognitive \ score  + \hat\beta_5 · E3_{sex}+ \hat\beta_6 · age_{mc} +\hat \beta_7· D1_{condition}·E1_{sleep \ quality}+ \hat\beta_8 · D1_{condition}·E2_{sleep \ quality}+ \hat\epsilon$$
+Both models will go through an assumptions and diagnostics check before testing (see section below). Any transformation or exclusion of data points will be done before model comparison. Failing to reject the null of the incremental F-test would suggest that including a differential effect of sleep quality on experimental groups (or vice versa) does not significantly improve the model predictions of the number of errors made on the UNRAVEL task. That is, the mean UNRAVEL errors of sleep deprived and non-sleep deprived participants does not significantly vary for different levels of sleep quality. In this case, M1 will be used for further analysis. If M2 accounts for significantly more variance than M1, i.e. if the incremental F-test is significant, it is not meaningful to interpret the main effect of sleep deprivation or sleep quality solely, and further analysis of the interaction to answer the research questions on sleep deprivation at high typical sleep quality will be performed as described in the following sections. 
+
+Model utility is reported for the final model with adjusted multiple correlation coefficient ($\hat R^2$), the amount of variance accounted for, and single-model F-test results, the overall significance of the model. $\hat R^2$ is used to adjust for possible inflation of variance accounted for from multiple predictors. Table 2 shows the interpretation of each regression coefficient in M1 ($\hat\beta_0$ - $\hat\beta_6$) and M2.
+
+**Table 2**  
+*M2 and M1 Coefficient Interpretations*
+```{r}
+kable(coef.tab, escape=FALSE)%>% 
+  kable_styling()
+```
+  \ *Note*. $\mu_{non-deprived}$: mean number of errors on the UNRAVEL task for non-sleep deprived participants across levels of sleep quality. $\mu_{deprived}$: mean number of errors on the UNRAVEL task for sleep deprived participants across levels of sleep quality.
+
+## The Effect of Sleep Deprivation on UNRAVEL Errors
+
+The effect of sleep deprivation on the number of errors made on the UNRAVEL task across levels of sleep quality is explored through its associated regression coefficient, i.e. the main effect of sleep deprivation ($\hat\beta_1$ in table 2). It is examined in terms of magnitude, sign and significance (t-test at $\alpha$ = 0.05). A positive coefficient indicates an increase in the number of errors made on the UNRAVEL task from being sleep deprived while a negative sign would indicate fewer errors made on the UNRAVEL task for sleep-deprived compared to non-sleep deprived participants keeping other factors constant. This effect is averaged across levels of sex and sleep quality (see table 1). If there is a significant interaction, it indicates that the effect of being sleep deprived differs depending on the level of sleep quality which would imply that the interpretation of the conditional main effect of sleep deprivation is insufficient to fully understand how sleep deprivation affects performance on the UNRAVEL task.
+
+An interaction plot is plotted to further investigate the differential effect of sleep deprivation for levels of sleep quality. The magnitude of the change in the mean number errors made on the UNRAVEL task is reflected in the steepness of the slope connecting the mean number of errors on the UNRAVEL task for non-sleep deprived participants group by reported sleep quality and the mean number of errors of sleep deprived participants also grouped by sleep quality. The direction of the effect, i.e. whether the average participant in the sleep deprived group for a given level of sleep quality made more or fewer errors than the average non-sleep deprived participant at the same level of sleep quality, is associated with the direction of the slope. An increasing slope indicates a higher mean of errors made on the UNRAVEL task for sleep deprived participants at the chosen level of sleep quality. A decreasing slope indicates a lower mean of errors for the sleep deprived group. Note this plot is based on the linear regression model fitted above and, therefore, accounts for confounding of sex, age and cognitive test score. This plot can be used to investigate if the effect of sleep deprivation is greater for high sleep quality.  
+To test the significance of the mean differences between experimental conditions for each level of sleep quality observed in the interaction plot, a contrast analysis of pairwise comparisons is performed. Since the research questions are oriented towards the effect of sleep deprivation at each level of sleep quality, the comparison is done on the mean difference between non-sleep deprived and sleep deprived participants for each level of sleep quality. To adjust for the increased probability of type-I error from running a small family of tests, the significance level is bonferroni-adjusted ($\alpha_{Bonferroni}$ = 0.05).
+
+A second contrast analysis is performed to investigate the specific hypothesis that an estimated effect of sleep deprivation on UNRAVEL errors made by participants reporting high quality sleep is different from the effect of sleep deprivation for participants reporting low or medium sleep quality. It is tested against a null hypothesis that the effect of sleep deprivation for high sleep quality on UNRAVEL errors is the same as the average of low and medium sleep quality at an $\alpha$ = 0.05. Formally, the hypothesis to be tested is:
+
+$$H_0: \mu_{deprived, \ high}-\frac{\mu_{deprived, \ low}+ \mu_{deprived, \ med}}{2} -(\mu_{non-deprived, \ high}-\frac{\mu_{non-deprived, \ low}+ \mu_{non-deprived, \ med}}{2})=0$$
+
+$$H_1: \mu_{deprived, \ high}- \frac{\mu_{deprived, \ low}+ \mu_{deprived, \ med}}{2}-(\mu_{non-deprived, \ high-}\frac{\mu_{non-deprived, \ low}+ \mu_{non-deprived, \ med}}{2})\neq0$$
+To perform this contrast analysis, the coding of sleep deprivation and sleep quality (see table 1) is redone with a sum to zero constraint so that the weights of low and medium sleep quality is half the weight of high sleep quality (see table 3), which gives rise to the combination of levels needed for this specific comparison.
+
+**Table 3**  
+*Planned Comparison Variable Coding*  
+```{r}
+kable(contr_coef) %>% 
+  kable_styling(full_width = T)
+```
+
+The result of this analysis provides an estimated size of the difference of the effect of sleep deprivation for participants reporting high sleep quality contra participants reporting either high or low as well as its significance. That is, whether the expected population parameter of this effect is not 0 with a 5 % change of wrongly rejecting the null. Rejecting the null would support the hypothesis that the impact of sleep deprivation on the number of errors made on the UNRAVEL task is significantly different for high sleep quality participants compared to non-high sleep quality groups.
+
+Lastly, to get an overview of the magnitude of the estimated changes to the group mean from sleep deprivation and sleep quality the estimated marginal means based on the model output is examined. This is done to understand if the effect on the number of errors made appears large or moderate.
+
+The following analysis strategy assumes that there is a significant interaction between experimental group and sleep quality. Alternatively, $\hat\beta_1$ can account for the effect of sleep deprivation which is constant for different levels of sleep quality.
+
+## Checking Assumptions and Case Diagnostics
+For both M1 and M2, the assumption of linearity is examined by checking if the residual mean is 0 with a residuals vs. fitted values plot, and slight deviance is accepted. The linearity of continuous predictors, age~mc~ and cognitive test score are investigated with component+residual plots, these can be used to detect possible causes for non-linearity. Likewise, some deviation between the linear trend and the loess line is acceptable. Multicollinearity, i.e. the correlation among predictors, affects the interpretation of partial regression coefficients as these depend on predictor variables being completely uncorrelated. This is tested by the variance inflation factor (VIF) which must be less than 5 for multicollinearity to be considered negligible. This criteria does not apply to the interaction term in M2 since a strong correlation between it and the two predictors of the interaction product is expected. 
+The assumption of normally distributed errors, $\epsilon$ ~ $N(0, \sigma^2)$, will be tested using a QQPlot. The assumption is satisfied when the points mostly adhere to the diagonal line. A Shapiro-Wilks test will also be performed, however, a rejection of the null that the model residual terms are normally distributed will be considered alongside the QQPlot of the data since this test is very conservative. 
+Constant variance across residuals will be checked by plotting the $\sqrt{|standardised \ residuals|}$ across fitted values. The assumption is said to be met when the spread of plot points is fairly even, and the red line across data points is close to flat (indicating equal variance). For continuous predictors, the assumption is further investigated by partial Pearson residuals plotted against each predictor and is said to be met when the plot points are randomly spread with no clear pattern, and the blue line is close to flat. If the model has slight deviations a non-constant variance (ncv) test will be performed to test if the deviance is enough to reject the null hypothesis of homeostaticity of residuals ($\alpha$ = 0.05). Test results and visualizations are considered jointly.  
+The assumption of independence of errors is largely a matter of study design, e.g. that participants are not related. However, autocorrelation of residual terms, the correlation between adjacent cases, can be tested with a Durbin-Watson test. The assumption is said to be satisfied when the test is insignificant ($\alpha$ = 0.05), and the D-W statistic is between 1.5 and 2.5 with values closer to 2 indicating less autocorrelation. Furthermore, dependent errors might show systematic patterns in residuals vs. fitted plot or the scale-location plot. These are visually examined to judge the presence of clear patterns indicating that residual terms are not independent.
+
+Extreme violations of linearity, homoescedastic residuals or normality of errors can possibly be resolved with a log or power transformation of the number errors made on the UNRAVEL task variable and/or predictor variables if plots of individual predictors indicate a non-linear relationship with the number errors made on the UNRAVEL task. If transformations are not suited to resolve violation of assumptions, a sensitivity analysis with a bootstrap with 1000 bootstrap samples is conducted. A bootstrap of regression coefficients is an assumption-free way to test the significance of each coefficient. The 95 % confidence intervals from the bootstrap distribution of each coefficient is compared to the p-value of its t-test. A model is considered non-sensitive to possible violations if predictors that are significant as measured by t-test ($\alpha$ = 0.05) have non-zero 95 % bootstrap confidence intervals as this is equivalent to the alternative hypothesis of the t-test that the population parameter have a linear association with the dependent variable, i.e. $\beta_i \neq 0$. If the model is non-sensitive, it will be used for further analysis.
+
+Regression outliers, data points with an unusual number errors made on the UNRAVEL task given the combination of predictors, will be detected by studentised residuals of more than 2 or less than -2. High leverage cases, cases with an unusual value for a predictor or combination of predictors, will be identified by calculating hat-values. Cases are said to be high leverage if hat-values are larger than $2\bar{h}=2\frac{k+1}n$. High leverage cases cause the variance within a predictor to increase which decreases its standard error. A data point detected as a regression outlier or high leverage will be removed if it strongly influences the estimation of the model coefficients or the associated standard error.  
+High influence on standard error will be defined as COVRATIOS outside the interval $[1-3\frac{k+1}{n}, 1+3\frac{k+1}{n}]$. Cook's Distance shows the average change to predicted values by the exclusion of a given case and is used as an overall measure to determine individual cases influence on model coefficients. Cook's distance larger than $\frac{4}{n-k-1}$ will be investigated with a residuals vs. leverage plot and in terms of DFFit, its effect on overall model estimation and its DFbeta values for each predictor. For a case to be excluded, its influence on overall model predictions or a certain predictor should be very large. Moderate influences will be considered as a possible limitation of results' generalisability.  
+Considering the plan to perform an incremental F-test for model comparison, a value is only be excluded if this is done for both models as the F-test requires both models to be based on the same data points.
+
+# Results
+```{r}
+# Models
+m1 <- lm(unravel ~ sleep_dep+sleep_qual + cog + sex + age_mc, data = sleep)
+m2 <- lm(unravel ~ sleep_dep*sleep_qual + cog+ sex + age_mc, data  = sleep)
+ano <- anova(m1,m2)
+
+# Bootstraps
+boot_m1<-Boot(m1, R=1000, f=coef)
+boot1ci <- Confint(boot_m1, level =0.95, type = "perc")
+
+rownames(boot1ci) <- c("(Intercept)", "Condition [sleep deprivation]", "Sleep Quality [high]", "Sleep Quality [medium]", "Cognitive test score", "Sex [female]", "Age")
+conf_table1 <-kable(boot1ci, caption = "A", row.names=T,digits=3)%>% 
+  kable_styling(full_width = FALSE, position = "float_left")
+
+boot_m2 <- Boot(m2, R=1000, f=coef)
+boot2ci <- Confint(boot_m2, level =0.95, type = "perc")
+
+rownames(boot2ci) <- c("(Intercept)", "Condition [sleep deprivation]", "Sleep Quality [high]", "Sleep Quality [medium]", "Cognitive test score", "Sex [female]", "Age","Condition [sleep deprivation] * Sleep Quality [high]", "Condition [sleep deprivation] * Sleep Quality [medium]")
+conf_table2 <- kable(boot2ci, caption = "B", digits=3, row.names=T) %>% 
+  kable_styling(full_width = FALSE, position = "left")
+
+
+
+# Tests
+swtest1 <- shapiro.test(m1$residuals)
+ncvtest1 <- ncvTest(m1)
+dwtest1 <- durbinWatsonTest(m1)
+
+swtest2 <- shapiro.test(m2$residuals)
+ncvtest2 <- ncvTest(m2)
+dwtest2 <- durbinWatsonTest(m2)
+
+# Plots
+bar <- ggplot(sleep, aes(x = sleep_dep, fill = sleep_qual)) +
+    geom_bar()+
+  scale_fill_discrete("Sleep Quality")+
+  labs(x = "Experimental Condition", y = "Participants", title="A")
+boxplot <- ggplot(sleep, aes(y= unravel, x = sleep_dep, fill = sleep_qual))+
+  geom_boxplot()+
+  scale_fill_discrete("Sleep Quality")+
+  labs(x = "Experimental Condition", y= "UNRAVEL Errors", title="B")
+
+statm2 <- summary(m2)
+
+# Contrasts
+emm <- emmeans(m2, ~ sleep_qual*sleep_dep)
+contr_qual <- contrast(emmeans(m2, ~ sleep_dep|sleep_qual), method = "pairwise", 
+                       adjust = "bonferroni")
+df_con<-data.frame(contr_qual)
+
+contr_qual_tab<- data.frame(contr_qual) %>%
+  mutate(p.value = ifelse(p.value < 0.001, "< 0.001", round(p.value,3)))
+
+comp_res <- contrast(emm, 
+                     method = list("Research Hyp" = c(-1, 0.5, 0.5, 1, -0.5, -0.5)))
+
+stat_hyp <- summary(comp_res, infer = TRUE)
+
+```
+
+As seen in figure 1A, the distribution of participants for each combination of levels in experimental condition and sleep quality was even with 50 participants in each group, and 300 participants in total. The larger spread of the number of errors made on the UNRAVEL task for non-sleep deprived participants in figure 1B indicated that sleep quality affected the number errors made on the UNRAVEL task less when participants were not sleep deprived. The higher median errors of high and low sleep quality in the sleep deprivation condition suggested that across sleep quality sleep deprivation increased the number of errors made on the UNRAVEL task.
+
+**Figure 1**  
+*A (left): Participant Distribution, and B (right): Box Plot of UNRAVEL Errors, Sleep Quality and Experimental Group*
+```{r fig.height=3, fig.width=10}
+(bar|boxplot)
+```
+
+Figure 2 showed a close to normal distribution of the the number of errors made on the UNRAVEL task across the sample. The correlation between standardised cognitive test score and the number of errors made on the UNRAVEL task was almost 30 % which was expected since UNRAVEL was a place keeping task. Cognitive score and age were also close to normally distributed. 
+
+**Figure 2**  
+*Marginal Distributions, Relationships and Correlations for UNRAVEL errors and covariates*  
+```{r fig.height=3}
+pairs.panels(sleep %>% select(unravel, cog, sex, age_mc))
+```
+
+To investigate the impact of sleep deprivation and sleep quality on the number of errors made on the UNRAVEL task two linear models were fitted; an additive model (M1) with experimental condition, sleep quality and covariates as predictors of the number of errors made on the UNRAVEL task, and an interaction model (M2) with the same predictors but including an interaction between sleep quality and experimental condition. Table 4 provides a summary of M1 (left) and M2 (right).
+
+**Table 4**  
+*Regression Table for M1 (left) and M2 (right)*
+```{r}
+tab_model(m1, m2, show.se=TRUE,show.stat=T ,dv.labels=c("M1: UNRAVEL errors","M2: UNRAVEL errors"), pred.labels = c("(Intercept)", "Condition [sleep deprivation]", "Sleep Quality [high]", "Sleep Quality [medium]", "Cognitive test score", "Sex [female]", "Age","Condition [sleep deprivation] * Sleep Quality [high]", "Condition [sleep deprivation] * Sleep Quality [medium]" ), string.stat = "t-statistic ", string.p = "p-value ", string.ci = "95 % CI", string.est = "Estimates ")
+```
+  \  
+
+Both models fulfilled the assumptions of linearity (M1: figures A1, A2 and A3. M2: figures B1, B2 and B3), and homoescedasticity of residuals (M1: figures A1 and A5; $\chi^2$(`r ncvtest1$Df`) = `r round(ncvtest1$ChiSquare,2)`, $p$ = `r round(ncvtest1$p,3)`. M2: figures B1 and B5; $\chi^2$(`r ncvtest2$Df`) = `r round(ncvtest2$ChiSquare,2)`, $p$ = `r round(ncvtest2$p,3)`). M1 had less homoescedastic residual terms in the partial residual plot (figure A6), however, this might have been caused by the lack of an interaction term if this relationship is present in the data. This notion was supported by the reduction of deviance from homeoscedasticity in the partial residual plot of M2 (figure B6). Neither M1 or M2 was above the threshold for multicollinearity (M1: table A1. M2: table B1), nor did either model have a significant amount of autocorrleation of residuals (M1: $D$-$W$ = `r round(dwtest1$dw,2)`, $p$ = `r dwtest1$p`. M2: $D$-$W$ = `r round(dwtest2$dw,2)`, $p$ = `r dwtest2$p`). However, figure A5 (M1) and figure B5 (M2) indicates a clear pattern of residuals across fitted values which indicate a degree of dependence among residuals for both models. Furthermore, a Shapiro-Wilks test suggested a significantly non-normal distribution of error terms for M2 ($W$ = `r round(swtest2$statistic,2)`, $p$ = `r round(swtest2$p,3)`), but from figure B4 (M2), the assumption did not appear to be significantly violated. Residuals in M1 was not significantly non-normal (figure A4; $W$ = `r round(swtest1$statistic,2)`, $p$ = `r round(swtest1$p,3)`).
+
+Due to the possible violation of independence of errors, a sensitivity analysis of the significance of the individual regression coefficients of M1 and M2 was performed with a bootstrap of the model coefficients (results in table 5). The bootstrap 95 % confidence intervals confirmed the significance of predictors in both models; all beta coefficients with an $p$ < 0.05 in table 4 (M1: Intercept, Condition[sleep deprivation], Sleep Quality[high], Cognitive test score, Age. M2: Intercept, Condition[sleep deprivation], Sleep Quality[high], Cognitive test score, Age, Condition[sleep deprivation]*Sleep Quality[high]), had a 95 % confidence interval of its bootstrap distribution that did not contain 0 (table 5). Hence, neither M1 or M2 appeared to be sensitive to the possible violation of independence of residuals or the non-normality detected by the Shapiro-Wilks test for M2. They were, therefore, used for further analysis.
+
+No data points were excluded from either model. There were some influential cases (measured by Cook's distance; M1: figure A7 and table A2. M2: figure B7 and table B2), some cases were found to have some influence on model predictions and/or standard error (table B2). However, for both models, the residuals vs. leverage plots (M1: figure A8. M2: figure B8) did not indicate any problematic cases. Furthermore, no DFFit value was above 0.6 and no DFbeta was above 0.5, hence, no case was considered influential enough to exclude. However, the moderately influential cases detected could to some extent limit the generalisability of results.
+
+**Table 5**  
+*Bootstrap 95 % Confidence Intervals for Regression Coefficients. A (left) is M1, B (right) is M2*  
+```{r}
+conf_table1
+conf_table2
+```
+
+An incremental F-test was performed to test if an interaction term between experimental condition and sleep quality significantly reduced residual sums of squares and, thus, improved the model fit to the data. The test supported the presence of interaction as the inclusion of this term significantly increased the variance accounted for in the model ($F$(`r ano[2,1]`, `r ano[2,3]`) = `r round(ano[2,4],2)`, $p$ = `r round(ano[2,6],3)`). M2 was, therefore, used as the model for analysis. The functional expression of M2 is:
+
+$$ \widehat {UNRAVEL} = `r round(m2$coef[1],2)`+ `r round(m2$coef[2],2)` · D1_{condition} `r round(m2$coef[3],2)`·E1_{sleep \ quality} `r round(m2$coef[4],2)` · E2_{sleep \ quality} + `r round(m2$coef[5],2)` · cognitive \ score  `r round(m2$coef[6],2)` · E3_{sex}+ `r round(m2$coef[7],2)`· age_{mc} + `r round(m2$coef[8],2)`· D1_{condition} ·E1_{sleep \ quality} + `r round(m2$coef[8],2)`· D1_{condition} · E1_{sleep \ quality} - 0.0001 · D1_{condition} · E2_{sleep \ quality} + \hat\epsilon$$
+
+This model accounted for around 32 % of the variance in the sample ($\hat R^2$ = 0.315), and overall it predicted the variance in the sample significantly better than a null-model ($F$(`r statm2$fstatistic[2]`, `r statm2$fstatistic[3]`) = `r round(statm2$fstatistic[1],2)`, $p$ < 0.001). 
+
+## The Impact of Sleep Deprivation on UNRAVEL Errors
+
+Being sleep deprived compared to not sleep deprived significantly increased the expected number of errors made on the UNRAVEL task by `r round(statm2$coef[2],2)` (95% $CI$[0.51, 0.98]; $p$ < 0.001) averaged across levels of sleep quality, sex and for the mean age and cognitive test score of the sample. However, given the significance of the interaction term, this effect significantly varies depending on the level of sleep quality as also noted in figure 1B.
+
+High sleep quality reduced the average number of errors made on the UNRAVEL task for non-deprived participants significantly by `r abs(round(statm2$coef[3],2))` (-0.81, 95% $CI$[-1.04, -0.58]; $p$ < 0.001). However, the interaction term between sleep deprivation and high sleep quality significantly increased UNRAVEL errors by `r round(statm2$coef[8],2)` (95% $CI$[0.20, 0.87]; $p$ = 0.002). For a clearer picture, the differential effect of sleep quality on the number of errors made on the UNRAVEL task for sleep deprived and non-sleep deprived participants was plotted in figure 4. The slope of high sleep quality was steeper than both the slope of medium and low sleep quality which suggested that an increase in the number of errors made on the UNRAVEL task from sleep deprivation is greater from high sleep quality.
+
+**Figure 4**  
+*Interaction Plot: Experimental Group and Sleep Quality*  
+```{r fig.height=3}
+emmip(m2, sleep_qual ~ sleep_dep, CIs = TRUE,
+  xlab= "Experimental Condition")+
+  scale_color_discrete("Sleep Quality")
+``` 
+
+Table 6 shows a pairwise comparison of the effect of sleep deprivation for each level of sleep quality. The comparison showed that for high sleep quality, there was a significant difference between non-sleep deprived and sleep deprived participants of `r round(df_con$estimate,2)[1]` ($t$(`r df_con$df[1]`) = `r round(df_con$t.ratio[1],2)`, $p_{Bonferroni}$ < 0.001), that is, sleep deprived participants with high sleep quality had 1.28 errors more than non-sleep deprived participants with high sleep quality on average. Sleep deprivation also increased the mean number of errors made on the UNRAVEL task for medium with a difference of `r round(df_con$estimate,2)[2]` ($t$(`r df_con$df[2]`) = `r round(df_con$t.ratio[2],2)`, $p_{Bonferroni}$ < 0.001) and low sleep quality (insignificantly) with a difference of `r round(df_con$estimate,2)[3]` ($t$(`r df_con$df[3]`) = `r round(df_con$t.ratio[3],2)`, $p_{Bonferroni}$ = 0.303), but less so than for participants with high sleep quality (table 6).
+
+**Table 6**  
+*Pairwise Comparison of Experimental condition for each Level of Sleep Quality*  
+```{r}
+kable(contr_qual_tab, digits = 3, col.names = c("Contrast", "Sleep Quality", "Estimate", "SE", "Df", "t-statistic", "p-value (Bonferroni-adjusted)")) %>%
+  kable_styling()
+```
+
+The hypothesis that the impact of sleep deprivation on UNRAVEL errors was different for high sleep quality participants compared to low and medium sleep quality was tested with a contrast analysis. Sleep deprivation was found to increase the mean UNRAVEL errors by `r round(stat_hyp$estimate,2)` (95 % $CI$[`r round(stat_hyp$lower.CL,2)`, `r round(stat_hyp$upper.CL,2)`]) more for participants reporting high sleep quality than the average of low and medium sleep quality. This was a significant difference in the change of mean UNRAVEL errors from being sleep deprived (compared to non-sleep deprived) for participants reporting high sleep quality compared to the average change found for low and medium sleep quality participants ($t$(`r stat_hyp$df`) = `r round(stat_hyp$t.ratio,2)`, $p$ = `r round(stat_hyp$p.value,3)`).
+
+While some were significant, all effect sizes of sleep quality or sleep deprivation (or a combination of the two) reported were relatively moderate with the estimated group means (accounting for confounds) for each of the six groups varying within 2 errors as seen in table 7.
+
+**Table 7**  
+*Estimated Marginal Means for Condition and Sleep Quality*  
+```{r}
+kable(emm, col.names = c("Sleep Quality", "Experimental Condition", "Estimated Marginal Mean", "SE", "Df", "95 % CI, lower", "95 % CI, upper"), digits=3) %>%
+  kable_styling()
+```
+
+
+# Discussion
+Sleep deprivation seemed to predict an on average impaired performance on the UNRAVEL task when accounting for sex, cognitive test score, sleep quality and age. This effect was the greatest for participants with high sleep quality, and the findings also suggested a smaller impaired performance on the task for participants with medium sleep quality. On average, being sleep deprived and reporting high sleep quality led to a significantly larger increase in the number of errors made on the UNRAVEL task compared to the average effect of sleep deprivation on participants with low and medium sleep quality. 
+
+# Appendix A: Assumptions and Diagnostics for M1
+
+**Figure A1**  
+*Residuals vs Fitted Values for M1*  
+```{r}
+plot(m1, which=1)
+```
+
+
+**Figure A2**  
+*Component Residual Plot for Continuous Predictors of M1: Cognitive Test Score*  
+```{r}
+crPlots(m1, terms = ~cog)
+```
+
+
+**Figure A3**  
+*Component Residual Plot for Continuous Predictors of M1: Age~mc~*  
+```{r}
+crPlots(m1, terms = ~age_mc)
+```
+
+
+**Table A1**  
+*VIF for M1*  
+```{r}
+kable(vif(m1)[,1:2]) %>%
+  kable_styling()
+```
+  *Note*. VIF < 5 is tolerated.
+
+
+**Figure A4**  
+*QQPlot of Standardised Residuals for M1*  
+```{r}
+plot(m1, which=2)
+```
+
+
+**Figure A5**  
+*Scale-Location Plot for M2*  
+```{r}
+plot(m1, which=3)
+```
+
+
+**Figure A6**  
+*Partial Residual Plots for M1*  
+```{r fig.height=10}
+residualPlots(m1, tests = FALSE)
+```
+
+
+**Figure A7**  
+*Cook's Distance Distribution for M1*  
+```{r}
+plot(m1, which=4) 
+```
+
+
+**Figure A8**  
+*Residuals vs. Leverage Plot for M1*  
+```{r}
+plot(m1, which=5)
+```
+
+
+**Table A2**  
+*Summary of Possible Influential Values*
+```{r}
+infl1 <-influence.measures(m1)$infmat 
+
+cd_cut1 =(4/(300-7-1))
+hat_cut1 = 2*((1+7)/300)
+covr_cut_low1 = 1-(3*(7+1)/300)
+covr_cut_high1 = 1+(3*(7+1)/300)
+
+n_cd1 <- data.frame(infl1) %>%
+  filter(abs(cook.d) > cd_cut1) %>%
+  count() %>%
+  mutate("Cook's distances above cut-off (0.14)"=n)
+
+n_stud1 <-data.frame(rstudent(m1, type="Pearson")) %>%
+  filter(abs(rstudent.m1..type....Pearson..)>2) %>%
+  count() %>%
+  mutate("Studentised residuals above/below +/- 2"=n)
+
+n_hat1 <- data.frame(infl1) %>%
+  filter(abs(hat)> (2*(1+5)/300)) %>%
+  count() %>%
+  mutate("Hat-values above/below cut-off (+/- 0.053)" = n)
+
+n_covr1 <- data.frame(infl1) %>%
+  filter(cov.r < 1-(3*(5+1)/300) | cov.r  > 1+(3*(5+1)/300)) %>%
+  count() %>%
+  mutate("COVRATIOS above/below cut-off (lower: 0.92, upper: 10.08)" = n)
+
+n_dffit1 <- data.frame(infl1) %>%
+  filter(abs(dffit) > 0.5) %>%
+  count() %>%
+  mutate("DFFit above 0.5" = n)
+
+kable(tibble(n_cd1[2], n_stud1[2], n_hat1[2], n_covr1[2], n_dffit1[2])) %>%
+  kable_styling()
+
+```
+
+
+# Appendix B: Assumptions and Diagnostics for M2
+
+**Figure B1**  
+*Residuals vs Fitted Values for M2*  
+```{r}
+plot(m2, which=1)
+```
+
+
+**Figure B2**  
+*Component Residual Plot for Continuous Predictors of M2: Cognitive Test Score*  
+```{r}
+sleep2<-sleep %>%
+  mutate(sleep_depn=ifelse(sleep_dep == "deprived", 1, 0),
+         sleep_qualn=ifelse(sleep_qual == "high",1,ifelse(sleep_qual == "medium", 0, -1)),
+         int=sleep_depn*sleep_qualn)
+
+
+m<-lm(unravel ~ sleep_dep+sleep_qual+sex+cog+ age_mc+ int, data=sleep2)
+crPlots(m, terms = ~cog)
+```
+
+
+**Figure B3**  
+*Component Residual Plot for Continuous Predictors of M2: Age~mc~*  
+```{r}
+crPlots(m, terms = ~age_mc)
+```
+
+
+**Table B2**  
+*VIF for M2*  
+```{r}
+kable(vif(m2)[,1:2]) %>%
+  kable_styling()
+```
+ *Note*. VIF < 5 is tolerated, and it is not applied to the interaction (see Assumptions and Diagnostics in Research Strategy).
+
+
+**Figure B4**  
+*QQPlot of Standardised Residuals for M2*  
+```{r}
+plot(m2, which=2)
+```
+ \
+*Note*. The residuals are slight left-skewed and deviate slightly from normality at the right tail, however, this plot presents no significant violation of the normality of errors assumption.
+
+
+**Figure B5**  
+*Scale-Location Plot for M2*  
+```{r}
+plot(m2, which=3)
+```
+
+
+**Figure B6**  
+*Partial Residual Plots for M2*  
+```{r fig.height=10}
+residualPlots(m2, tests = FALSE)
+```
+
+
+**Figure B7**  
+*Cook's Distance Distribution for M2*  
+```{r}
+ plot(m2, which=4) 
+```
+
+
+**Figure B8**  
+*Residuals vs. Leverage Plot for M2*  
+```{r}
+plot(m2, which=5)
+```
+
+
+**Table B2**  
+*Summary of Possible Influential Values for M2*
+```{r}
+infl <-influence.measures(m2)$infmat 
+cd_cut =(4/(300-9-1))
+hat_cut = 2*((1+9)/300)
+covr_cut_low = 1-(3*(9+1)/300)
+covr_cut_high = 1+(3*(9+1)/300)
+
+n_cd <- data.frame(infl) %>%
+  filter(abs(cook.d) > cd_cut) %>%
+  count() %>%
+  mutate("Cook's distances above cut-off (0.14)"=n)
+
+n_stud <-data.frame(rstudent(m2, type="Pearson")) %>%
+  filter(abs(rstudent.m2..type....Pearson..)>2) %>%
+  count() %>%
+  mutate("Studentised residuals above/below +/- 2"=n)
+
+n_hat <- data.frame(infl) %>%
+  filter(abs(hat) > hat_cut) %>%
+  count() %>%
+  mutate("Hat-values above/below cut-off (+/- 0.04)" = n)
+
+n_covr <- data.frame(infl) %>%
+  filter(cov.r < covr_cut_low | cov.r > covr_cut_high) %>%
+  count() %>%
+  mutate("COVRATIOS above/below cut-off (lower: 0.9, upper: 1.1) " = n)
+
+n_dffit <- data.frame(infl) %>%
+  filter(abs(dffit) > 0.5) %>%
+  count() %>%
+  mutate("DFFit above 0.5" = n)
+kable(tibble(n_cd[2], n_stud[2] ,n_hat[2], n_covr[2], n_dffit[2])) %>%
+  kable_styling()
+
+```
+
+$$h_0: (\mu_{control, control} - \mu_{classrom, control}) - ((\mu_{control, 2week} - \mu_{classrom, 2week}) + (\mu_{control, 4week} - \mu_{classrom, 4week})) / 2 = 0$$
+$$h_1: (\mu_{classrom, control}- \mu_{control, control} ) - (\mu_{classrom, 2week} + \mu_{classrom, 4week})/2 - (\mu_{control, 2week} + \mu_{control, 4week})/ 2 ≠ 0$$
