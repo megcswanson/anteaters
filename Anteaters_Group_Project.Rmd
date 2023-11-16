@@ -8,3 +8,9 @@ date: "2023-11-16"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+library(tidyverse)
+source("https://edin.ac/4616rYu")
+get_my_data(group_name = "aggregating_anteaters")
+```
+
