@@ -6,7 +6,6 @@ date: "2023-11-16"
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-#hqpth24py
 ```
 
 ```{r}
