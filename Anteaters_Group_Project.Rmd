@@ -1,16 +1,55 @@
 ---
 title: "Aggregating Anteaters Project"
-output: html_document
+output: 
+  html_document:
+    number_sections: true
 date: "2023-11-16"
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+knitr::opts_chunk$set(echo = FALSE,
+                      warning = FALSE, # (JMEP) makes sure html doc doesn't print warnings
+                      message = FALSE) # (JMEP) makes sure html doc doesn't print messages
 
-```{r}
 library(tidyverse)
+library(GGally) # (JMEP lib to make pretty pairs panel)
+
 source("https://edin.ac/4616rYu")
 get_my_data(group_name = "aggregating_anteaters")
 ```
 
+# (JMEP) cleaning data of weird values - see notes 
+emoji_clean <- emoji |>
+  filter(is.na(age) == F,
+         age > 2,
+         #opsys != "windows",
+         freq_emu >= 0) |>
+  mutate(opsys = ifelse(opsys == "appple", "apple", opsys))
+```
+
+
+# Data Description
+
+```{r}
+# (JMEP) pretty paris panel
+emoji_clean |> 
+  select(age, freq_emu, EVS) |> 
+  ggpairs()
+```
+
+# The Emotional Effect of Emojis
+
+# Accuracy of Emoji Interpretation
+
+# Appendix A: Supplementary Tables and Figures
+
+# Notes for report (to be deleted)
+
+found this cool way of generating lm equation :0 https://bookdown.org/yihui/rmarkdown-cookbook/equatiomatic.html
+
+(JMEP; 16/11/2023 - midnight zoomies) found this cool way of generating lm equation :0 https://bookdown.org/yihui/rmarkdown-cookbook/equatiomatic.html
+
+(JMEP; 16/11/2023 - midnight zoomies) Would be helpful if we could do all our code for each section in one chunk. Then we can call tables/figures where we need them and refer to numbers in inline code. Inline code example: `r mean(emoji$age)` (there is an NA in age, booo)
+
+(JMEP; 16/11/2023 - midnight zoomies) I looked into age. There is one NA, one person who is -100 years old and one that is 1 year old. I think we can reliably remove them (done in emoji_clean). There are also a bunch (`r nrow(filter(emoji, is.na(age) == F & age < 18 & age > 1))` to be exact) that are under 18 (between `r range(filter(emoji, is.na(age) == F & age < 18 & age > 1)$age)[1]` and `r range(filter(emoji, is.na(age) == F & age < 18 & age > 1)$age)[2]`), whom I am not sure if we should remove??
+I also noticed some other unusual stuff. Frequency ratings below 0, and a typo in "Apple" for one of the operating systems ("Appple"). There are also only two windows users which isn't really helpful in terms of analysis - might wanna exclude them.
