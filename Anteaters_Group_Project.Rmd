@@ -23,6 +23,7 @@ emoji_clean <- emoji |>
   filter(is.na(age) == F,
          age > 2,
          opsys != "windows",
+         em_cat != "upside-down face",
          freq_emu >= 0) |>
   mutate(opsys = ifelse(opsys == "appple", "apple", opsys),
          opsys = as.factor(opsys))
@@ -37,6 +38,11 @@ emoji_clean |>
   select(age, freq_emu, EVS) |> 
   ggpairs()
 ```
+# Meg - 1c chisq tests 
+```{r}
+table(emoji_clean$opsys, emoji_clean$em_cat)
+```
+
 
 # The Emotional Effect of Emojis
 
