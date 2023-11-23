@@ -10,7 +10,8 @@ date: "2023-11-16"
 knitr::opts_chunk$set(echo = FALSE,
                       warning = FALSE, # (JMEP) makes sure html doc doesn't print warnings
                       message = FALSE) # (JMEP) makes sure html doc doesn't print messages
-
+```
+```{r}
 library(tidyverse)
 library(GGally) # (JMEP lib to make pretty pairs panel)
 
@@ -21,9 +22,10 @@ get_my_data(group_name = "aggregating_anteaters")
 emoji_clean <- emoji |>
   filter(is.na(age) == F,
          age > 2,
-         #opsys != "windows",
+         opsys != "windows",
          freq_emu >= 0) |>
-  mutate(opsys = ifelse(opsys == "appple", "apple", opsys))
+  mutate(opsys = ifelse(opsys == "appple", "apple", opsys),
+         opsys = as.factor(opsys))
 ```
 
 
