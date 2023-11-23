@@ -38,6 +38,22 @@ emoji_clean |>
   select(age, freq_emu, EVS) |> 
   ggpairs()
 ```
+
+
+# Ella - 1a violin plots
+```{r}
+ggplot(data=emoji_clean, aes(x=opsys, y=freq_emu)) + geom_violin(alpha = 0.5) +
+geom_boxplot(width=0.1) + xlab("Operating system") + ylab("Frequency of emoji use (emoji/day)") +
+  labs(title="Frequency of use depending on operating system")
+
+```
+
+Notes on the violin plot:
+- The LQ and median look very similar if not the same for the two operating systems
+- The UQ and overall range is much higher for Apple - Apple users seem more likely to use a higher number of emojis in a day
+- Android is more densely concentrated around the median
+- There's only one outlier - at 24 emojis/day under Apple
+
 # Meg - 1c chisq tests 
 ```{r}
 table(emoji_clean$opsys, emoji_clean$em_cat)
