@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = FALSE,
 ```{r}
 library(tidyverse)
 library(GGally) # (JMEP lib to make pretty pairs panel)
-
+library(ggplot2)
 source("https://edin.ac/4616rYu")
 get_my_data(group_name = "aggregating_anteaters")
 
@@ -42,6 +42,33 @@ emoji_clean |>
 ```{r}
 table(emoji_clean$opsys, emoji_clean$em_cat)
 ```
+
+# Question 1b
+# By: Renia
+
+```{r}
+
+cor.test(emoji_clean$age, emoji_clean$freq_emu)
+
+mean(emoji_clean$age)
+sd(emoji_clean$age)
+mean(emoji_clean$freq_emu)
+sd(emoji_clean$freq_emu)
+
+ggplot(emoji_clean, aes(x=age, y=freq_emu)) + 
+  geom_point() + 
+  labs(x = "Age",
+       y = "Frequency of emoji use per day",
+       title = "Figure 1: Negative relationship between age and frequency of emoji use")+
+  guides(fill="none") + 
+  theme_light()
+```
+#Interpretation for Correlation test, Q1b:
+
+A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of 235 individuals where included in the analysis, with a mean age of 35.39 (SD = 13.45) and a mean frequency of use of emoji of 5.15 (SD = 5.15).
+There was a strong negative correlation between a geographical age of an individual and the frequency of emoji use. (r = -0.79, t(233)= -19.35 , p < 2.2e-16). We therefore reject the null hypothesis that there is no correlation between an area’s school attendance and attainment. Figure 1 provides a visualization of the relationship.
+
+
 
 
 # The Emotional Effect of Emojis
