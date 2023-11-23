@@ -38,10 +38,40 @@ emoji_clean |>
   select(age, freq_emu, EVS) |> 
   ggpairs()
 ```
-# Meg - 1c chisq tests 
+# Meg - 1c chisq tests and balance ----
 ```{r}
-table(emoji_clean$opsys, emoji_clean$em_cat)
+chisq.test(table(emoji_clean$opsys, emoji_clean$em_cat))
+# so there is no significant association between which operating system you use and your  emoji category
+# but is there a balance? 
+# the null hyp would state that each emoji should be presented with the same frequencies
+# but the table shows us that apple was more frequently shown each type of emoji than android
 ```
+```{r}
+# so we can build a mosaic plot to represent expected vs observed levels of each emoji being presented
+emoji_clean |>
+  select(opsys, em_cat) |>
+  table() |>
+  addmargins()
+# a beautiful contingency table
+t <- emoji_clean |>
+  select(opsys, em_cat) |>
+  table()
+t
+# now we add expected values
+e <- rowSums(t) %o%
+  colSums(t)/sum(t)
+e
+```
+```{r}
+# plot
+plot(t)
+```
+```{r}
+#plot
+plot(as.table(e))
+
+```
+I DON'T KNOW IF THIS IS WHAT 1C WAS ASKING BUT THE DIFFERENT PLOTS SEEM TO ANSWER THE QUESTION 'IS THERE A BALANCE'
 
 
 # The Emotional Effect of Emojis
