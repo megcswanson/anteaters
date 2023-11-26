@@ -7,38 +7,93 @@ date: "2023-11-16"
 ---
 
 ```{r setup, include=FALSE}
+# Formatting
 knitr::opts_chunk$set(echo = FALSE,
                       warning = FALSE, # (JMEP) makes sure html doc doesn't print warnings
                       message = FALSE) # (JMEP) makes sure html doc doesn't print messages
-```
-```{r}
+
+# Load required libraries
 library(tidyverse)
-library(GGally) # (JMEP lib to make pretty pairs panel)
+library(GGally)
 library(ggplot2)
+library(sjPlot)
+library(kableExtra)
+library(equatiomatic)
+
+# Download data
 source("https://edin.ac/4616rYu")
 get_my_data(group_name = "aggregating_anteaters")
 
+or_p <- function(or, log = T) {
+  if (log == T)
+    or = exp(or)
+  p = or/(1+or)
+  return(p)
+}
+```
+
+# Data Preparation
+
+```{r}
 # (JMEP) cleaning data of weird values - see notes 
 emoji_clean <- emoji |>
   filter(is.na(age) == F,
          age > 2,
-         opsys != "windows",
+         # opsys != "windows",
          em_cat != "upside-down face",
          freq_emu >= 0) |>
   mutate(opsys = ifelse(opsys == "appple", "apple", opsys),
-         opsys = as.factor(opsys))
+         opsys = as.factor(opsys),
+         em_cat_emoji = sapply(em_cat, emoji::emoji),
+         em_cat = as.factor(em_cat),
+         EI = as.factor(EI))
+
+excl_tab <- emoji |> 
+  mutate(
+    exclusion_reason = ifelse(is.na(name) == T, 
+                              "Name is missing",
+                        ifelse(is.na(age) == T, 
+                               "Age is missing",
+                        ifelse(age < 7,
+                               "Impossible or unlikely age",
+                        ifelse(is.na(opsys) == T,
+                               "Operating system is missing",
+                        ifelse(is.na(freq_emu) == T,
+                               "Frequency of Emoji use is missing",
+                        ifelse(freq_emu < 0,
+                               "Impossible frequency value (negative) is reported",
+                        ifelse(is.na(em_cat) == T,
+                               "Emoji category is missing",
+                        ifelse(em_cat != "loudly crying face" &
+                                 em_cat != "slightly smiling face" &
+                                 em_cat != "thumbs up",
+                               "Emoji not in study materials is reported",
+                        ifelse(is.na(EVS) == T,
+                               "Emotional valence score is missing",
+                        ifelse(is.na(EI) == T,
+                               "Emoji Interpretation is missing",
+                               "not excluded"))))))))))) |>
+  filter(exclusion_reason != "not excluded")
 ```
 
+Before exploring the sample, initial checks were conducted to ensure that all observations were entered within their possible ranges (for continuous variables) or levels (for categorical variables). We excluded these along with any observation containing missing data (N~excluded~ = `r nrow(excl_tab)`). Table A1 provides an overview of excluded data points and the reason for exclusion. Additionally, the spelling of "Apple" was corrected in the operating system entry of `r nrow(filter(emoji, opsys=="appple"))` observations from "Appple". The marginal distributions and relationships amongst variables are visualised in Figure 1 (Figure A1 shows the same plots for pre-processed data).
+
+**Figure 1** 
+\
+*Marginal distributions and between-variable relationships*
+
+```{r fig.width=15, fig.height=15}
+# (JMEP) pretty paris panel
+
+emoji_clean |> 
+  select(-c("name", "em_cat_emoji")) |>
+  mutate(em_cat = factor(em_cat, labels = c("cry", "smile", "thumbs"))) |>
+  ggpairs()
+```
 
 # Data Description
 
-```{r}
-# (JMEP) pretty paris panel
-emoji_clean |> 
-  select(age, freq_emu, EVS) |> 
-  ggpairs()
-```
-# Meg - 1c chisq tests and balance ----
+## Meg - 1c chisq tests and balance ----
 ```{r}
 chisq.test(table(emoji_clean$opsys, emoji_clean$em_cat))
 # so there is no significant association between which operating system you use and your  emoji category
@@ -73,8 +128,9 @@ plot(as.table(e))
 ```
 I DON'T KNOW IF THIS IS WHAT 1C WAS ASKING BUT THE DIFFERENT PLOTS SEEM TO ANSWER THE QUESTION 'IS THERE A BALANCE'
 
-# Question 1b
-# By: Renia
+## Question 1b
+
+*By: Renia*
 
 ```{r}
 
@@ -93,7 +149,7 @@ ggplot(emoji_clean, aes(x=age, y=freq_emu)) +
   guides(fill="none") + 
   theme_light()
 ```
-#Interpretation for Correlation test, Q1b:
+### Interpretation for Correlation test, Q1b:
 
 A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of 235 individuals where included in the analysis, with a mean age of 35.39 (SD = 13.45) and a mean frequency of use of emoji of 5.15 (SD = 5.15).
 There was a strong negative correlation between a geographical age of an individual and the frequency of emoji use. (r = -0.79, t(233)= -19.35 , p < 2.2e-16). We therefore reject the null hypothesis that there is no correlation between an area’s school attendance and attainment. Figure 1 provides a visualization of the relationship.
@@ -105,13 +161,98 @@ There was a strong negative correlation between a geographical age of an individ
 
 # Accuracy of Emoji Interpretation
 
+Finally, we address the research aim of what factors predicts changes to likelihood in correctly interpreting the Emoji according to the researchers' coding scheme. We fitted a multiple logistic regression model to predict correct interpretation with frequency of Emoji use, 
+account for the binary nature of the outcome variable.
+
+```{r 3. Accuracy of interpretation}
+# JMEP
+
+# hard coding failure = 0 and success = 1 for logistic regression
+emoji_q2_analysis <- emoji_clean |>
+  mutate(EI_bi = ifelse(EI == "incorrect", 0, 1))
+
+# sum-to-zero contrast applied to emoji category
+contrasts(emoji_q2_analysis$em_cat)<- "contr.sum"
+
+
+m1q3 <- glm(EI_bi ~ freq_emu + I(age-mean(age))*em_cat, data = emoji_q2_analysis, family = binomial)
+
+# Should we include these? just the estimated means
+emm <- emmeans::emmeans(m1q3, ~ em_cat)
+emmeans::contrast(emm)
+
+```
+$$
+\log\left[ \frac { P( \operatorname{Emoji Interpretation} = \operatorname{correct} ) }{ P( \operatorname{Emoji Interpretation} = \operatorname{incorrect} ) } \right] = \beta_0 + \beta_{1}(\operatorname{Emoji use frequency}) + \beta_{2}(\operatorname{Age}) + \beta_{3}(\operatorname{em\_cat}_{\operatorname{1}}) + \beta_{4}(\operatorname{em\_cat}_{\operatorname{2}}) + \beta_{5}(\operatorname{Age} \times \operatorname{em\_cat}_{\operatorname{1}}) + \beta_{6}(\operatorname{Age} \times \operatorname{em\_cat}_{\operatorname{2}})
+$$
+
+**Table x**
+\
+*Logistic Regression Model*
+
+```{r}
+tab_model(m1q3, 
+          transform = "exp",
+          show.stat=T, 
+          dv.labels = "Correct Emoji Interpretation", 
+          pred.labels = c("Intercept", 
+                          "Emoji use frequency", 
+                          "Age", 
+                          str_c("Emoji [", emoji::emoji("loudly crying face"),"]"), 
+                          str_c("Emoji [", emoji::emoji("slightly smiling face"),"]"), 
+                          str_c("Age:Emoji [", emoji::emoji("loudly crying face"),"]"), 
+                          str_c("Age:Emoji [", emoji::emoji("slightly smiling face"),"]")), 
+          string.stat = "z-statistic ", 
+          string.p = "p-value ", 
+          string.ci = "95 % CI", 
+          string.est = "Odds Ratio ",
+          show.r2 = F,
+          show.dev = T,
+          show.loglik = T,
+          show.se = T) 
+```
+
+**Needs p-values, z-stats, and CIs**
+
+Across emoji categories, the chance of correctly interpreting an emoji was `r or_p(as.numeric(coef(m1q3)[1]))*100` %. Which emoji was interpreted and emoji use frequency predicted no significant change in this likelihood. Age, on the other hand, reduced the predicted probability of correct interpretation; for each year above the sample mean, **xx** `r or_p(as.numeric(coef(m1q3)[3]))*100` % .
+
 # Appendix A: Supplementary Tables and Figures
+
+**Table A1** 
+\
+*Excluded observations and exclusion rationale*
+
+```{r}
+excl_tab |> 
+  kable(col.names = c("Name", "Age", "Operating system", "Emoji use frequency", "Emoji category", "Emotional valence score", "Emoji Interpretation", "Reason for exlcusion")) |> 
+  kable_styling()
+```
+
+**Figure A1** 
+\
+*Marginal distributions and between-variable relationships (pre-processed data)*
+
+```{r}
+emoji |> 
+  select(-c("name")) |>
+  mutate(em_cat = factor(em_cat, labels = c("cry", "smile", "thumbs", "upside-down")),
+         EI = as.factor(EI),
+         opsys = as.factor(opsys)) |>
+  ggpairs()
+```
+
+
+**Figure A x**
+\
+*Assumptions: Linearity*
+```{r}
+plot(m1q3, which =1)
+```
+
 
 # Notes for report (to be deleted)
 
-found this cool way of generating lm equation :0 https://bookdown.org/yihui/rmarkdown-cookbook/equatiomatic.html
-
-(JMEP; 16/11/2023 - midnight zoomies) found this cool way of generating lm equation :0 https://bookdown.org/yihui/rmarkdown-cookbook/equatiomatic.html
+(JMEP; 16/11/2023 - midnight zoomies) found this cool way of generating lm equation :0 equatiomatic
 
 (JMEP; 16/11/2023 - midnight zoomies) Would be helpful if we could do all our code for each section in one chunk. Then we can call tables/figures where we need them and refer to numbers in inline code. Inline code example: `r mean(emoji$age)` (there is an NA in age, booo)
 
