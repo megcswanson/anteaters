@@ -146,7 +146,7 @@ There was a strong negative correlation between a geographical age of an individ
 
 ## Meg - 1c chisq tests and balance ----
 ```{r}
-chisq.test(table(emoji_clean$opsys, emoji_clean$em_cat))
+q1_chisq <- chisq.test(table(emoji_clean$opsys, emoji_clean$em_cat))
 # so there is no significant association between which operating system you use and your  emoji category
 # but is there a balance? 
 # the null hyp would state that each emoji should be presented with the same frequencies
@@ -155,7 +155,7 @@ chisq.test(table(emoji_clean$opsys, emoji_clean$em_cat))
 
 ```{r}
 # so we can build a mosaic plot to represent expected vs observed levels of each emoji being presented
-emoji_clean |>
+contin_tab <- emoji_clean |>
   select(opsys, em_cat) |>
   table() |>
   addmargins()
@@ -163,22 +163,19 @@ emoji_clean |>
 t <- emoji_clean |>
   select(opsys, em_cat) |>
   table()
-t
 # now we add expected values
 e <- rowSums(t) %o%
   colSums(t)/sum(t)
-e
 ```
 ```{r}
 # plot
-plot(t)
+observed1c <- plot(t)
 ```
 ```{r}
 #plot
-plot(as.table(e))
+expected1c <- plot(as.table(e))
 
 ```
-I DON'T KNOW IF THIS IS WHAT 1C WAS ASKING BUT THE DIFFERENT PLOTS SEEM TO ANSWER THE QUESTION 'IS THERE A BALANCE'
 
 
 # The Emotional Effect of Emojis
