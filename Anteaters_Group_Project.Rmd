@@ -181,7 +181,7 @@ As shown above, there is a clear imbalance in the emoji categories shown to part
 
 # The Emotional Effect of Emojis
 
-##Renia - model
+##Renia - model for Q2
 
 One of the main aims we address in this research is the investigation of factors influencing emotional valence. We fitted a multiple regression model to predict whether the type of emoji and the frequency of use of the emoji, as well as the age of the participants has an effect on their emotional valence. We mean-centered age for interpretation of coefficients and intercepts at the mean age.
 
