@@ -117,18 +117,17 @@ t.test(emoji ~ opsys, data = emoji_clean)
 
 A Welch two sample t-test was used to assess whether the mean frequency of emoji use was different between apple (*n* = ) and android users (*n* = ). There was a significant difference in emoji use among apple users (*M* = ; *SD* = ) and android users (*M* = ; *SD*= )(*t*() = -2.85, *p* = , two-tailed). Therefore, we reject the null hypothesis that there is no difference in emoji use between apple and android users. 
 
-## Question 1b
+## Renia : Question 1b
 
-*By: Renia*
 
 ```{r}
 
-cor.test(emoji_clean$age, emoji_clean$freq_emu)
+q1b_cortest <- cor.test(emoji_clean$age, emoji_clean$freq_emu)
 
-mean(emoji_clean$age)
-sd(emoji_clean$age)
-mean(emoji_clean$freq_emu)
-sd(emoji_clean$freq_emu)
+mean_age <- mean(emoji_clean$age)
+sd_age <- (emoji_clean$age)
+mean_frq <- (emoji_clean$freq_emu)
+sd_frq <- (emoji_clean$freq_emu)
 
 ggplot(emoji_clean, aes(x=age, y=freq_emu)) + 
   geom_point() + 
@@ -140,7 +139,7 @@ ggplot(emoji_clean, aes(x=age, y=freq_emu)) +
 ```
 ### Interpretation for Correlation test, Q1b:
 
-A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of 235 individuals where included in the analysis, with a mean age of 35.39 (SD = 13.45) and a mean frequency of use of emoji of 5.15 (SD = 5.15).
+A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of 235 individuals where included in the analysis, with a mean age of `r nrow(mean_age)`(*SD* = `r nrow(sd_age)`) and a mean frequency of use of emoji of `r nrow(mean_frq)` (*SD* = `r nrow(sd_frq)`).
 There was a strong negative correlation between a geographical age of an individual and the frequency of emoji use. (r = -0.79, t(233)= -19.35 , p < 2.2e-16). We therefore reject the null hypothesis that there is no correlation between an area’s school attendance and attainment. Figure 1 provides a visualization of the relationship.
 
 
