@@ -18,8 +18,12 @@ library(tidyverse)
 library(GGally)
 library(ggplot2)
 library(sjPlot)
+
+
+
 library(kableExtra)
 library(emmeans)
+
 
 # Download data
 source("https://edin.ac/4616rYu")
@@ -118,7 +122,23 @@ q1t_test <-t.test(freq_emu ~ opsys, data = filter(emoji_clean, opsys != "windows
 
 A Welch two sample t-test was used to assess whether the mean frequency of emoji use was different between apple (*n* = ) and android users (*n* = ). There was a significant difference in emoji use among apple users (*M* = ; *SD* = ) and android users (*M* = ; *SD*= )(*t*(`r round(q1t_test$statistic,2 )`) = -2.85, *p* = , two-tailed). Therefore, we reject the null hypothesis that there is no difference in emoji use between apple and android users. 
 
+
+# Ella - 1a violin plots
+```{r}
+ggplot(data=emoji_clean, aes(x=opsys, y=freq_emu)) + geom_violin(alpha = 0.5) +
+geom_boxplot(width=0.1) + xlab("Operating system") + ylab("Frequency of emoji use (emoji/day)") +
+  labs(title="Frequency of use depending on operating system")
+
+```
+
+
+1a: Whether there’s any difference in the frequency of emoji use between apple and android users.
+From the violin plots above/below, it is clear that the lower quartile and median are very similar, if not the same, for the two operating systems. However, the upper quartile is higher and overall range is larger for Apple than Android. It seems that Apple users seem more liekly to use a higher number of emojis per day. Android users however are more densely concentrated around the median. In the data set, we can see there is only one outlier - at 24 emojis per day for one Apple user.
+
+## Question 1b
+=======
 ## Renia : Question 1b
+>>>>>>> 3cabff6bd493f9f1e5114546b61c3a020119c973
 
 
 ```{r}
@@ -170,6 +190,35 @@ observed1c <- plot(t)
 expected1c <- plot(as.table(e))
 
 ```
+
+## Question 1b
+
+*By: Renia*
+
+```{r}
+
+cor.test(emoji_clean$age, emoji_clean$freq_emu)
+
+mean(emoji_clean$age)
+sd(emoji_clean$age)
+mean(emoji_clean$freq_emu)
+sd(emoji_clean$freq_emu)
+
+ggplot(emoji_clean, aes(x=age, y=freq_emu)) + 
+  geom_point() + 
+  labs(x = "Age",
+       y = "Frequency of emoji use per day",
+       title = "Figure 1: Negative relationship between age and frequency of emoji use")+
+  guides(fill="none") + 
+  theme_light()
+```
+### Interpretation for Correlation test, Q1b:
+
+A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of 235 individuals where included in the analysis, with a mean age of 35.39 (SD = 13.45) and a mean frequency of use of emoji of 5.15 (SD = 5.15).
+There was a strong negative correlation between a geographical age of an individual and the frequency of emoji use. (r = -0.79, t(233)= -19.35 , p < 2.2e-16). We therefore reject the null hypothesis that there is no correlation between an area’s school attendance and attainment. Figure 1 provides a visualization of the relationship.
+
+
+
 
 
 # The Emotional Effect of Emojis
