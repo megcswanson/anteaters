@@ -12,6 +12,9 @@ knitr::opts_chunk$set(echo = FALSE,
                       warning = FALSE, # (JMEP) makes sure html doc doesn't print warnings
                       message = FALSE) # (JMEP) makes sure html doc doesn't print messages
 
+#how to install the equatiomatic package the github way:
+remotes::install_github("datalorax/equatiomatic")
+
 # Load required libraries
 library(tidyverse)
 library(GGally)
@@ -19,6 +22,7 @@ library(ggplot2)
 library(sjPlot)
 library(kableExtra)
 library(equatiomatic)
+library(emoji)
 
 # Download data
 source("https://edin.ac/4616rYu")
