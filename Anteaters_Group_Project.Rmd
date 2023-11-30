@@ -19,6 +19,7 @@ library(GGally)
 library(ggplot2)
 library(sjPlot)
 library(kableExtra)
+library(emmeans)
 
 # Download data
 source("https://edin.ac/4616rYu")
@@ -112,10 +113,10 @@ Notes on the violin plot:
 
 
 ```{r}
-t.test(emoji ~ opsys, data = emoji_clean)
+q1t_test <-t.test(freq_emu ~ opsys, data = filter(emoji_clean, opsys != "windows"))
 ```
 
-A Welch two sample t-test was used to assess whether the mean frequency of emoji use was different between apple (*n* = ) and android users (*n* = ). There was a significant difference in emoji use among apple users (*M* = ; *SD* = ) and android users (*M* = ; *SD*= )(*t*() = -2.85, *p* = , two-tailed). Therefore, we reject the null hypothesis that there is no difference in emoji use between apple and android users. 
+A Welch two sample t-test was used to assess whether the mean frequency of emoji use was different between apple (*n* = ) and android users (*n* = ). There was a significant difference in emoji use among apple users (*M* = ; *SD* = ) and android users (*M* = ; *SD*= )(*t*(`r round(q1t_test$statistic,2 )`) = -2.85, *p* = , two-tailed). Therefore, we reject the null hypothesis that there is no difference in emoji use between apple and android users. 
 
 ## Renia : Question 1b
 
@@ -145,7 +146,7 @@ There was a strong negative correlation between a geographical age of an individ
 
 ## Meg - 1c chisq tests and balance ----
 ```{r}
-chisq.test(table(emoji_clean$opsys, emoji_clean$em_cat))
+q1_chisq <- chisq.test(table(emoji_clean$opsys, emoji_clean$em_cat))
 # so there is no significant association between which operating system you use and your  emoji category
 # but is there a balance? 
 # the null hyp would state that each emoji should be presented with the same frequencies
@@ -154,7 +155,7 @@ chisq.test(table(emoji_clean$opsys, emoji_clean$em_cat))
 
 ```{r}
 # so we can build a mosaic plot to represent expected vs observed levels of each emoji being presented
-emoji_clean |>
+contin_tab <- emoji_clean |>
   select(opsys, em_cat) |>
   table() |>
   addmargins()
@@ -162,22 +163,19 @@ emoji_clean |>
 t <- emoji_clean |>
   select(opsys, em_cat) |>
   table()
-t
 # now we add expected values
 e <- rowSums(t) %o%
   colSums(t)/sum(t)
-e
 ```
 ```{r}
 # plot
-plot(t)
+observed1c <- plot(t)
 ```
 ```{r}
 #plot
-plot(as.table(e))
+expected1c <- plot(as.table(e))
 
 ```
-I DON'T KNOW IF THIS IS WHAT 1C WAS ASKING BUT THE DIFFERENT PLOTS SEEM TO ANSWER THE QUESTION 'IS THERE A BALANCE'
 
 
 # The Emotional Effect of Emojis
@@ -202,9 +200,11 @@ m1q3 <- glm(EI_bi ~ freq_emu + I(age-mean(age))*em_cat, data = emoji_q2_analysis
 
 # Should we include these? just the estimated means
 
-emmean_q2 <- contrast(emmeans(m1q3, ~ em_cat), transformation)
+emmean_q2 <- contrast(emmeans(m1q3, ~ em_cat))
 emmean_q2
 ```
+
+
 $$
 \log\left[ \frac { P( \operatorname{Emoji Interpretation} = \operatorname{correct} ) }{ P( \operatorname{Emoji Interpretation} = \operatorname{incorrect} ) } \right] = \beta_0 + \beta_{1}(\operatorname{Emoji use frequency}) + \beta_{2}(\operatorname{Age}) + \beta_{3}(\operatorname{em\_cat}_{\operatorname{1}}) + \beta_{4}(\operatorname{em\_cat}_{\operatorname{2}}) + \beta_{5}(\operatorname{Age} \times \operatorname{em\_cat}_{\operatorname{1}}) + \beta_{6}(\operatorname{Age} \times \operatorname{em\_cat}_{\operatorname{2}})
 $$
