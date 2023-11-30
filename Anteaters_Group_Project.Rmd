@@ -177,9 +177,20 @@ expected1c <- plot(as.table(e))
 
 ```
 
-As shown above, there is a clear imbalance in the emoji categories shown to participants with Apple veersus Android operating systems. 
+As shown above, there is a clear imbalance in the emoji categories shown to participants with Apple versus Android operating systems. 
 
 # The Emotional Effect of Emojis
+
+##Renia - model
+One of the main aims we address in this research is the investigation of factors influencing emotional valence. We fitted a multiple regression model to predict 
+
+
+```{r}
+m1q2 <- lm(EVS ~ )
+```
+
+
+
 
 # Accuracy of Emoji Interpretation
 
