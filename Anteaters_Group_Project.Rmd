@@ -130,18 +130,12 @@ sd_age <- (emoji_clean$age)
 mean_frq <- (emoji_clean$freq_emu)
 sd_frq <- (emoji_clean$freq_emu)
 
-ggplot(emoji_clean, aes(x=age, y=freq_emu)) + 
-  geom_point() + 
-  labs(x = "Age",
-       y = "Frequency of emoji use per day",
-       title = "Figure 1: Negative relationship between age and frequency of emoji use")+
-  guides(fill="none") + 
-  theme_light()
+
 ```
 ### Interpretation for Correlation test, Q1b:
 
 A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of 235 individuals where included in the analysis, with a mean age of `r nrow(mean_age)`(*SD* = `r nrow(sd_age)`) and a mean frequency of use of emoji of `r nrow(mean_frq)` (*SD* = `r nrow(sd_frq)`).
-There was a strong negative correlation between a geographical age of an individual and the frequency of emoji use. (r = -0.79, t(233)= -19.35 , p < 2.2e-16). We therefore reject the null hypothesis that there is no correlation between an area’s school attendance and attainment. Figure 1 provides a visualization of the relationship.
+There was a strong negative correlation between a geographical age of an individual and the frequency of emoji use. (*r* = -0.79, t(233)= -19.35 , *p* < 0.001). We therefore reject the null hypothesis that there is no correlation between an area’s school attendance and attainment. Figure 1 provides a visualization of the relationship.
 
 
 ## Meg - 1c chisq tests and balance ----
@@ -292,3 +286,16 @@ plot(rstandard(m1q3, type = 'deviance'),ylab = 'Studentized Deviance Residuals')
 
 (JMEP; 16/11/2023 - midnight zoomies) I looked into age. There is one NA, one person who is -100 years old and one that is 1 year old. I think we can reliably remove them (done in emoji_clean). There are also a bunch (`r nrow(filter(emoji, is.na(age) == F & age < 18 & age > 1))` to be exact) that are under 18 (between `r range(filter(emoji, is.na(age) == F & age < 18 & age > 1)$age)[1]` and `r range(filter(emoji, is.na(age) == F & age < 18 & age > 1)$age)[2]`), whom I am not sure if we should remove??
 I also noticed some other unusual stuff. Frequency ratings below 0, and a typo in "Apple" for one of the operating systems ("Appple"). There are also only two windows users which isn't really helpful in terms of analysis - might wanna exclude them.
+
+
+#Code to possisbly be deleted:
+```{r}
+ggplot(emoji_clean, aes(x=age, y=freq_emu)) + 
+  geom_point() + 
+  labs(x = "Age",
+       y = "Frequency of emoji use per day",
+       title = "Figure 1: Negative relationship between age and frequency of emoji use")+
+  guides(fill="none") + 
+  theme_light()
+```
+
