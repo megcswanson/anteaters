@@ -153,7 +153,7 @@ q1_chisq <- chisq.test(table(emoji_clean$opsys, emoji_clean$em_cat))
 # the null hyp would state that each emoji should be presented with the same frequencies
 # but the table shows us that apple was more frequently shown each type of emoji than android
 ```
-
+A Pearson's Chi-squared test of independence indicated no significant association between the operating system used and the emoji presented to the participant ($\chi$^2^(4) = 1.55, *p* = .818), suggesting that the emoji category is not dependent on the particpant's operating system. 
 ```{r}
 # so we can build a mosaic plot to represent expected vs observed levels of each emoji being presented
 contin_tab <- emoji_clean |>
@@ -168,6 +168,9 @@ t <- emoji_clean |>
 e <- rowSums(t) %o%
   colSums(t)/sum(t)
 ```
+
+Based on the results of the $\chi$^2^ test, we still must determine whether or not there is a balance between the operating systems in the number of emojis they were presented. The null hypothesis for this would state that each category of emoji would be presented equally across all operating systems, however a contingency table showing the counts of each emoji indicate otherwise. In order to visualise this, we can display expected and observed values in mosaic plots (fig. 2.3).
+
 ```{r}
 # plot
 observed1c <- plot(t)
@@ -178,6 +181,7 @@ expected1c <- plot(as.table(e))
 
 ```
 
+As shown above, there is a clear imbalance in the emoji categories shown to participants with Apple veersus Android operating systems. 
 
 # The Emotional Effect of Emojis
 
