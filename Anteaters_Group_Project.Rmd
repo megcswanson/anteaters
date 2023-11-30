@@ -19,7 +19,10 @@ library(GGally)
 library(ggplot2)
 library(sjPlot)
 library(kableExtra)
+<<<<<<< Updated upstream
 library(emoji)
+=======
+>>>>>>> Stashed changes
 
 # Download data
 source("https://edin.ac/4616rYu")
