@@ -20,6 +20,10 @@ library(ggplot2)
 library(sjPlot)
 
 
+
+library(kableExtra)
+
+
 # Download data
 source("https://edin.ac/4616rYu")
 get_my_data(group_name = "aggregating_anteaters")
@@ -33,16 +37,6 @@ or_p <- function(or, log = T) {
 ```
 
 # Data Preparation
-
-##JRB Question 1a - Whether there’s any difference in the frequency of emoji use between apple and android users.
-
-
-```{r}
-t.test(emoji ~ opsys, data = emoji_clean)
-```
-
-A Welch two sample t-test was used to assess whether the mean frequency of emoji use was different between apple (*n* = ) and android users (*n* = ). There was a significant difference in emoji use among apple users (*M* = ; *SD* = ) and android users (*M* = ; *SD*= )(*t*() = -2.85, *p* = , two-tailed). Therefore, we reject the null hypothesis that there is no difference in emoji use between apple and android users. 
-
 
 ```{r}
 # (JMEP) cleaning data of weird values - see notes 
@@ -103,6 +97,69 @@ emoji_clean |>
 
 # Data Description
 
+## Ella - 1a violin plots
+```{r}
+ggplot(data=emoji_clean, aes(x=opsys, y=freq_emu)) + geom_violin(alpha = 0.5) +
+geom_boxplot(width=0.1) + xlab("Operating system") + ylab("Frequency of emoji use (emoji/day)") +
+  labs(title="Frequency of use depending on operating system")
+
+```
+
+Notes on the violin plot:
+- The LQ and median look very similar if not the same for the two operating systems
+- The UQ and overall range is much higher for Apple - Apple users seem more likely to use a higher number of emojis in a day
+- Android is more densely concentrated around the median
+- There's only one outlier - at 24 emojis/day under Apple
+
+
+##JRB Question 1a - Whether there’s any difference in the frequency of emoji use between apple and android users.
+
+
+```{r}
+t.test(emoji ~ opsys, data = emoji_clean)
+```
+
+A Welch two sample t-test was used to assess whether the mean frequency of emoji use was different between apple (*n* = ) and android users (*n* = ). There was a significant difference in emoji use among apple users (*M* = ; *SD* = ) and android users (*M* = ; *SD*= )(*t*() = -2.85, *p* = , two-tailed). Therefore, we reject the null hypothesis that there is no difference in emoji use between apple and android users. 
+
+# Ella - 1a violin plots
+```{r}
+ggplot(data=emoji_clean, aes(x=opsys, y=freq_emu)) + geom_violin(alpha = 0.5) +
+geom_boxplot(width=0.1) + xlab("Operating system") + ylab("Frequency of emoji use (emoji/day)") +
+  labs(title="Frequency of use depending on operating system")
+
+```
+
+
+1a: Whether there’s any difference in the frequency of emoji use between apple and android users.
+From the violin plots above/below, it is clear that the lower quartile and median are very similar, if not the same, for the two operating systems. However, the upper quartile is higher and overall range is larger for Apple than Android. It seems that Apple users seem more liekly to use a higher number of emojis per day. Android users however are more densely concentrated around the median. In the data set, we can see there is only one outlier - at 24 emojis per day for one Apple user.
+
+## Question 1b
+
+*By: Renia*
+
+```{r}
+
+cor.test(emoji_clean$age, emoji_clean$freq_emu)
+
+mean(emoji_clean$age)
+sd(emoji_clean$age)
+mean(emoji_clean$freq_emu)
+sd(emoji_clean$freq_emu)
+
+ggplot(emoji_clean, aes(x=age, y=freq_emu)) + 
+  geom_point() + 
+  labs(x = "Age",
+       y = "Frequency of emoji use per day",
+       title = "Figure 1: Negative relationship between age and frequency of emoji use")+
+  guides(fill="none") + 
+  theme_light()
+```
+### Interpretation for Correlation test, Q1b:
+
+A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of 235 individuals where included in the analysis, with a mean age of 35.39 (SD = 13.45) and a mean frequency of use of emoji of 5.15 (SD = 5.15).
+There was a strong negative correlation between a geographical age of an individual and the frequency of emoji use. (r = -0.79, t(233)= -19.35 , p < 2.2e-16). We therefore reject the null hypothesis that there is no correlation between an area’s school attendance and attainment. Figure 1 provides a visualization of the relationship.
+
+
 ## Meg - 1c chisq tests and balance ----
 ```{r}
 chisq.test(table(emoji_clean$opsys, emoji_clean$em_cat))
@@ -139,21 +196,6 @@ plot(as.table(e))
 ```
 I DON'T KNOW IF THIS IS WHAT 1C WAS ASKING BUT THE DIFFERENT PLOTS SEEM TO ANSWER THE QUESTION 'IS THERE A BALANCE'
 
-
-# Ella - 1a violin plots
-```{r}
-ggplot(data=emoji_clean, aes(x=opsys, y=freq_emu)) + geom_violin(alpha = 0.5) +
-geom_boxplot(width=0.1) + xlab("Operating system") + ylab("Frequency of emoji use (emoji/day)") +
-  labs(title="Frequency of use depending on operating system")
-
-```
-
-
-1a: Whether there’s any difference in the frequency of emoji use between apple and android users.
-From the violin plots above/below, it is clear that the lower quartile and median are very similar, if not the same, for the two operating systems. However, the upper quartile is higher and overall range is larger for Apple than Android. It seems that Apple users seem more liekly to use a higher number of emojis per day. Android users however are more densely concentrated around the median. In the data set, we can see there is only one outlier - at 24 emojis per day for one Apple user.
-
-
-
 ## Question 1b
 
 *By: Renia*
@@ -183,6 +225,7 @@ There was a strong negative correlation between a geographical age of an individ
 
 
 
+
 # The Emotional Effect of Emojis
 
 # Accuracy of Emoji Interpretation
@@ -204,9 +247,9 @@ contrasts(emoji_q2_analysis$em_cat)<- "contr.sum"
 m1q3 <- glm(EI_bi ~ freq_emu + I(age-mean(age))*em_cat, data = emoji_q2_analysis, family = binomial)
 
 # Should we include these? just the estimated means
-emm <- emmeans::emmeans(m1q3, ~ em_cat)
-emmeans::contrast(emm)
 
+emmean_q2 <- contrast(emmeans(m1q3, ~ em_cat), transformation)
+emmean_q2
 ```
 $$
 \log\left[ \frac { P( \operatorname{Emoji Interpretation} = \operatorname{correct} ) }{ P( \operatorname{Emoji Interpretation} = \operatorname{incorrect} ) } \right] = \beta_0 + \beta_{1}(\operatorname{Emoji use frequency}) + \beta_{2}(\operatorname{Age}) + \beta_{3}(\operatorname{em\_cat}_{\operatorname{1}}) + \beta_{4}(\operatorname{em\_cat}_{\operatorname{2}}) + \beta_{5}(\operatorname{Age} \times \operatorname{em\_cat}_{\operatorname{1}}) + \beta_{6}(\operatorname{Age} \times \operatorname{em\_cat}_{\operatorname{2}})
@@ -270,9 +313,20 @@ emoji |>
 
 **Figure A x**
 \
-*Assumptions: Linearity*
+*Binned plot: Logistic Regression*
 ```{r}
-plot(m1q3, which =1)
+arm::binnedplot(fitted(m1q3), 
+                rstudent(m1q3, type = 'deviance'),
+                xlab = 'Prob. of correct emoji interpretation', 
+                ylab = 'Studentized Deviance Residuals')
+```
+
+**Figure A x**
+\
+*Standardised Deviance Residuals (Logistic Regression)*
+
+```{r}
+plot(rstandard(m1q3, type = 'deviance'),ylab = 'Studentized Deviance Residuals')
 ```
 
 
