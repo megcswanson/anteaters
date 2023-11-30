@@ -306,6 +306,7 @@ I also noticed some other unusual stuff. Frequency ratings below 0, and a typo i
 
 #Code to possisbly be deleted:
 ```{r}
+#ggplot for Q1b
 ggplot(emoji_clean, aes(x=age, y=freq_emu)) + 
   geom_point() + 
   labs(x = "Age",
