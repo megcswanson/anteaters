@@ -34,6 +34,16 @@ or_p <- function(or, log = T) {
 
 # Data Preparation
 
+##JRB Question 1a - Whether there’s any difference in the frequency of emoji use between apple and android users.
+
+
+```{r}
+t.test(emoji ~ opsys, data = emoji_clean)
+```
+
+A Welch two sample t-test was used to assess whether the mean frequency of emoji use was different between apple (*n* = ) and android users (*n* = ). There was a significant difference in emoji use among apple users (*M* = ; *SD* = ) and android users (*M* = ; *SD*= )(*t*() = -2.85, *p* = , two-tailed). Therefore, we reject the null hypothesis that there is no difference in emoji use between apple and android users. 
+
+
 ```{r}
 # (JMEP) cleaning data of weird values - see notes 
 emoji_clean <- emoji |>
