@@ -18,8 +18,7 @@ library(tidyverse)
 library(GGally)
 library(ggplot2)
 library(sjPlot)
-library(kableExtra)
-library(emoji)
+
 
 # Download data
 source("https://edin.ac/4616rYu")
@@ -149,11 +148,9 @@ geom_boxplot(width=0.1) + xlab("Operating system") + ylab("Frequency of emoji us
 
 ```
 
-Notes on the violin plot:
-- The LQ and median look very similar if not the same for the two operating systems
-- The UQ and overall range is much higher for Apple - Apple users seem more likely to use a higher number of emojis in a day
-- Android is more densely concentrated around the median
-- There's only one outlier - at 24 emojis/day under Apple
+
+1a: Whether there’s any difference in the frequency of emoji use between apple and android users.
+From the violin plots above/below, it is clear that the lower quartile and median are very similar, if not the same, for the two operating systems. However, the upper quartile is higher and overall range is larger for Apple than Android. It seems that Apple users seem more liekly to use a higher number of emojis per day. Android users however are more densely concentrated around the median. In the data set, we can see there is only one outlier - at 24 emojis per day for one Apple user.
 
 
 
