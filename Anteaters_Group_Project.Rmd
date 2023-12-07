@@ -189,9 +189,10 @@ One of the main aims we address in this research is the investigation of factors
 contrasts(emoji_clean$em_cat) <- "contr.sum" 
 contrasts(emoji_clean$em_cat)
 # need to find estimated mean differences
-emmeans(basemodel, pairwise ~ em_cat)
 
 basemodel <- lm(EVS ~ em_cat, data = emoji_clean)
+
+emmeans(basemodel, pairwise ~ em_cat)
 
 q2m2 <- lm(EVS ~ I(age-mean(age)) + em_cat + freq_emu, data = emoji_clean)
 
