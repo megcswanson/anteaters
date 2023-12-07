@@ -98,26 +98,24 @@ emoji_clean |>
 
 # Data Description
 
-```{r}
-q1t_test <-t.test(freq_emu ~ opsys, data = filter(emoji_clean, opsys != "windows"))
-```
 We explored whether there's a difference in the frequency of emoji use between Apple and Android users. We did this in two ways - we created violin plots, and conducted a Welch two sample t-test. 
  
 From the violin plots below, we can see that the lower quartile and median of the two operating systems are very similar. However,  the upper quartile is higher and overall range is larger for Apple than Android. It seems that Apple users seem more likely to use a higher number of emojis per day. Android users however are more densely concentrated around the median. In the data set, we can see there is only one outlier - at 24 emojis per day for one Apple user.
 
 ```{r}
 q1t_test <-t.test(freq_emu ~ opsys, data = filter(emoji_clean, opsys != "windows"))
-ggplot(data=filter(emoji_clean, opsys !="windows"), aes(x=opsys, y=freq_emu)) + geom_violin(alpha = 0.5) +
+
+emoji_clean |>
+  filter(opsys !="windows") |>
+  mutate(opsys = factor(opsys, labels =c("Android", "Apple")))|>
+ggplot(aes(x=opsys, y=freq_emu)) + geom_violin(alpha = 0.5) +
 geom_boxplot(width=0.1) + xlab("Operating system") + ylab("Frequency of emoji use (emoji/day)") +
   labs(title="Frequency of use depending on operating system")
 ```
  
-Following this, we conducted the Welch two sample t-test to assess whether the mean frequency of emoji use was different between android (*n* = `r nrow(filter(emoji_clean, opsys == "android"))` ; *m* = `r round(q1t_test$estimate [1],1)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "android")$freq_emu), 2)` and apple users (*n* = `r nrow(filter(emoji_clean, opsys == "apple"))`; *m* = `r round(q1t_test$estimate[2],2)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "apple")$freq_emu), 2)`). There was a significant difference in emoji use among android and apple users, *t*(`r round(q1t_test$parameter,2)`) = `r round(q1t_test$statistic,2 )`, *p* =`r round(q1t_test$p.value,3)`, two-tailed). Therefore, we reject the null hypothesis that there is no difference in emoji use between apple and android users. From these two mechanisms, we have concluded that there is a difference between the two operating systems.
+Following this, we conducted the Welch two sample t-test to assess whether the mean frequency of emoji use was different between Android (*n* = `r nrow(filter(emoji_clean, opsys == "android"))` ; *m* = `r round(q1t_test$estimate [1],1)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "android")$freq_emu), 2)` and Apple users (*n* = `r nrow(filter(emoji_clean, opsys == "apple"))`; *m* = `r round(q1t_test$estimate[2],2)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "apple")$freq_emu), 2)`). There was a significant difference in emoji use among Android and Apple users, *t*(`r round(q1t_test$parameter,2)`) = `r round(q1t_test$statistic,2 )`, *p* =`r round(q1t_test$p.value,3)`, two-tailed). Therefore, we reject the null hypothesis that there is no difference in emoji use between Apple and Android users. From these two mechanisms, we have concluded that there is a difference between the two operating systems.
 
 
-```{r}
-q1t_test <-t.test(freq_emu ~ opsys, data = filter(emoji_clean, opsys != "windows"))
-```
 
 
 ## Renia : Question 1b
@@ -148,15 +146,15 @@ q1_chisq <- chisq.test(table(emoji_clean[, "opsys" != "windows"]$opsys, emoji_cl
 # the null hyp would state that each emoji should be presented with the same frequencies
 # but the table shows us that apple was more frequently shown each type of emoji than android
 ```
-A Pearson's Chi-squared test of independence indicated no significant association between the operating system used and the emoji presented to the participant ($\chi$^2^(4) = 1.55, *p* = .818), suggesting that the emoji category is not dependent on the particpant's operating system. 
+A Pearson's Chi-squared test of independence indicated no significant association between the operating system used and the emoji presented to the participant ($\chi$^2^(4) = 1.55, *p* = .818), suggesting that the emoji category is not dependent on the participant's operating system. 
 ```{r}
 # so we can build a mosaic plot to represent expected vs observed levels of each emoji being presented
-contin_tab <- emoji_clean |>
+contin_tab <- emoji_clean|>
   select(opsys, em_cat) |>
   table() |>
   addmargins()
 # a beautiful contingency table
-t <- emoji_clean |>
+t <- emoji_clean|>
   select(opsys, em_cat) |>
   table()
 # now we add expected values
@@ -182,7 +180,7 @@ As shown above, there is a clear imbalance in the emoji categories shown to part
 
 ##Renia and Meg - model and interactions for Q2
 
-One of the main aims we address in this research is the investigation of factors influencing emotional valence. We fitted a multiple regression model to predict whether the type of emoji and the frequency of use of the emoji, as well as the age of the participants has an effect on their emotional valence. We mean-centered age for interpretation of coefficients and intercepts at the mean age.
+One of the main aims we address in this research is the investigation of factors influencing emotional valence. We fitted a multiple regression model to predict whether the type of emoji and the frequency of use of the emoji, as well as the age of the participants, has an effect on their emotional valence. We mean-centered age for interpretation of coefficients and intercepts.
 
 ```{r}
 #sum contrasting
@@ -215,7 +213,8 @@ emmeans(m2intq2, pairwise ~ em_cat * I(age-mean(age)))
 
 # Accuracy of Emoji Interpretation
 
-Finally, we address the research aim of what factors predict changes to likelihood in correctly interpreting the Emoji according to the researchers' coding scheme. Given the binary outcome (correct vs. incorrect) and the variables of interested expressed by the researchers, we fitted a multiple logistic regression model to predict correct interpretation with frequency of Emoji use, age, emoji category, and the interaction between the latter two. Like the previous model, we mean-centered age for interpretation of coefficients and intercepts at the mean age. Secondly, we used treatment coding (exact coding scheme in table **Ax**) for the emoji category such that each coefficient is the mean difference between the level and the grand mean, and that all other coefficients are interpreted across levels rather than within a reference level. The final model has the following equation:
+Finally, we address the research aim of what factors predict changes to likelihood in correctly interpreting the emoji according to the researchers' coding scheme. Given the binary outcome (correct vs. incorrect) and the variables of interest expressed by the researchers, we fitted a multiple logistic regression model to predict correct interpretation with frequency of Emoji use, age, emoji category, and the interaction between the latter two. Like the previous model, we mean-centered age for interpretation of coefficients and intercepts. Secondly, we used treatment coding (exact coding scheme in table **Ax**) for the emoji category such that each coefficient is the mean difference between the level and the grand mean, and that all other coefficients are interpreted across levels rather than within a reference level. The final model has the following equation:
+
 
 $$
 \log\left[ \frac {P(\operatorname{Emoji Interpretation} = \operatorname{correct})}{P(\operatorname{Emoji Interpretation} = \operatorname{incorrect})} \right] = \beta_0 + \beta_{1}(\operatorname{Emoji use frequency}) + \beta_{2}(\operatorname{Age_{mean-centered}}) + \beta_{3}·E_1 + \beta_{4}·E_2 + \beta_{5}(\operatorname{Age_{mean-centered}} \times \operatorname{E_1}) + \beta_{6}(\operatorname{Age_{mean-centered}} \times \operatorname{E_2})
@@ -280,9 +279,13 @@ Across emoji categories, the chance of correctly interpreting an emoji was `r or
 *Excluded observations and exclusion rationale*
 
 ```{r}
+#need to work out how to capitalise the operating system names here
+
 excl_tab |> 
   kable(col.names = c("Name", "Age", "Operating system", "Emoji use frequency", "Emoji category", "Emotional valence score", "Emoji Interpretation", "Reason for exlcusion")) |> 
   kable_styling()
+
+
 ```
 
 **Figure A1** 
