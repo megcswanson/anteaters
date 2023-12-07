@@ -134,7 +134,7 @@ sd_frq <- (emoji_clean$freq_emu)
 
 
 ```
-### Interpretation for Correlation test, Q1b:
+Correlation test Interpretation
 
 A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of 235 individuals where included in the analysis, with a mean age of `r nrow(mean_age)`(*sd* = `r nrow(sd_age)`) and a mean frequency of use of emoji of `r nrow(mean_frq)` (*sd* = `r nrow(sd_frq)`).
 There was a strong negative correlation between a geographical age of an individual and the frequency of emoji use. (*r* = -0.79, t(233)= -19.35 , *p* < 0.001). We therefore reject the null hypothesis that there is no correlation between an area’s school attendance and attainment. Figure 1 provides a visualization of the relationship.
