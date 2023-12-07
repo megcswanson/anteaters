@@ -185,9 +185,17 @@ As shown above, there is a clear imbalance in the emoji categories shown to part
 One of the main aims we address in this research is the investigation of factors influencing emotional valence. We fitted a multiple regression model to predict whether the type of emoji and the frequency of use of the emoji, as well as the age of the participants has an effect on their emotional valence. We standardized the emotional valence scores by standard deviation and we mean-centered age for interpretation of coefficients and intercepts at the mean age.
 
 ```{r}
-lm(EVS ~ em_cat, data = emoji_clean)
+#sum contrasting
+contrasts(emoji_clean$em_cat) <- "contr.sum" 
+contrasts(emoji_clean$em_cat)
+# need to find estimated mean differences
+emmeans(basemodel, pairwise ~ em_cat)
 
-summary(lm(EVS ~ I(age-mean(age)) + em_cat + freq_emu, data = emoji_clean))
+basemodel <- lm(EVS ~ em_cat, data = emoji_clean)
+
+q2m2 <- lm(EVS ~ I(age-mean(age)) + em_cat + freq_emu, data = emoji_clean)
+
+emmeans(q2m2, pairwise ~ em_cat)
 # this is a base model: no interactions, just to show the effect of each predictor on EVS
 ```
 
@@ -197,7 +205,9 @@ summary(lm(EVS ~ I(age-mean(age)) + em_cat + freq_emu, data = emoji_clean))
 m2intq2 <- (lm(EVS ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean))
 summary(m2intq2)
 
-# see word doc for interpretations 
+emmeans(m2intq2, pairwise ~ em_cat * I(age-mean(age)))
+
+# plot interactions  
 ```
 
 
