@@ -125,17 +125,13 @@ Following this, we conducted the Welch two sample t-test to assess whether the m
 
 q1b_cortest <- cor.test(emoji_clean$age, emoji_clean$freq_emu)
 
-mean_age <- mean(emoji_clean$age)
-sd_age <- (emoji_clean$age)
-mean_frq <- (emoji_clean$freq_emu)
-sd_frq <- (emoji_clean$freq_emu)
-
-
 ```
-### Interpretation for Correlation test, Q1b:
+Correlation test Interpretation
 
-A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of 235 individuals where included in the analysis, with a mean age of `r nrow(mean_age)`(*sd* = `r nrow(sd_age)`) and a mean frequency of use of emoji of `r nrow(mean_frq)` (*sd* = `r nrow(sd_frq)`).
-There was a strong negative correlation between a geographical age of an individual and the frequency of emoji use. (*r* = -0.79, t(233)= -19.35 , *p* < 0.001). We therefore reject the null hypothesis that there is no correlation between an area’s school attendance and attainment. Figure 1 provides a visualization of the relationship.
+
+A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of *n* = 235 individuals where included in the analysis, with a mean age of `r round(mean(emoji_clean$age),2 )`(*sd* = `r round(sd(emoji_clean$age),2 )`) and a mean frequency of use of emoji of `r round(mean(emoji_clean$freq_emu),2 )` (*sd* = `r round(sd(emoji_clean$freq_emu),2 )`).
+There was a strong negative correlation between a geographical age of an individual and the frequency of emoji use. (*r* = -0.79, *t*(233) = -19.35, *p* < 0.001). We therefore reject the null hypothesis that there is no correlation between an area’s school attendance and attainment. Figure 1 provides a visualization of the relationship.
+
 
 
 ## Meg - 1c chisq tests and balance ----
@@ -319,7 +315,8 @@ arm::binnedplot(fitted(m1q3),
 ```{r}
 plot(rstandard(m1q3, type = 'deviance'),ylab = 'Studentized Deviance Residuals')
 ```
-
+#Group Memebers' Exam Numbers: "B246814, B244840, B239979, , "
+#we're missing 2 people!
 
 # Notes for report (to be deleted)
 
