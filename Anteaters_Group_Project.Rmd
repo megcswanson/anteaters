@@ -127,18 +127,13 @@ q1t_test <-t.test(freq_emu ~ opsys, data = filter(emoji_clean, opsys != "windows
 
 q1b_cortest <- cor.test(emoji_clean$age, emoji_clean$freq_emu)
 
-mean_age <- mean(emoji_clean$age)
-sd_age <- (emoji_clean$age)
-mean_frq <- (emoji_clean$freq_emu)
-sd_frq <- (emoji_clean$freq_emu)
-
-
 ```
 Correlation test Interpretation
 
 
 A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of *n* = 235 individuals where included in the analysis, with a mean age of `r round(mean(emoji_clean$age),2 )`(*sd* = `r round(sd(emoji_clean$age),2 )`) and a mean frequency of use of emoji of `r round(mean(emoji_clean$freq_emu),2 )` (*sd* = `r round(sd(emoji_clean$freq_emu),2 )`).
-There was a strong negative correlation between a geographical age of an individual and the frequency of emoji use. (*r* = -0.79, t(233)= -19.35 , *p* < 0.001). We therefore reject the null hypothesis that there is no correlation between an area’s school attendance and attainment. Figure 1 provides a visualization of the relationship.
+There was a strong negative correlation between a geographical age of an individual and the frequency of emoji use. (*r* = -0.79, *t*(233) = -19.35, *p* < 0.001). We therefore reject the null hypothesis that there is no correlation between an area’s school attendance and attainment. Figure 1 provides a visualization of the relationship.
+
 
 
 ## Meg - 1c chisq tests and balance ----
