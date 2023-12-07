@@ -137,13 +137,13 @@ sd_frq <- (emoji_clean$freq_emu)
 ```
 ### Interpretation for Correlation test, Q1b:
 
-A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of 235 individuals where included in the analysis, with a mean age of `r nrow(mean_age)`(*SD* = `r nrow(sd_age)`) and a mean frequency of use of emoji of `r nrow(mean_frq)` (*SD* = `r nrow(sd_frq)`).
+A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of 235 individuals where included in the analysis, with a mean age of `r nrow(mean_age)`(*sd* = `r nrow(sd_age)`) and a mean frequency of use of emoji of `r nrow(mean_frq)` (*sd* = `r nrow(sd_frq)`).
 There was a strong negative correlation between a geographical age of an individual and the frequency of emoji use. (*r* = -0.79, t(233)= -19.35 , *p* < 0.001). We therefore reject the null hypothesis that there is no correlation between an area’s school attendance and attainment. Figure 1 provides a visualization of the relationship.
 
 
 ## Meg - 1c chisq tests and balance ----
 ```{r}
-q1_chisq <- chisq.test(table(emoji_clean$opsys, emoji_clean$em_cat))
+q1_chisq <- chisq.test(table(emoji_clean[, "opsys" != "windows"]$opsys, emoji_clean[, "opsys" != "windows"]$em_cat))
 # so there is no significant association between which operating system you use and your  emoji category
 # but is there a balance? 
 # the null hyp would state that each emoji should be presented with the same frequencies
@@ -177,38 +177,77 @@ expected1c <- plot(as.table(e))
 
 ```
 
-As shown above, there is a clear imbalance in the emoji categories shown to participants with Apple veersus Android operating systems. 
+As shown above, there is a clear imbalance in the emoji categories shown to participants with Apple versus Android operating systems. 
 
 # The Emotional Effect of Emojis
 
+##Renia - model for Q2
+
+One of the main aims we address in this research is the investigation of factors influencing emotional valence. We fitted a multiple regression model to predict whether the type of emoji and the frequency of use of the emoji, as well as the age of the participants has an effect on their emotional valence. We standardized the emotional valence scores by standard deviation and we mean-centered age for interpretation of coefficients and intercepts at the mean age.
+
+
+
+```{r}
+#Haven't written the interpretation for this one yet. Also not sure if I'm using (all) the correct predictors. 
+
+m1q2 <- lm(scale(EVS) ~ I(age-mean(age)) + em_cat + freq_emu, data = emoji_clean)
+summary(m1q2)
+
+anv_m1q2 <- anova(m1q2)
+
+coef_m1q2 <- coef(m1q2)
+
+# question from Meg - if EVS is already a composite score with 0 as a neutral, doesn't that mean that we don't need to scale it? I think the only think we need to adjust in the model is mean-centering age
+```
+
+# Meg working on Q2 and interactions
+```{r}
+lm(EVS ~ em_cat, data = emoji_clean)
+
+summary(lm(EVS ~ I(age-mean(age)) + em_cat + freq_emu, data = emoji_clean))
+# this is a base model: no interactions, just to show the effect of each predictor on EVS
+```
+
+```{r}
+# add interactions to address the aim that states "The researchers are interested in whether the age of the user also has an effect, although they are not sure whether the effect will be the same for all types of emoji."
+
+m2intq2 <- (lm(EVS ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean))
+summary(m2intq2)
+
+# see word doc for interpretations 
+```
+
+
+
 # Accuracy of Emoji Interpretation
 
-Finally, we address the research aim of what factors predicts changes to likelihood in correctly interpreting the Emoji according to the researchers' coding scheme. We fitted a multiple logistic regression model to predict correct interpretation with frequency of Emoji use, 
-account for the binary nature of the outcome variable.
+Finally, we address the research aim of what factors predicts changes to likelihood in correctly interpreting the Emoji according to the researchers' coding scheme. Given the binary outcome (correct vs. incorrect) and the variables of interested expressed by the researchers, we fitted a multiple logistic regression model to predict correct interpretation with frequency of Emoji use, age, emoji category, and the interaction between the latter two. Like the previous model, we mean-centered age for interpretation of coefficients and intercepts at the mean age. Secondly, we used treatment coding (exact coding scheme in table **Ax**) for the emoji category such that each coefficient is the mean difference between the level and the grand mean, and that all other coefficients are interpreted across levels rather than within a reference level. The final model has the following equation:
+
+$$
+\log\left[ \frac {P(\operatorname{Emoji Interpretation} = \operatorname{correct})}{P(\operatorname{Emoji Interpretation} = \operatorname{incorrect})} \right] = \beta_0 + \beta_{1}(\operatorname{Emoji use frequency}) + \beta_{2}(\operatorname{Age_{mean-centered}}) + \beta_{3}·E_1 + \beta_{4}·E_2 + \beta_{5}(\operatorname{Age_{mean-centered}} \times \operatorname{E_1}) + \beta_{6}(\operatorname{Age_{mean-centered}} \times \operatorname{E_2})
+$$
 
 ```{r 3. Accuracy of interpretation}
 # JMEP
 
 # hard coding failure = 0 and success = 1 for logistic regression
-emoji_q2_analysis <- emoji_clean |>
+emoji_q3_analysis <- emoji_clean |>
   mutate(EI_bi = ifelse(EI == "incorrect", 0, 1))
 
 # sum-to-zero contrast applied to emoji category
-contrasts(emoji_q2_analysis$em_cat)<- "contr.sum"
+contrasts(emoji_q3_analysis$em_cat)<- "contr.sum"
 
 
-m1q3 <- glm(EI_bi ~ freq_emu + I(age-mean(age))*em_cat, data = emoji_q2_analysis, family = binomial)
+m1q3 <- glm(EI_bi ~ freq_emu + I(age-mean(age))*em_cat, data = emoji_q3_analysis, family = binomial)
 
 # Should we include these? just the estimated means
 
-emmean_q2 <- contrast(emmeans(m1q3, ~ em_cat))
-emmean_q2
+emmean_q3 <- contrast(emmeans(m1q3, ~ em_cat))
+emmean_q3
 ```
 
 
-$$
-\log\left[ \frac { P( \operatorname{Emoji Interpretation} = \operatorname{correct} ) }{ P( \operatorname{Emoji Interpretation} = \operatorname{incorrect} ) } \right] = \beta_0 + \beta_{1}(\operatorname{Emoji use frequency}) + \beta_{2}(\operatorname{Age}) + \beta_{3}(\operatorname{em\_cat}_{\operatorname{1}}) + \beta_{4}(\operatorname{em\_cat}_{\operatorname{2}}) + \beta_{5}(\operatorname{Age} \times \operatorname{em\_cat}_{\operatorname{1}}) + \beta_{6}(\operatorname{Age} \times \operatorname{em\_cat}_{\operatorname{2}})
-$$
+
 
 **Table x**
 \
