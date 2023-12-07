@@ -181,26 +181,10 @@ As shown above, there is a clear imbalance in the emoji categories shown to part
 
 # The Emotional Effect of Emojis
 
-##Renia - model for Q2
+##Renia and Meg - model and interactions for Q2
 
 One of the main aims we address in this research is the investigation of factors influencing emotional valence. We fitted a multiple regression model to predict whether the type of emoji and the frequency of use of the emoji, as well as the age of the participants has an effect on their emotional valence. We standardized the emotional valence scores by standard deviation and we mean-centered age for interpretation of coefficients and intercepts at the mean age.
 
-
-
-```{r}
-#Haven't written the interpretation for this one yet. Also not sure if I'm using (all) the correct predictors. 
-
-m1q2 <- lm(scale(EVS) ~ I(age-mean(age)) + em_cat + freq_emu, data = emoji_clean)
-summary(m1q2)
-
-anv_m1q2 <- anova(m1q2)
-
-coef_m1q2 <- coef(m1q2)
-
-# question from Meg - if EVS is already a composite score with 0 as a neutral, doesn't that mean that we don't need to scale it? I think the only think we need to adjust in the model is mean-centering age
-```
-
-# Meg working on Q2 and interactions
 ```{r}
 lm(EVS ~ em_cat, data = emoji_clean)
 
