@@ -28,7 +28,7 @@ get_my_data(group_name = "aggregating_anteaters")
 
 print_p <- function(p) {
   print <- ifelse(p < 0.001, "< 0.001", str_c("= ", round(p,3)))
-  print(print)
+  return(print)
 }
 ```
 
@@ -129,41 +129,40 @@ There was a strong negative correlation between a geographical age of an individ
 
 ## Meg - 1c chisq tests and balance ----
 
-Finally, we investigated whether there is a balance between apple and android users for each category of emoji. We conducted a $\chi^2$ goodness of fit test for each emoji category, which tests if the observed proportion of participants using Apple and Android deviates from hypothesised equal proportions of users indicating balance.
+Finally, we investigated whether there is a balance between apple and android users for each category of emoji. We conducted a $\chi^2$ goodness of fit test for each emoji category, which tests if the observed proportion of participants using Apple and Android deviates from hypothesised equal proportions of users (50 % of the data each) indicating balance.
 
-```{r}
+```{r chi square}
+ ## which one do we think is answering the question?
+
+# OG chi square
 q1_chisq <- chisq.test(table(emoji_clean[, "opsys" != "windows"]$opsys, emoji_clean[, "opsys" != "windows"]$em_cat))
 
+# updated chi squares
 q1_chisq_cry <- emoji_clean |>
   filter((opsys == "apple" | opsys == "android") & em_cat == "loudly crying face") |>
+  droplevels() |>
   select(opsys) |>
   table() |>
   chisq.test()
 
 q1_chisq_smile <-emoji_clean |>
   filter((opsys == "apple" | opsys == "android") & em_cat == "slightly smiling face") |>
+  droplevels() |>
   select(opsys) |>
   table() |>
   chisq.test()
 
 q1_chisq_thumb <-emoji_clean |>
   filter((opsys == "apple" | opsys == "android") & em_cat == "thumbs up") |>
+  droplevels() |>
   select(opsys) |>
   table() |>
   chisq.test()
-
-
-# so there is no significant association between which operating system you use and your  emoji category
-# but is there a balance? 
-# the null hyp would state that each emoji should be presented with the same frequencies
-# but the table shows us that apple was more frequently shown each type of emoji than android
 ```
 
-For the loudly crying face emoji (`r emoji::emoji("loudly crying face")`), we found
+For each emoji category, we found no significant difference between the observed proportions of Apple and Android users and an hypthesised set of equal proportions (loudly crying face emoji [`r emoji::emoji("loudly crying face")`]: $\chi^2$ (`r q1_chisq_cry$parameter`) = `r round(q1_chisq_cry$statistic, 2)`, *p* `r print_p(q1_chisq_cry$p.value)`; slightly smiling face  emoji [`r emoji::emoji("slightly smiling face")`]: $\chi^2$ (`r q1_chisq_smile$parameter`) = `r round(q1_chisq_smile$statistic, 2)`, *p* `r print_p(q1_chisq_smile$p.value)`; thumbs up emoji [`r emoji::emoji("thumbs up")`]: $\chi^2$ (`r q1_chisq_thumb$parameter`) = `r round(q1_chisq_thumb$statistic, 2)`, *p* `r print_p(q1_chisq_thumb$p.value)`).
 
-$\chi^2$ (`r q1_chisq_cry$parameter`) = `r round(q1_chisq_cry$statistic, 2)`, *p* `r print_p(q1_chisq_cry$p.value)`
-$\chi^2$ (`r q1_chisq_cry$parameter`) = `r round(q1_chisq_cry$statistic, 2)`, *p* `r print_p(q1_chisq_cry$p.value)`
-
+**Orignal**
 A Pearson's Chi-squared test of independence indicated no significant association between the operating system used and the emoji presented to the participant ($\chi$^2^(4) = 1.55, *p* = .818), suggesting that the emoji category is not dependent on the particpant's operating system. 
 
 ```{r}
@@ -264,7 +263,7 @@ emmean_q3
 \
 *Logistic Regression Model*
 
-```{r}
+```{r logistic model table}
 tab_model(m1q3, 
           transform = "exp",
           show.stat=T, 
@@ -286,9 +285,8 @@ tab_model(m1q3,
           show.se = T) 
 ```
 
-**Needs p-values, z-stats, and CIs**
 
-Across emoji categories, the chance of correctly interpreting an emoji was `r or_p(as.numeric(coef(m1q3)[1]))*100` %. Which emoji was interpreted and emoji use frequency predicted no significant change in this likelihood. Age, on the other hand, reduced the predicted probability of correct interpretation; for each year above the sample mean, **xx** `r or_p(as.numeric(coef(m1q3)[3]))*100` % .
+Across emoji categories, the chance of correctly interpreting an emoji was `r as.numeric(coef(m1q3)[1])`. Which emoji was interpreted and emoji use frequency predicted no significant change in this likelihood. Age, on the other hand, reduced the predicted probability of correct interpretation; for each year above the sample mean, **xx** `r as.numeric(coef(m1q3)[3])` % .
 
 # Appendix A: Supplementary Tables and Figures
 
