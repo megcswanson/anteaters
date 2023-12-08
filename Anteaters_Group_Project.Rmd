@@ -18,9 +18,6 @@ library(tidyverse)
 library(GGally)
 library(ggplot2)
 library(sjPlot)
-
-
-
 library(kableExtra)
 library(emmeans)
 
@@ -29,11 +26,9 @@ library(emmeans)
 source("https://edin.ac/4616rYu")
 get_my_data(group_name = "aggregating_anteaters")
 
-or_p <- function(or, log = T) {
-  if (log == T)
-    or = exp(or)
-  p = or/(1+or)
-  return(p)
+print_p <- function(p) {
+  print <- ifelse(p < 0.001, "< 0.001", str_c("= ", round(p,3)))
+  print(print)
 }
 ```
 
@@ -88,12 +83,10 @@ Before exploring the sample, initial checks were conducted to ensure that all ob
 *Marginal distributions and between-variable relationships*
 
 ```{r fig.width=15, fig.height=15}
-# (JMEP) pretty paris panel
-
 emoji_clean |> 
-  select(-c("name", "em_cat_emoji")) |>
+  select("age", "EVS", "freq_emu", "em_cat", "EI", "opsys") |>
   mutate(em_cat = factor(em_cat, labels = c("cry", "smile", "thumbs"))) |>
-  ggpairs()
+  ggpairs(columnLabels = c("Age", "Emotional Valence Score", "Frequency of Emoji Use", "Emoji Category", "Emoji Interpretation", "Operating System")) 
 ```
 
 # Data Description
@@ -115,16 +108,16 @@ geom_boxplot(width=0.1) + xlab("Operating system") + ylab("Frequency of emoji us
  
 Following this, we conducted the Welch two sample t-test to assess whether the mean frequency of emoji use was different between Android (*n* = `r nrow(filter(emoji_clean, opsys == "android"))` ; *m* = `r round(q1t_test$estimate [1],1)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "android")$freq_emu), 2)` and Apple users (*n* = `r nrow(filter(emoji_clean, opsys == "apple"))`; *m* = `r round(q1t_test$estimate[2],2)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "apple")$freq_emu), 2)`). There was a significant difference in emoji use among Android and Apple users, *t*(`r round(q1t_test$parameter,2)`) = `r round(q1t_test$statistic,2 )`, *p* =`r round(q1t_test$p.value,3)`, two-tailed). Therefore, we reject the null hypothesis that there is no difference in emoji use between Apple and Android users. From these two mechanisms, we have concluded that there is a difference between the two operating systems.
 
-
-
-
 ## Renia : Question 1b
 
 
 ```{r}
-
 q1b_cortest <- cor.test(emoji_clean$age, emoji_clean$freq_emu)
 
+mean_age <- mean(emoji_clean$age)
+sd_age <- (emoji_clean$age)
+mean_frq <- (emoji_clean$freq_emu)
+sd_frq <- (emoji_clean$freq_emu)
 ```
 Correlation test Interpretation
 
@@ -135,14 +128,44 @@ There was a strong negative correlation between a geographical age of an individ
 
 
 ## Meg - 1c chisq tests and balance ----
+
+Finally, we investigated whether there is a balance between apple and android users for each category of emoji. We conducted a $\chi^2$ goodness of fit test for each emoji category, which tests if the observed proportion of participants using Apple and Android deviates from hypothesised equal proportions of users indicating balance.
+
 ```{r}
 q1_chisq <- chisq.test(table(emoji_clean[, "opsys" != "windows"]$opsys, emoji_clean[, "opsys" != "windows"]$em_cat))
+
+q1_chisq_cry <- emoji_clean |>
+  filter((opsys == "apple" | opsys == "android") & em_cat == "loudly crying face") |>
+  select(opsys) |>
+  table() |>
+  chisq.test()
+
+q1_chisq_smile <-emoji_clean |>
+  filter((opsys == "apple" | opsys == "android") & em_cat == "slightly smiling face") |>
+  select(opsys) |>
+  table() |>
+  chisq.test()
+
+q1_chisq_thumb <-emoji_clean |>
+  filter((opsys == "apple" | opsys == "android") & em_cat == "thumbs up") |>
+  select(opsys) |>
+  table() |>
+  chisq.test()
+
+
 # so there is no significant association between which operating system you use and your  emoji category
 # but is there a balance? 
 # the null hyp would state that each emoji should be presented with the same frequencies
 # but the table shows us that apple was more frequently shown each type of emoji than android
 ```
-A Pearson's Chi-squared test of independence indicated no significant association between the operating system used and the emoji presented to the participant ($\chi$^2^(4) = 1.55, *p* = .818), suggesting that the emoji category is not dependent on the participant's operating system. 
+
+For the loudly crying face emoji (`r emoji::emoji("loudly crying face")`), we found
+
+$\chi^2$ (`r q1_chisq_cry$parameter`) = `r round(q1_chisq_cry$statistic, 2)`, *p* `r print_p(q1_chisq_cry$p.value)`
+$\chi^2$ (`r q1_chisq_cry$parameter`) = `r round(q1_chisq_cry$statistic, 2)`, *p* `r print_p(q1_chisq_cry$p.value)`
+
+A Pearson's Chi-squared test of independence indicated no significant association between the operating system used and the emoji presented to the participant ($\chi$^2^(4) = 1.55, *p* = .818), suggesting that the emoji category is not dependent on the particpant's operating system. 
+
 ```{r}
 # so we can build a mosaic plot to represent expected vs observed levels of each emoji being presented
 contin_tab <- emoji_clean|>
@@ -186,10 +209,9 @@ contrasts(emoji_clean$em_cat)
 
 basemodel <- lm(EVS ~ em_cat, data = emoji_clean)
 
-emmeans(basemodel, pairwise ~ em_cat)
-
 q2m2 <- lm(EVS ~ I(age-mean(age)) + em_cat + freq_emu, data = emoji_clean)
 
+emmeans(basemodel, pairwise ~ em_cat)
 emmeans(q2m2, pairwise ~ em_cat)
 # this is a base model: no interactions, just to show the effect of each predictor on EVS
 ```
