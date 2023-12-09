@@ -22,6 +22,7 @@ library(kableExtra)
 library(emmeans)
 library(patchwork)
 library(ggmosaic)
+library(broom)
 
 
 # Download data
@@ -127,8 +128,6 @@ Correlation test Interpretation
 A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of *n* = 235 individuals were included in the analysis, with a mean age of `r round(mean(emoji_clean$age),2 )`(*sd* = `r round(sd(emoji_clean$age),2 )`) and a mean frequency of use of emoji of `r round(mean(emoji_clean$freq_emu),2 )` (*sd* = `r round(sd(emoji_clean$freq_emu),2 )`).
 There was a strong negative correlation between age of an individual and the frequency of emoji use. (*r* = -0.79, *t*(233) = -19.35, *p* < 0.001). We therefore reject the null hypothesis that there is no correlation between age and frequency of emoji use. Figure 1 provides a visualization of the relationship.
 
-
-
 ## Meg - 1c chisq tests and balance ----
 
 ```{r}
@@ -185,8 +184,15 @@ contrasts(emoji_clean$em_cat) <- "contr.sum"
 m2intq2 <- (lm(EVS ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean))
 anova(m2intq2)
 summary(m2intq2)
-# plot interactions  
+# plot interactions 
+plotdat <- expand_grid(
+  EVS = -0.03:37, 
+  em_cat = c("loudly crying", "slightly smiling", "thumbs up")
+)
+p2 <- interactions::interact_plot(m2intq2, pred = "age", modx = "em_cat", interval = TRUE)
+p2
 ```
+
 
 ```{r}
 emmeans(m2intq2, pairwise ~ em_cat * I(age-mean(age)))$contrasts |>
