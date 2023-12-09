@@ -22,6 +22,7 @@ library(kableExtra)
 library(emmeans)
 library(patchwork)
 library(ggmosaic)
+library(broom)
 
 
 # Download data
@@ -178,8 +179,15 @@ anova(m2intq2)
 
 m2intq2 <- (lm(EVS ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean))
 summary(m2intq2)
-# plot interactions  
+# plot interactions 
+plotdat <- expand_grid(
+  EVS = -0.03:37, 
+  em_cat = c("loudly crying", "slightly smiling", "thumbs up")
+)
+p2 <- interactions::interact_plot(m2intq2, pred = "age", modx = "em_cat", interval = TRUE)
+p2
 ```
+
 
 ```{r}
 emmeans(m2intq2, pairwise ~ em_cat * I(age-mean(age)))$contrasts |>
