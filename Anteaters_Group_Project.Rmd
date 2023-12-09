@@ -131,15 +131,15 @@ There was a strong negative correlation between a geographical age of an individ
 
 ## Meg - 1c chisq tests and balance ----
 
+```{r}
+p1 <- ggplot(data = filter(emoji_clean, opsys != "Windows"), aes(x = em_cat, fill = opsys))+
+  geom_bar(position = "dodge") +
+  labs(fill = "Operating System Used", x = "Emoji Category", y = "Number of Participants")
+```
+
 Finally, we investigated whether there is a balance between Apple and Android users for each category of emoji. We conducted a $\chi^2$ goodness of fit test for each emoji category, which tests if the observed proportion of participants using Apple and Android deviates from hypothesised equal proportions of users (50 % of the data each) indicating balance.
 
 ```{r chi square}
- ## which one do we think is answering the question?
-
-# OG chi square
-q1_chisq <- chisq.test(table(emoji_clean[, "opsys" != "Windows"]$opsys, emoji_clean[, "opsys" != "Windows"]$em_cat))
-
-# updated chi squares
 q1_chisq_cry <- emoji_clean |>
   filter((opsys == "Apple" | opsys == "Android") & em_cat == "loudly crying face") |>
   droplevels() |>
@@ -163,58 +163,6 @@ q1_chisq_thumb <-emoji_clean |>
 ```
 
 For each emoji category, we found no significant difference between the observed proportions of Apple and Android users and an hypthesised set of equal proportions (loudly crying face emoji [`r emoji::emoji("loudly crying face")`]: $\chi^2$ (`r q1_chisq_cry$parameter`) = `r round(q1_chisq_cry$statistic, 2)`, *p* `r print_p(q1_chisq_cry$p.value)`; slightly smiling face  emoji [`r emoji::emoji("slightly smiling face")`]: $\chi^2$ (`r q1_chisq_smile$parameter`) = `r round(q1_chisq_smile$statistic, 2)`, *p* `r print_p(q1_chisq_smile$p.value)`; thumbs up emoji [`r emoji::emoji("thumbs up")`]: $\chi^2$ (`r q1_chisq_thumb$parameter`) = `r round(q1_chisq_thumb$statistic, 2)`, *p* `r print_p(q1_chisq_thumb$p.value)`).
-
-**Orignal**
-
-A Pearson's Chi-squared test of independence indicated no significant association between the operating system used and the emoji presented to the participant ($\chi$^2^(4) = 1.55, *p* = .818), suggesting that the emoji category is not dependent on the participant's operating system. 
-
-```{r}
-# so we can build a mosaic plot to represent expected vs observed levels of each emoji being presented
-contin_tab <- emoji_clean|>
-  select(opsys, em_cat) |>
-  filter(opsys != "Windows") |>
-  droplevels() |>
-  table() |>
-  addmargins()
-# a beautiful contingency table
-t <- emoji_clean|>
-  select(opsys, em_cat) |>
-  filter(opsys != "Windows") |>
-  droplevels()
-# now we add expected values
-e <- rowSums(t) %o%
-  colSums(t)/sum(t)
-```
-
-Based on the results of the $\chi$^2^ test, we still must determine whether or not there is a balance between the operating systems in the number of emojis they were presented. The null hypothesis for this would state that each category of emoji would be presented equally across all operating systems, however a contingency table showing the counts of each emoji indicate otherwise. In order to visualise this, we can display expected and observed values in mosaic plots (fig. 2.3).
-
-```{r}
-p1 <- ggplot(data = filter(emoji_clean, opsys != "Windows"), aes(x = em_cat, fill = opsys))+
-  geom_bar(position = "dodge") +
-  labs(fill = "Operating System Used", x = "Emoji Category", y = "Number of Participants")
-
-p2<- emoji_clean |>
-  filter(opsys != "Windows") |>
-  droplevels() |>
-  group_by(em_cat,opsys)|>
-  summarise(n = n()) |>
-  mutate(total_n =sum(n[em_cat == em_cat]),
-    prop = n/total_n) |>
-  ggplot( aes(x = em_cat, y = prop, fill = opsys))+
-  geom_col(position = "dodge")+
-  ylim(0,1)
-
-p1 
-
-# plot
-ggplot(data = t) +
-  geom_mosaic(aes(x = product(em_cat, opsys), fill = em_cat)) +   
-  labs(y="Do you recline?", x="Is it rude to recline?", title = "Mosaic Plot (2 variables)")
-
-plot(t) | plot(as.table(e))
-```
-
-As shown above, there is a clear imbalance in the emoji categories shown to participants with Apple versus Android operating systems. 
 
 # The Emotional Effect of Emojis
 
@@ -332,11 +280,9 @@ excl_tab |>
 
 ```{r}
 emoji |> 
-  select(-c("name")) |>
-  mutate(em_cat = factor(em_cat, labels = c("cry", "smile", "thumbs", "upside-down")),
-         EI = as.factor(EI),
-         opsys = as.factor(opsys)) |>
-  ggpairs()
+  select("age", "EVS", "freq_emu", "em_cat", "EI", "opsys") |>
+  mutate(em_cat = factor(em_cat, labels = c("cry", "smile", "thumbs"))) |>
+  ggpairs(columnLabels = c("Age", "Emotional Valence Score", "Frequency of Emoji Use", "Emoji Category", "Emoji Interpretation", "Operating System")) 
 ```
 
 
@@ -380,5 +326,17 @@ ggplot(emoji_clean, aes(x=age, y=freq_emu)) +
        title = "Figure 1: Negative relationship between age and frequency of emoji use")+
   guides(fill="none") + 
   theme_light()
+
+# proportion plot for Q1c
+p2<- emoji_clean |>
+  filter(opsys != "Windows") |>
+  droplevels() |>
+  group_by(em_cat,opsys)|>
+  summarise(n = n()) |>
+  mutate(total_n =sum(n[em_cat == em_cat]),
+    prop = n/total_n) |>
+  ggplot( aes(x = em_cat, y = prop, fill = opsys))+
+  geom_col(position = "dodge")+
+  ylim(0,1)
 ```
 
