@@ -303,8 +303,7 @@ arm::binnedplot(fitted(m1q3),
 ```{r}
 plot(rstandard(m1q3, type = 'deviance'),ylab = 'Studentized Deviance Residuals')
 ```
-#Group Memebers' Exam Numbers: "B246814, B244840, B239979, , "
-#we're missing 2 people!
+#Exam Numbers: "B155926, B239086, B239979, B244840, B246814"
 
 # Notes for report (to be deleted)
 
