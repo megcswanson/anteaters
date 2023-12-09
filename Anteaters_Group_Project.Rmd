@@ -171,31 +171,20 @@ For each emoji category, we found no significant difference between the observed
 One of the main aims we address in this research is the investigation of factors influencing emotional valence. We fitted a multiple regression model to predict whether the type of emoji and the frequency of use of the emoji, as well as the age of the participants, has an effect on their emotional valence. We mean-centered age for interpretation of coefficients and intercepts.
 
 ```{r}
-#sum contrasting
-contrasts(emoji_clean$em_cat) <- "contr.sum" 
-contrasts(emoji_clean$em_cat)
-# need to find estimated mean differences
-
-basemodel <- lm(EVS ~ em_cat, data = emoji_clean)
-
-q2m2 <- lm(EVS ~ I(age-mean(age)) + em_cat + freq_emu, data = emoji_clean)
-
-emmeans(basemodel, pairwise ~ em_cat)
-emmeans(q2m2, pairwise ~ em_cat)
-# this is a base model: no interactions, just to show the effect of each predictor on EVS
-```
-
-```{r}
 # add interactions to address the aim that states "The researchers are interested in whether the age of the user also has an effect, although they are not sure whether the effect will be the same for all types of emoji."
+contrasts(emoji_clean$em_cat) <- "contr.sum"
 
 m2intq2 <- (lm(EVS ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean))
+anova(m2intq2)
 summary(m2intq2)
-
-emmeans(m2intq2, pairwise ~ em_cat * I(age-mean(age)))
-
 # plot interactions  
 ```
 
+```{r}
+emmeans(m2intq2, pairwise ~ em_cat * I(age-mean(age)))$contrasts |>
+  kable(digits = 3) |>
+  kable_styling()
+```
 
 
 # Accuracy of Emoji Interpretation
@@ -256,7 +245,7 @@ tab_model(m1q3,
 ```
 
 
-Across emoji categories, the chance of correctly interpreting an emoji was `r as.numeric(coef(m1q3)[1])`. Which emoji was interpreted and emoji use frequency predicted no significant change in this likelihood. Age, on the other hand, reduced the predicted probability of correct interpretation; for each year above the sample mean, **xx** `r as.numeric(coef(m1q3)[3])` % .
+Across emoji categories, the chance of correctly interpreting an emoji was. Which emoji was interpreted and emoji use frequency predicted no significant change in this likelihood. Age, on the other hand, reduced the predicted probability of correct interpretation; for each year above the sample mean, **xx**.
 
 # Appendix A: Supplementary Tables and Figures
 
@@ -281,8 +270,10 @@ excl_tab |>
 ```{r}
 emoji |> 
   select("age", "EVS", "freq_emu", "em_cat", "EI", "opsys") |>
-  mutate(em_cat = factor(em_cat, labels = c("cry", "smile", "thumbs"))) |>
-  ggpairs(columnLabels = c("Age", "Emotional Valence Score", "Frequency of Emoji Use", "Emoji Category", "Emoji Interpretation", "Operating System")) 
+  mutate(em_cat = factor(em_cat, labels = c("cry", "smile", "thumbs", "upside-down"))) |>
+  ggpairs(
+    #columnLabels = c("Age", "Emotional Valence Score", "Frequency of Emoji Use", "Emoji Category", "Emoji Interpretation", "Operating System")
+    ) 
 ```
 
 
