@@ -174,9 +174,8 @@ One of the main aims we address in this research is the investigation of factors
 # add interactions to address the aim that states "The researchers are interested in whether the age of the user also has an effect, although they are not sure whether the effect will be the same for all types of emoji."
 contrasts(emoji_clean$em_cat) <- "contr.sum"
 
-anova(m2intq2)
-
 m2intq2 <- (lm(EVS ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean))
+anova(m2intq2)
 summary(m2intq2)
 # plot interactions  
 ```
@@ -271,8 +270,10 @@ excl_tab |>
 ```{r}
 emoji |> 
   select("age", "EVS", "freq_emu", "em_cat", "EI", "opsys") |>
-  mutate(em_cat = factor(em_cat, labels = c("cry", "smile", "thumbs"))) |>
-  ggpairs(columnLabels = c("Age", "Emotional Valence Score", "Frequency of Emoji Use", "Emoji Category", "Emoji Interpretation", "Operating System")) 
+  mutate(em_cat = factor(em_cat, labels = c("cry", "smile", "thumbs", "upside-down"))) |>
+  ggpairs(
+    #columnLabels = c("Age", "Emotional Valence Score", "Frequency of Emoji Use", "Emoji Category", "Emoji Interpretation", "Operating System")
+    ) 
 ```
 
 
