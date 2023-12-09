@@ -124,8 +124,8 @@ sd_frq <- (emoji_clean$freq_emu)
 
 Correlation test Interpretation
 
-A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of *n* = 235 individuals where included in the analysis, with a mean age of `r round(mean(emoji_clean$age),2 )`(*sd* = `r round(sd(emoji_clean$age),2 )`) and a mean frequency of use of emoji of `r round(mean(emoji_clean$freq_emu),2 )` (*sd* = `r round(sd(emoji_clean$freq_emu),2 )`).
-There was a strong negative correlation between a geographical age of an individual and the frequency of emoji use. (*r* = -0.79, *t*(233) = -19.35, *p* < 0.001). We therefore reject the null hypothesis that there is no correlation between an area’s school attendance and attainment. Figure 1 provides a visualization of the relationship.
+A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of *n* = 235 individuals were included in the analysis, with a mean age of `r round(mean(emoji_clean$age),2 )`(*sd* = `r round(sd(emoji_clean$age),2 )`) and a mean frequency of use of emoji of `r round(mean(emoji_clean$freq_emu),2 )` (*sd* = `r round(sd(emoji_clean$freq_emu),2 )`).
+There was a strong negative correlation between age of an individual and the frequency of emoji use. (*r* = -0.79, *t*(233) = -19.35, *p* < 0.001). We therefore reject the null hypothesis that there is no correlation between age and frequency of emoji use. Figure 1 provides a visualization of the relationship.
 
 
 
@@ -137,7 +137,7 @@ p1 <- ggplot(data = filter(emoji_clean, opsys != "Windows"), aes(x = em_cat, fil
   labs(fill = "Operating System Used", x = "Emoji Category", y = "Number of Participants")
 ```
 
-Finally, we investigated whether there is a balance between Apple and Android users for each category of emoji. We conducted a $\chi^2$ goodness of fit test for each emoji category, which tests if the observed proportion of participants using Apple and Android deviates from hypothesised equal proportions of users (50 % of the data each) indicating balance.
+Finally, we investigated whether there is a balance between Apple and Android users for each category of emoji. We conducted a $\chi^2$ goodness of fit test for each emoji category, which tests if the observed proportion of participants using Apple and Android deviates from hypothesised equal proportions of users (50% of the data each) indicating balance.
 
 ```{r chi square}
 q1_chisq_cry <- emoji_clean |>
@@ -162,7 +162,7 @@ q1_chisq_thumb <-emoji_clean |>
   chisq.test()
 ```
 
-For each emoji category, we found no significant difference between the observed proportions of Apple and Android users and an hypthesised set of equal proportions (loudly crying face emoji [`r emoji::emoji("loudly crying face")`]: $\chi^2$ (`r q1_chisq_cry$parameter`) = `r round(q1_chisq_cry$statistic, 2)`, *p* `r print_p(q1_chisq_cry$p.value)`; slightly smiling face  emoji [`r emoji::emoji("slightly smiling face")`]: $\chi^2$ (`r q1_chisq_smile$parameter`) = `r round(q1_chisq_smile$statistic, 2)`, *p* `r print_p(q1_chisq_smile$p.value)`; thumbs up emoji [`r emoji::emoji("thumbs up")`]: $\chi^2$ (`r q1_chisq_thumb$parameter`) = `r round(q1_chisq_thumb$statistic, 2)`, *p* `r print_p(q1_chisq_thumb$p.value)`).
+For each emoji category, we found no significant difference between the observed proportions of Apple and Android users, and a hypothesised set of equal proportions. For loudly crying face emoji [`r emoji::emoji("loudly crying face")`], $\chi^2$ (`r q1_chisq_cry$parameter`) = `r round(q1_chisq_cry$statistic, 2)`, *p* `r print_p(q1_chisq_cry$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "loudly crying face"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "loudly crying face")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "loudly crying face")$prop` %). For the slightly smiling face  emoji [`r emoji::emoji("slightly smiling face")`],  $\chi^2$ (`r q1_chisq_smile$parameter`) = `r round(q1_chisq_smile$statistic, 2)`, *p* `r print_p(q1_chisq_smile$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "slightly smiling face"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "slightly smiling face")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "slightly smiling face")$prop` %). Finally, for the thumbs up emoji [`r emoji::emoji("thumbs up")`], $\chi^2$ (`r q1_chisq_thumb$parameter`) = `r round(q1_chisq_thumb$statistic, 2)`, *p* `r print_p(q1_chisq_thumb$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "thumbs up"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "thumbs up")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "thumbs up")$prop` %).
 
 # The Emotional Effect of Emojis
 
@@ -305,7 +305,6 @@ plot(rstandard(m1q3, type = 'deviance'),ylab = 'Studentized Deviance Residuals')
 (JMEP; 16/11/2023 - midnight zoomies) I looked into age. There is one NA, one person who is -100 years old and one that is 1 year old. I think we can reliably remove them (done in emoji_clean). There are also a bunch (`r nrow(filter(emoji, is.na(age) == F & age < 18 & age > 1))` to be exact) that are under 18 (between `r range(filter(emoji, is.na(age) == F & age < 18 & age > 1)$age)[1]` and `r range(filter(emoji, is.na(age) == F & age < 18 & age > 1)$age)[2]`), whom I am not sure if we should remove??
 I also noticed some other unusual stuff. Frequency ratings below 0, and a typo in "Apple" for one of the operating systems ("Appple"). There are also only two Windows users which isn't really helpful in terms of analysis - might wanna exclude them.
 
-
 #Code to possibly be deleted:
 ```{r}
 #ggplot for Q1b
@@ -328,5 +327,9 @@ p2<- emoji_clean |>
   ggplot( aes(x = em_cat, y = prop, fill = opsys))+
   geom_col(position = "dodge")+
   ylim(0,1)
+
+
 ```
 
+#probably to delete but just in case
+For each emoji category, we found no significant difference between the observed proportions of Apple and Android users, and a hypothesised set of equal proportions. The results for each emoji category are as follows: loudly crying face emoji [`r emoji::emoji("loudly crying face")`]: *n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "loudly crying face"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "loudly crying face")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "loudly crying face")$prop` %; $\chi^2$ (`r q1_chisq_cry$parameter`) = `r round(q1_chisq_cry$statistic, 2)`, *p* `r print_p(q1_chisq_cry$p.value)`; slightly smiling face  emoji [`r emoji::emoji("slightly smiling face")`]: *n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "slightly smiling face"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "slightly smiling face")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "slightly smiling face")$prop` %; $\chi^2$ (`r q1_chisq_smile$parameter`) = `r round(q1_chisq_smile$statistic, 2)`, *p* `r print_p(q1_chisq_smile$p.value)`; thumbs up emoji [`r emoji::emoji("thumbs up")`]: *n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "thumbs up"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "thumbs up")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "thumbs up")$prop` %; $\chi^2$ (`r q1_chisq_thumb$parameter`) = `r round(q1_chisq_thumb$statistic, 2)`, *p* `r print_p(q1_chisq_thumb$p.value)`.
