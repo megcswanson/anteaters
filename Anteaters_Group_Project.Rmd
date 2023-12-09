@@ -93,7 +93,7 @@ emoji_clean |>
 
 # Data Description
 
-##Q1A - T-test
+## Q1A - T-test
 
 We explored whether there's a difference in the frequency of emoji use between Apple and Android users. We did this in two ways - we created violin plots, and conducted a Welch two sample t-test. 
  
@@ -160,9 +160,17 @@ q1_chisq_thumb <-emoji_clean |>
   select(opsys) |>
   table() |>
   chisq.test()
+
+prop <- emoji_clean |>
+  filter(opsys != "Windows") |>
+  droplevels() |>
+  group_by(em_cat,opsys)|>
+  summarise(n = n()) |>
+  mutate(total_n =sum(n[em_cat == em_cat]),
+    prop = round(n/total_n*100, 2))
 ```
 
-For each emoji category, we found no significant difference between the observed proportions of Apple and Android users and an hypthesised set of equal proportions (loudly crying face emoji [`r emoji::emoji("loudly crying face")`]: $\chi^2$ (`r q1_chisq_cry$parameter`) = `r round(q1_chisq_cry$statistic, 2)`, *p* `r print_p(q1_chisq_cry$p.value)`; slightly smiling face  emoji [`r emoji::emoji("slightly smiling face")`]: $\chi^2$ (`r q1_chisq_smile$parameter`) = `r round(q1_chisq_smile$statistic, 2)`, *p* `r print_p(q1_chisq_smile$p.value)`; thumbs up emoji [`r emoji::emoji("thumbs up")`]: $\chi^2$ (`r q1_chisq_thumb$parameter`) = `r round(q1_chisq_thumb$statistic, 2)`, *p* `r print_p(q1_chisq_thumb$p.value)`).
+For each emoji category, we found no significant difference between the observed proportions of Apple and Android users and an hypothesised set of equal proportions (loudly crying face emoji [`r emoji::emoji("loudly crying face")`]: *n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "loudly crying face"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "loudly crying face")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "loudly crying face")$prop` %; $\chi^2$ (`r q1_chisq_cry$parameter`) = `r round(q1_chisq_cry$statistic, 2)`, *p* `r print_p(q1_chisq_cry$p.value)`; slightly smiling face  emoji [`r emoji::emoji("slightly smiling face")`]: $\chi^2$ (`r q1_chisq_smile$parameter`) = `r round(q1_chisq_smile$statistic, 2)`, *p* `r print_p(q1_chisq_smile$p.value)`; thumbs up emoji [`r emoji::emoji("thumbs up")`]: $\chi^2$ (`r q1_chisq_thumb$parameter`) = `r round(q1_chisq_thumb$statistic, 2)`, *p* `r print_p(q1_chisq_thumb$p.value)`).
 
 # The Emotional Effect of Emojis
 
