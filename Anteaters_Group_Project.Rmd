@@ -36,7 +36,7 @@ print_p <- function(p) {
 
 # Data Preparation
 
-```{r}
+```{r data cleaning}
 # (JMEP) cleaning data of weird values - see notes 
 emoji_clean <- emoji |>
   filter(is.na(age) == F,
@@ -85,7 +85,7 @@ Before exploring the sample, initial checks were conducted to ensure that all ob
 *Marginal distributions and between-variable relationships*
 
 ```{r fig.width=15, fig.height=15}
-emoji_clean |> 
+emoji_clean |>
   select("age", "EVS", "freq_emu", "em_cat", "EI", "opsys") |>
   mutate(em_cat = factor(em_cat, labels = c("cry", "smile", "thumbs"))) |>
   ggpairs(columnLabels = c("Age", "Emotional Valence Score", "Frequency of Emoji Use", "Emoji Category", "Emoji Interpretation", "Operating System")) 
@@ -107,6 +107,12 @@ emoji_clean |>
 ggplot(aes(x=opsys, y=freq_emu)) + geom_violin(alpha = 0.5) +
 geom_boxplot(width=0.1) + xlab("Operating system") + ylab("Frequency of emoji use (emoji/day)") +
   labs(title="Frequency of use depending on operating system")
+
+qqnorm(emoji_clean$freq_emu) # make the plot
+qqline(emoji_clean$freq_emu)
+
+wilcox.test(freq_emu ~ opsys, data = filter(emoji_clean, opsys != "Windows"))
+#https://en.wikipedia.org/wiki/Mann%E2%80%93Whitney_U_test
 ```
  
 Following this, we conducted a Welch two sample t-test to assess whether the mean frequency of emoji use was different between Android (*n* = `r nrow(filter(emoji_clean, opsys == "Android"))` ; *m* = `r round(q1t_test$estimate [1],1)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "Android")$freq_emu), 2)` and Apple users (*n* = `r nrow(filter(emoji_clean, opsys == "Apple"))`; *m* = `r round(q1t_test$estimate[2],2)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "Apple")$freq_emu), 2)`). There was a significant difference in emoji use among Android and Apple users, *t*(`r round(q1t_test$parameter,2)`) = `r round(q1t_test$statistic,2 )`, *p* `r print_p(q1t_test$p.value)`, two-tailed). Therefore, we reject the null hypothesis that there is no difference in emoji use between Apple and Android users. From these two mechanisms, we have concluded that there is a difference between the two operating systems.
@@ -120,14 +126,14 @@ mean_age <- mean(emoji_clean$age)
 sd_age <- (emoji_clean$age)
 mean_frq <- (emoji_clean$freq_emu)
 sd_frq <- (emoji_clean$freq_emu)
+
+q1b_cortest
 ```
 
 Correlation test Interpretation
 
 A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of *n* = 235 individuals were included in the analysis, with a mean age of `r round(mean(emoji_clean$age),2 )`(*sd* = `r round(sd(emoji_clean$age),2 )`) and a mean frequency of use of emoji of `r round(mean(emoji_clean$freq_emu),2 )` (*sd* = `r round(sd(emoji_clean$freq_emu),2 )`).
 There was a strong negative correlation between age of an individual and the frequency of emoji use. (*r* = -0.79, *t*(233) = -19.35, *p* < 0.001). We therefore reject the null hypothesis that there is no correlation between age and frequency of emoji use. Figure 1 provides a visualization of the relationship.
-
-
 
 ## Meg - 1c chisq tests and balance ----
 
@@ -164,20 +170,40 @@ q1_chisq_thumb <-emoji_clean |>
 
 For each emoji category, we found no significant difference between the observed proportions of Apple and Android users, and a hypothesised set of equal proportions. For loudly crying face emoji [`r emoji::emoji("loudly crying face")`], $\chi^2$ (`r q1_chisq_cry$parameter`) = `r round(q1_chisq_cry$statistic, 2)`, *p* `r print_p(q1_chisq_cry$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "loudly crying face"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "loudly crying face")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "loudly crying face")$prop` %). For the slightly smiling face  emoji [`r emoji::emoji("slightly smiling face")`],  $\chi^2$ (`r q1_chisq_smile$parameter`) = `r round(q1_chisq_smile$statistic, 2)`, *p* `r print_p(q1_chisq_smile$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "slightly smiling face"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "slightly smiling face")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "slightly smiling face")$prop` %). Finally, for the thumbs up emoji [`r emoji::emoji("thumbs up")`], $\chi^2$ (`r q1_chisq_thumb$parameter`) = `r round(q1_chisq_thumb$statistic, 2)`, *p* `r print_p(q1_chisq_thumb$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "thumbs up"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "thumbs up")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "thumbs up")$prop` %).
 
-# The Emotional Effect of Emojis
-
-##Renia and Meg - model and interactions for Q2
+# The Emotional Effect of Emojis (Renia & MegS)
 
 One of the main aims we address in this research is the investigation of factors influencing emotional valence. We fitted a multiple regression model to predict whether the type of emoji and the frequency of use of the emoji, as well as the age of the participants, has an effect on their emotional valence. We mean-centered age for interpretation of coefficients and intercepts.
 
 ```{r}
 # add interactions to address the aim that states "The researchers are interested in whether the age of the user also has an effect, although they are not sure whether the effect will be the same for all types of emoji."
+emoji_clean$em_cat <- relevel(emoji_clean$em_cat, "loudly crying face", "slightly smiling face")
 contrasts(emoji_clean$em_cat) <- "contr.sum"
 
-m2intq2 <- (lm(EVS ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean))
+m2intq2 <- lm(EVS ~ freq_emu + age_mc*em_cat, data = mutate(emoji_clean,
+                                                            age_mc = I(age-mean(age))))
 anova(m2intq2)
 summary(m2intq2)
-# plot interactions  
+
+m2intq2$coefficients[4]
+m2intq2$coefficients[5]
+- (m2intq2$coefficients[5] + m2intq2$coefficients[4])
+
+m2intq2$coefficients[6] + m2intq2$coefficients[4] + m2intq2$coefficients[1] + m2intq2$coefficients[3]
+
+m2intq2$coefficients[7]
+- (m2intq2$coefficients[6] + m2intq2$coefficients[7])
+
+m2intq2$coefficients[1] - (m2intq2$coefficients[5] + m2intq2$coefficients[4] +m2intq2$coefficients[6] + m2intq2$coefficients[7])
+augment(m2intq2, 
+        newdata = data.frame(freq_emu = c(0,0,0),
+                             age_mc = c(0,0,0, 1, 1, 1),
+                             em_cat = c("loudly crying face", 
+                                        "slightly smiling face",
+                                        "thumbs up",
+                                        "loudly crying face", 
+                                        "slightly smiling face",
+                                        "thumbs up")), 
+        interval="confidence")
 ```
 
 ```{r}
@@ -185,7 +211,6 @@ emmeans(m2intq2, pairwise ~ em_cat * I(age-mean(age)))$contrasts |>
   kable(digits = 3) |>
   kable_styling()
 ```
-
 
 # Accuracy of Emoji Interpretation
 
@@ -206,16 +231,8 @@ emoji_q3_analysis <- emoji_clean |>
 # sum-to-zero contrast applied to emoji category
 contrasts(emoji_q3_analysis$em_cat)<- "contr.sum"
 
-
 m1q3 <- glm(EI_bi ~ freq_emu + I(age-mean(age))*em_cat, data = emoji_q3_analysis, family = binomial)
-
-# Should we include these? just the estimated means
-
-emmean_q3 <- contrast(emmeans(m1q3, ~ em_cat))
-emmean_q3
 ```
-
-
 
 
 **Table x**
@@ -244,8 +261,9 @@ tab_model(m1q3,
           show.se = T) 
 ```
 
-
 Across emoji categories, the chance of correctly interpreting an emoji was. Which emoji was interpreted and emoji use frequency predicted no significant change in this likelihood. Age, on the other hand, reduced the predicted probability of correct interpretation; for each year above the sample mean, **xx**.
+
+
 
 # Appendix A: Supplementary Tables and Figures
 
@@ -276,6 +294,19 @@ emoji |>
     ) 
 ```
 
+**Table A2**
+\
+*Emoji Category Coding Scheme*
+
+```{r}
+e3 <- c(-1, -1, 0)
+e1 <- c(0,1,-1)
+e2 <- c(1,0,-1)
+kable(tibble(e1, e2, e3)) |> 
+  kable_styling()
+
+contrasts(emoji_clean$em_cat)
+```
 
 **Figure A x**
 \
