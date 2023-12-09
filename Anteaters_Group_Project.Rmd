@@ -23,7 +23,6 @@ library(emmeans)
 library(patchwork)
 library(MKinfer)
 
-
 # Download data
 source("https://edin.ac/4616rYu")
 get_my_data(group_name = "aggregating_anteaters")
@@ -111,40 +110,34 @@ geom_boxplot(width=0.1) + xlab("Operating system") + ylab("Frequency of emoji us
 qqnorm(emoji_clean$freq_emu) # make the plot
 qqline(emoji_clean$freq_emu)
 
+
+shapiro.test(emoji_clean$freq_emu) # greater than 0.05
+
 wilcox.test(freq_emu ~ opsys, data = filter(emoji_clean, opsys != "Windows"))
 #https://en.wikipedia.org/wiki/Mann%E2%80%93Whitney_U_test
 
 boot_t_test <- boot.t.test(freq_emu ~ opsys, data = filter(emoji_clean, opsys != "Windows"))
 ```
  
-Following this, we conducted a Welch two sample t-test to assess whether the mean frequency of emoji use was different between Android (*n* = `r nrow(filter(emoji_clean, opsys == "Android"))` ; *m* = `r round(q1t_test$estimate [1],1)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "Android")$freq_emu), 2)` and Apple users (*n* = `r nrow(filter(emoji_clean, opsys == "Apple"))`; *m* = `r round(q1t_test$estimate[2],2)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "Apple")$freq_emu), 2)`). There was a significant difference in emoji use among Android and Apple users, *t*(`r round(q1t_test$parameter,2)`) = `r round(q1t_test$statistic,2 )`, *p* `r print_p(q1t_test$p.value)`, two-tailed). Therefore, we reject the null hypothesis that there is no difference in emoji use between Apple and Android users. From these two mechanisms, we have concluded that there is a difference between the two operating systems.
+Following this, we conducted a Welch two sample t-test to assess whether the mean frequency of emoji use was different between Android (*n* = `r nrow(filter(emoji_clean, opsys == "Android"))` ; *m* = `r round(q1t_test$estimate [1],1)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "Android")$freq_emu), 2)` and Apple users (*n* = `r nrow(filter(emoji_clean, opsys == "Apple"))`; *m* = `r round(q1t_test$estimate[2],2)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "Apple")$freq_emu), 2)`). There was a significant difference in emoji use among Android and Apple users, *t*(`r round(q1t_test$parameter,2)`) = `r round(q1t_test$statistic,2 )`, *p* `r print_p(q1b_cortest$p.value)`, two-tailed).Therefore, we reject the null hypothesis that there is no difference in emoji use between Apple and Android users. From these two mechanisms, we have concluded that there is a difference between the two operating systems.
 
 ## Renia : Question 1b
 
 ```{r}
+
 q1b_cortest <- cor.test(emoji_clean$age, emoji_clean$freq_emu)
 
 mean_age <- mean(emoji_clean$age)
 sd_age <- (emoji_clean$age)
 mean_frq <- (emoji_clean$freq_emu)
 sd_frq <- (emoji_clean$freq_emu)
+
 ```
 
 Correlation test Interpretation
 
-A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of `r round(q1b_cortest$parameter,1)` individuals were included in the analysis, with a mean age of `r round(mean(emoji_clean$age),2 )` (*sd* = `r round(sd(emoji_clean$age),2 )`) and a mean frequency of use of emoji of `r round(mean(emoji_clean$freq_emu),2 )` (*sd* = `r round(sd(emoji_clean$freq_emu),2 )`).
+A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of `r count(emoji_clean)` individuals were included in the analysis, with a mean age of `r round(mean(emoji_clean$age),2 )` (*sd* = `r round(sd(emoji_clean$age),2 )`) and a mean frequency of use of emoji of `r round(mean(emoji_clean$freq_emu),2 )` (*sd* = `r round(sd(emoji_clean$freq_emu),2 )`).There was a strong negative correlation between age of an individual and the frequency of emoji use (*r* = `r round(q1b_cortest$estimate,2)`, *t*(`r round(q1b_cortest$parameter,1)`) = `r round(q1b_cortest$statistic,2)`), *p* print_p(q1b_cortest$p.value). We therefore reject the null hypothesis that there is no correlation between age and frequency of emoji use. Figure 1 provides a visualization of the relationship. 
 
-<<<<<<< Updated upstream
-=======
-There was a strong negative correlation between age of an individual and the frequency of emoji use (*r* = `r round(q1b_cortest$estimate,2)`, *t*(`r round(q1b_cortest$parameter,1)`) = `r round(q1b_cortest$statistic,2)`), *p* print_p(q1b_cortest$p.value). We therefore reject the null hypothesis that there is no correlation between age and frequency of emoji use. Figure 1 provides a visualization of the relationship. 
-
-```{r}
-emoji_clean |>
-  n()
-```
-
-
->>>>>>> Stashed changes
 ## Meg - 1c chisq tests and balance ----
 
 ```{r}
@@ -216,6 +209,12 @@ Finally, we address the research aim of what factors make participants more or l
 $$
 \log\left[ \frac {P(\operatorname{Emoji Interpretation} = \operatorname{correct})}{P(\operatorname{Emoji Interpretation} = \operatorname{incorrect})} \right] = \beta_0 + \beta_{1}(\operatorname{Emoji use frequency}) + \beta_{2}(\operatorname{Age_{mean-centered}}) + \beta_{3}·E_1 + \beta_{4}·E_2 + \beta_{5}(\operatorname{Age_{mean-centered}} \times \operatorname{E_1}) + \beta_{6}(\operatorname{Age_{mean-centered}} \times \operatorname{E_2})
 $$
+```{r}
+emmeans(m2intq2, pairwise ~ em_cat * I(age-mean(age)))$contrasts |>
+  kable(digits = 3) |>
+  kable_styling()
+```
+
 
 To answer the research question, we conduct the following tests. Firstly, an analysis of deviance is conducted using a $\chi^2$ test to test if each predictor significantly reduces model deviance. Secondly, we investigate the associated regression coefficients of significant predictors. We examine their direction and significance using z-tests ($\alpha$ = .05).
 
