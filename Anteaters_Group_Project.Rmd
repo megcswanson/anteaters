@@ -129,10 +129,11 @@ Following this, we conducted a Welch two sample t-test to assess whether the mea
 
 ```{r}
 #Testing normality
-qqnorm(emoji_clean$age) 
+c(emoji_clean$age) 
 qqline(emoji_clean$age)
 
-q1b_cortest <- cor.test(emoji_clean$age, emoji_clean$freq_emu)
+q1b_cortest <- cor.test(emoji_clean$age, emoji_clean$freq_emu, method = "spearman")
+q1b_cortest
 
 mean_age <- mean(emoji_clean$age)
 sd_age <- (emoji_clean$age)
