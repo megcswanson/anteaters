@@ -95,21 +95,25 @@ emoji_clean |>
 ##Q1A - T-test
 
 We explored whether there's a difference in the frequency of emoji use between Apple and Android users. We did this in two ways - we created violin plots, and conducted a Welch two sample t-test. 
- 
-From the violin plots below, we can see that the lower quartile and median of the two operating systems are very similar. However,  the upper quartile is higher and overall range is larger for Apple than Android. It seems that Apple users seem more likely to use a higher number of emojis per day. Android users however are more densely concentrated around the median. In the data set, we can see there is only one outlier - at 24 emojis per day for one Apple user.
 
-```{r t-test and violin plot}
-q1t_test <-t.test(freq_emu ~ opsys, data = filter(emoji_clean, opsys != "Windows"))
-
+```{r}
 emoji_clean |>
   filter(opsys !="Windows") |>
 ggplot(aes(x=opsys, y=freq_emu)) + geom_violin(alpha = 0.5) +
 geom_boxplot(width=0.1) + xlab("Operating system") + ylab("Frequency of emoji use (emoji/day)") +
   labs(title="Frequency of use depending on operating system")
 
+var_test <- var.test(freq_emu ~ opsys, filter(emoji_clean, opsys != "Windows"))
+```
+ 
+From the violin plots below, we can see that the lower quartile and median of the two operating systems are very similar. However, the upper quartile is higher and overall range is larger for Apple than Android, indicating unequal variance between the operating systems. It seems that Apple users are more likely to use a higher number of emojis per day. Android users however are more densely concentrated around the median. In the data set, we can see there is only one outlier - at 24 emojis per day for one Apple user. We conducted a F-test `r round(var_test$statistic,1)`, and further confirmed unequal variance. Due to unequal variance and sample size between between Android (*n* = `r nrow(filter(emoji_clean, opsys == "Android"))` and Apple users (*n* = `r nrow(filter(emoji_clean, opsys == "Apple"))`, we therefore conducted a Welch two sample t-test to test whether the groups were different in the frequency of emoji-use. 
+
+```{r t-test and violin plot}
+
+q1t_test <-t.test(freq_emu ~ opsys, data = filter(emoji_clean, opsys != "Windows"))
+
 qqnorm(emoji_clean$freq_emu) # make the plot
 qqline(emoji_clean$freq_emu)
-
 
 shapiro.test(emoji_clean$freq_emu) # greater than 0.05
 
@@ -117,13 +121,16 @@ wilcox.test(freq_emu ~ opsys, data = filter(emoji_clean, opsys != "Windows"))
 #https://en.wikipedia.org/wiki/Mann%E2%80%93Whitney_U_test
 
 boot_t_test <- boot.t.test(freq_emu ~ opsys, data = filter(emoji_clean, opsys != "Windows"))
+
 ```
- 
-Following this, we conducted a Welch two sample t-test to assess whether the mean frequency of emoji use was different between Android (*n* = `r nrow(filter(emoji_clean, opsys == "Android"))` ; *m* = `r round(q1t_test$estimate [1],1)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "Android")$freq_emu), 2)` and Apple users (*n* = `r nrow(filter(emoji_clean, opsys == "Apple"))`; *m* = `r round(q1t_test$estimate[2],2)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "Apple")$freq_emu), 2)`). There was a significant difference in emoji use among Android and Apple users, *t*(`r round(q1t_test$parameter,2)`) = `r round(q1t_test$statistic,2 )`, *p* `r print_p(q1b_cortest$p.value)`, two-tailed).Therefore, we reject the null hypothesis that there is no difference in emoji use between Apple and Android users. From these two mechanisms, we have concluded that there is a difference between the two operating systems.
+Following this, we conducted a Welch two sample t-test to assess whether the mean frequency of emoji use was different between Android (*n* = `r nrow(filter(emoji_clean, opsys == "Android"))` ; *m* = `r round(q1t_test$estimate [1],1)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "Android")$freq_emu), 2)` and Apple users (*n* = `r nrow(filter(emoji_clean, opsys == "Apple"))`; *m* = `r round(q1t_test$estimate[2],2)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "Apple")$freq_emu), 2)`). There was a significant difference in emoji use among Android and Apple users, *t*(`r round(q1t_test$parameter,2)`) = `r round(q1t_test$statistic,2 )`, *p* `r print_p(q1t_test$p.value)`, two-tailed).Therefore, we reject the null hypothesis that there is no difference in emoji use between Apple and Android users. From these two mechanisms, we have concluded that there is a difference between the two operating systems. 
 
 ## Renia : Question 1b
 
 ```{r}
+#Testing normality
+qqnorm(emoji_clean$age) 
+qqline(emoji_clean$age)
 
 q1b_cortest <- cor.test(emoji_clean$age, emoji_clean$freq_emu)
 
