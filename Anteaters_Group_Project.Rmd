@@ -136,9 +136,9 @@ sd_frq <- (emoji_clean$freq_emu)
 
 Correlation test Interpretation
 
-A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of `r count(emoji_clean)` individuals were included in the analysis, with a mean age of `r round(mean(emoji_clean$age),2 )` (*sd* = `r round(sd(emoji_clean$age),2 )`) and a mean frequency of use of emoji of `r round(mean(emoji_clean$freq_emu),2 )` (*sd* = `r round(sd(emoji_clean$freq_emu),2 )`).There was a strong negative correlation between age of an individual and the frequency of emoji use (*r* = `r round(q1b_cortest$estimate,2)`, *t*(`r round(q1b_cortest$parameter,1)`) = `r round(q1b_cortest$statistic,2)`), *p* print_p(q1b_cortest$p.value). We therefore reject the null hypothesis that there is no correlation between age and frequency of emoji use. Figure 1 provides a visualization of the relationship. 
+A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of `r count(emoji_clean)` individuals were included in the analysis, with a mean age of `r round(mean(emoji_clean$age),2 )` (*sd* = `r round(sd(emoji_clean$age),2 )`) and a mean frequency of use of emoji of `r round(mean(emoji_clean$freq_emu),2 )` (*sd* = `r round(sd(emoji_clean$freq_emu),2 )`).There was a strong negative correlation between age of an individual and the frequency of emoji use (*r* = `r round(q1b_cortest$estimate,2)`, *t*(`r round(q1b_cortest$parameter,1)`) = `r round(q1b_cortest$statistic,2)`), *p* `r print_p(q1b_cortest$p.value)`. We therefore reject the null hypothesis that there is no correlation between age and frequency of emoji use. Figure 1 provides a visualization of the relationship. 
 
-## Meg - 1c chisq tests and balance ----
+## Meg - 1c chisq tests and balance
 
 ```{r}
 p1 <- ggplot(data = filter(emoji_clean, opsys != "Windows"), aes(x = em_cat, fill = opsys))+
@@ -187,7 +187,7 @@ One of the main aims we address in this research is the investigation of factors
 
 ```{r}
 # add interactions to address the aim that states "The researchers are interested in whether the age of the user also has an effect, although they are not sure whether the effect will be the same for all types of emoji."
-emoji_clean$em_cat <- relevel(emoji_clean$em_cat, "loudly crying face", "slightly smiling face")
+
 contrasts(emoji_clean$em_cat) <- "contr.sum"
 
 m2intq2 <- lm(EVS ~ freq_emu + age_mc*em_cat, data = mutate(emoji_clean,
@@ -198,7 +198,7 @@ anova(m2intq2)
 thumbs up regression coef: `r round(-sum(m2intq2$coefficients[4:5]),2)` 
 interaction term: `r round(-sum(m2intq2$coefficients[6:7]),2) `
 
-# Accuracy of Emoji Interpretation
+# Accuracy of Emoji Interpretation (JMEP)
 
 *include*
 
@@ -209,12 +209,6 @@ Finally, we address the research aim of what factors make participants more or l
 $$
 \log\left[ \frac {P(\operatorname{Emoji Interpretation} = \operatorname{correct})}{P(\operatorname{Emoji Interpretation} = \operatorname{incorrect})} \right] = \beta_0 + \beta_{1}(\operatorname{Emoji use frequency}) + \beta_{2}(\operatorname{Age_{mean-centered}}) + \beta_{3}·E_1 + \beta_{4}·E_2 + \beta_{5}(\operatorname{Age_{mean-centered}} \times \operatorname{E_1}) + \beta_{6}(\operatorname{Age_{mean-centered}} \times \operatorname{E_2})
 $$
-```{r}
-emmeans(m2intq2, pairwise ~ em_cat * I(age-mean(age)))$contrasts |>
-  kable(digits = 3) |>
-  kable_styling()
-```
-
 
 To answer the research question, we conduct the following tests. Firstly, an analysis of deviance is conducted using a $\chi^2$ test to test if each predictor significantly reduces model deviance. Secondly, we investigate the associated regression coefficients of significant predictors. We examine their direction and significance using z-tests ($\alpha$ = .05).
 
@@ -232,6 +226,15 @@ ano_q3 <- anova(m1q3, test = "Chisq") |>
          Deviance = ifelse(is.na(Deviance) == T, "", round(Deviance,2)),
          p.value = ifelse(is.na(p.value) == T, "", ifelse(p.value < 0.001, "< 0.001", round(p.value,3)))
          )
+
+q3_plotdata1 <- tibble(
+  "I(age-mean(age))" = seq(min(emoji_clean$age), max(emoji_clean$age), 1),
+  em_cat = rep(unique(emoji_clean$em_cat), 15)
+)
+
+q3_plotdata2 <- tibble(
+  freq_emu = seq(min(emoji_clean$freq_emu), max(emoji_clean$freq_emu), 1)
+)
 ```
 
 The model fit had residuals of reasonable size (see Figure Ax), suggesting that no assumptions were violated 
@@ -286,6 +289,9 @@ tab_model(m1q3,
 
 Across emoji categories, the chance of correctly interpreting an emoji was. Which emoji was interpreted and emoji use frequency predicted no significant change in this likelihood. Age, on the other hand, reduced the predicted probability of correct interpretation; for each year above the sample mean, **xx**.
 
+```{r}
+
+```
 
 
 # Appendix A: Supplementary Tables and Figures
@@ -322,13 +328,7 @@ emoji |>
 *Emoji Category Coding Scheme*
 
 ```{r}
-e3 <- c(-1, -1, 0)
-e1 <- c(0,1,-1)
-e2 <- c(1,0,-1)
-kable(tibble(e1, e2, e3)) |> 
-  kable_styling()
-
-contrasts(emoji_clean$em_cat)
+kable(contrasts(emoji_clean$em_cat), col.names = c("E1", "E2"))
 ```
 
 **Figure A x**
