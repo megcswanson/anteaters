@@ -217,13 +217,13 @@ For each emoji category, we found no significant difference between the observed
 * plot commentary
 * check assumptions
 * check for multicolinearity (vif)
-* check for influential values (cooks distances + inf matrix)
-* write up analysis
-* add interaction plot + comment
+* check for influential values (cooks distances + inf matrix) - Meg - i've started writing up cooks distances analysis
+* write up analysis - Meg - i've written up the model but please check
+* add interaction plot + comment - Meg - interaction plot has been added but I need some help on what (if anything) I need to comment on 
 
-One of the main aims we address in this research is the investigation of factors influencing emotional valence. We fitted a multiple regression model to predict whether the type of emoji and the frequency of use of the emoji, as well as the age of the participants, has an effect on their emotional valence. We mean-centered age for interpretation of coefficients and intercepts.
+One of the main aims we address in this research is the investigation of factors influencing emotional valence. We fitted a multiple regression model to predict whether the type of emoji and the frequency of use of the emoji, as well as the age of the participants, has an effect on their emotional valence. We mean-centered age for interpretation of coefficients and intercepts. We additionally used sum-to-zero contrasting for this linear regression model, as there is no intuitive reference level between in the emoji categories. The interaction coefficients in this model refer to the movement between the overall grand mean, represented by the intercept coefficient (*b* = -1.80), and the different emoji categories.
 
-```{r linear model}
+```{r linear model, echo=FALSE, include=FALSE}
 # add interactions to address the aim that states "The researchers are interested in whether the age of the user also has an effect, although they are not sure whether the effect will be the same for all types of emoji."
 
 contrasts(emoji_clean$em_cat) <- "contr.sum"
@@ -232,27 +232,45 @@ contrasts(emoji_clean$em_cat) <- "contr.sum"
 m2intq2 <- (lm(EVS ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean))
 anova(m2intq2)
 summary(m2intq2)
+
+plot(m2intq2,which=4)
+# 13, 175 and 2 are outliers
+# cook's distance: 
+plot(cooks.distance(m2intq2),type="b",pch=18)
+
+```
+
+In this model, we evaluated the effect of the frequency of emoji use, age, and emoji category on the emotional valence score. The emoji category was found to not be a significant influence on the EVS (*p*> 0.05), and the interaction between age and emoji category was also found to be non-significant (*p*> 0.05). However, both the frequency of emoji use and the age of the participant were found to be significant (*p*< 0.001 and *p*< 0.05, respectively). An analysis of variance on this model fit indicated that the full model including the frequecy of emoji use, age, emoji category, and the interaction between age and emoji category explained 32% (adjusted *R*^2^) of the variance in emotional valence scores. 
+
+Cook's distance was also computed to determine which, if any, data points contributed undue influence on this model. The threshold for this determination was given by $4/(N-k-1)$, in which *N* is the number of observations and *k* is the number of predictors. Given this threshold of 0.017, it was determined that 
+
+
+```{r q2-interaction-plot}
 # plot interactions 
 p2 <- interactions::interact_plot(m2intq2, pred = "age", modx = "em_cat", interval = TRUE, x.label = "Age", y.label = "Emotional Valence Score", main.title = "The interaction of Age and Emoji Category on the EVS", legend.main = "Emoji Category")
 p2
+```
 
+The interactions in the linear model between age and emoji category were plotted. Across all emoji categories, there were no statistically significant interactions between category and age. For the interaction between the 'loudly crying emoji' [`r emoji::emoji("loudly crying face")`] and age, 
+
+```{r anova-linear-regression, echo=FALSE}
 m2intq2 <- lm(EVS ~ freq_emu + age_mc*em_cat, data = mutate(emoji_clean,
                                                             age_mc = I(age-mean(age))))
 ano_q2 <- anova(m2intq2)
 
 ```
 
+
+
 thumbs up regression coef: `r round(-sum(m2intq2$coefficients[4:5]),2)` 
 interaction term: `r round(-sum(m2intq2$coefficients[6:7]),2) `
 
-```{r}
+```{r estimated-means, echo=FALSE}
 # estimated means
-emmeans(m2intq2, pairwise ~ em_cat * I(age-mean(age)))$contrasts |>
+library(emmeans)
+emmeans(m2intq2, pairwise ~ em_cat * age_mc)$contrasts |>
   kable(digits = 3) |>
   kable_styling()
-
-# meg does mean calculations ew
-coef(m2intq2)
 ```
 
 
