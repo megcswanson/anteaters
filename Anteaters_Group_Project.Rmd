@@ -22,6 +22,7 @@ library(kableExtra)
 library(patchwork)
 library(MKinfer)
 library(RColorBrewer)
+library(emmeans)
 
 # Download data ----
 source("https://edin.ac/4616rYu")
@@ -245,15 +246,14 @@ thumbs up regression coef: `r round(-sum(m2intq2$coefficients[4:5]),2)`
 interaction term: `r round(-sum(m2intq2$coefficients[6:7]),2) `
 
 ```{r}
-# estimated means
-emmeans(m2intq2, pairwise ~ em_cat * I(age-mean(age)))$contrasts |>
-  kable(digits = 3) |>
-  kable_styling()
+# estimated means - doesn't run and we prob shouldn't include these
+#emmeans(m2intq2, pairwise ~ em_cat * I(age-mean(age)))$contrasts |>
+#  kable(digits = 3) |>
+#  kable_styling()
 
 # meg does mean calculations ew
 coef(m2intq2)
 ```
-
 
 
 # Accuracy of Emoji Interpretation (Julie)
@@ -325,14 +325,12 @@ p_freq <- ggplot(emoji_clean, aes(x = freq_emu))+
 
 ```
 
-Given the binary outcome (correct vs. incorrect interpretation; see Figure \@ref(fig:q3-desc-plots)F), we fitted a multiple logistic regression model using maximum likelihood estimation, which will estimate the change in log-odds for correct interpretation for each predictor. We included the predictors as outlined above and as in the earlier model (see The Emotional Effect of Emoji). Like the previous model, we mean-centered age so that the log-odds of the intercept are estimated at the mean age of the sample rather than extrapolated to age 0. Secondly, we used treatment coding (exact contrast coding in Table \@ref(tab:cat-code-tab-q3) in the Appendix) for the Emoji category since the three different kinds of Emoji had no intuitive reference group. In this way, the two regression coefficients for Emoji category would be the difference between the mean log-odds of correct interpretation across Emoji categories and the Emoji-specific mean log-odds for the loudly crying face Emoji and the thumbs up Emoji. We specifically chose to include these two categories due to the seemingly lower age for correctly interpreting the thumbs up Emoji. Thus, we fitted a model where the intercept was the log-odds of correctly interpreting an Emoji averaged across the different categories for a mean-aged participant reporting using 0 Emoji per day. This model has the following regression equation (note, E1 and E2 refers to the sum-to-zero coding in Table \@ref(tab:cat-code-tab-q3) in the Appendix):
-
+Given the binary outcome (correct vs. incorrect interpretation; see Figure \@ref(fig:q3-desc-plots)F), we fitted a multiple logistic regression model using maximum likelihood estimation. This will estimate the change in log-odds for correct interpretation for each predictor (see eq. \@ref(eq:q3-model)). We included the predictors as outlined above and as in the earlier model (see The Emotional Effect of Emoji). Like the previous model, we mean-centered age so that the log-odds of the intercept are estimated at the mean age of the sample rather than extrapolated to age 0. Secondly, we used treatment coding (exact contrast coding in Table \@ref(tab:cat-code-tab-q3) in the Appendix) for the Emoji category since the three different kinds of Emoji had no intuitive reference group. In this way, the two regression coefficients for Emoji category would be the difference between the mean log-odds of correct interpretation across Emoji categories and the Emoji-specific mean log-odds for the loudly crying face Emoji and the thumbs up Emoji. We specifically chose to include these two categories due to the seemingly lower age for correctly interpreting the thumbs up Emoji. Thus, we fitted a model where the intercept was the log-odds of correctly interpreting an Emoji averaged across the different categories for a mean-aged participant reporting using 0 Emoji per day. Equation \@ref(eq:q3-model) (note, E1 and E2 refers to the sum-to-zero coding in Table \@ref(tab:cat-code-tab-q3) in the Appendix):
 
 \begin{align}
-\log\left[ \frac {P(Correct)}{P(Incorrect)} \right] = \hat\beta_0 + \hat\beta_{1}·(Frequency) + \hat\beta_{2}(Age) + \hat\beta_{3}·E_{1[thumbs \ up]} + \hat\beta_{4}·E_{2[loudly\ crying]} + \hat\beta_{5}·(Age · E_{1[thumbs \ up]})\\ 
-& \hat\beta_{6}·(Age · E_{2[loudly\ crying]}) + \varepsilon_{i} (\#eq:q3-model)
+\log[ \frac {P(Correct)}{P(Incorrect)}] = & \ \hat\beta_0 + \hat\beta_{1}(Frequency) + \hat\beta_{2}(Age) + \hat\beta_{3}E_{1[thumbs \ up]} + \hat\beta_{4}E_{2[loudly\ crying]} \ + \\ 
+& \hat\beta_{5}(Age · E_{1[thumbs \ up]}) + \hat\beta_{6}(Age · E_{2[loudly\ crying]}) + \varepsilon_{i} (\#eq:q3-model)
 \end{align} 
-
 
 We conducted the following tests to address the research question of which factors are associated with more or less likelihood of correctly interpreting the tested Emoji. Firstly, an analysis of deviance was conducted using likelihood ratio tests to test if each predictor significantly reduced model deviance. Secondly, we investigated the associated regression coefficients to elucidate the direction of association. We examined each regression coefficient, its direction, range with 95 % confidence intervals, and significance with *z*-tests ($H_0: \hat\beta_i \neq 0$; $\alpha$ = .05). We also estimated these for slightly smiling face Emoji category ($\hat\beta_0-(\hat\beta_3+\hat\beta_4)$) and its interaction with age ($\hat\beta_0-(\hat\beta_5+\hat\beta_6)$). Before examining the model, we verified that the model fit did not violate assumptions of logistic regression by inspecting the standardised deviance residuals (a priori criterion range: $|standardised \ deviance \ residual| ≤ 3$; see Figure \@ref(fig:q3-stand-dev-res-plot)).
 
