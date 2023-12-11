@@ -216,8 +216,10 @@ For each emoji category, we found no significant difference between the observed
 * generate relevant plots
 * plot commentary
 * check assumptions
-* check for multicolinearity
-* check for influential values
+* check for multicolinearity (vif)
+* check for influential values (cooks distances + inf matrix)
+* write up analysis
+* add interaction plot + comment
 
 One of the main aims we address in this research is the investigation of factors influencing emotional valence. We fitted a multiple regression model to predict whether the type of emoji and the frequency of use of the emoji, as well as the age of the participants, has an effect on their emotional valence. We mean-centered age for interpretation of coefficients and intercepts.
 
@@ -413,7 +415,7 @@ ano_q3 |>
                       "p-value"),
         caption = "Emoji Interpretation: Analysis of Deviance Table",
         booktabs = T) |> 
-  kable_styling()
+  kable_styling(htmltable_class = "lightable-classic")
 ```
 
 As shown in Table \@ref(tab:q3-dev-tab),  
@@ -447,7 +449,7 @@ Across emoji categories, the chance of correctly interpreting an emoji was. Whic
 
 Due to the linear transformation of the logistic regression model, the increase in probability of correctly interpreting an Emoji is not constant across its predictors (only the log-odds have this attribute). Figure \@ref(fig:q3-model-plots)A visualises the change in predicted probability of correctly interpreting the loudly crying emoji for the mean age across the reported range of frequency of Emoji use. Figure \@ref(fig:q3-model-plots)B provides the a similar visualisation across the sample age range for each Emoji category holding frequency of Emoji use at 0.
 
-```{r q3-model-plots, fig.cap="Predicted Probability of Correct Emoji Interpretation for (A) Emoji Use Frequency and (B) Age for Each Emoji Tested"}
+```{r q3-model-plots, fig.cap="Predicted Probability of Correct Emoji Interpretation for (A) Emoji Use Frequency and (B) Age for Each Emoji Tested", fig.height= 4, fig.width=9, fig.align='center'}
 q3_p1|q3_p2
 ```
 
@@ -458,15 +460,20 @@ q3_p1|q3_p2
 ```{r exclude} 
 excl_tab |>
   mutate(opsys = factor(opsys, labels = c("Android", "Apple"))) |>
-  kable(col.names = c("Name", "Age", "Operating system", "Emoji use frequency", "Emoji category", "Emotional valence score", "Emoji Interpretation", "Reason for exlcusion")) |> 
-  kable_styling()
+  kable(col.names = c("Name", "Age", "Operating system", "Emoji use frequency",
+                      "Emoji category", "Emotional valence score",
+                      "Emoji Interpretation", "Reason for exlcusion"),
+        caption = "Excluded Observations",
+        booktabs = T) |> 
+  kable_styling(htmltable_class = "lightable-classic")
 ```
 
 ```{r ini-pairs-panels, fig.cap="Marginal Distributions and Between-Variable Relationships for Pre-Processed Data", fig.width=11,fig.height=16}
 emoji |> 
   select("age", "EVS", "freq_emu", "em_cat", "EI", "opsys") |>
   mutate(em_cat = factor(em_cat, labels = c("Cry", "Smile", "Thumbs", "Upside-down"))) |>
-  ggpairs(columnLabels = c("Age", "Emotional Valence Score", "Frequency of Emoji Use", "Emoji Category", "Emoji Interpretation", "Operating System")
+  ggpairs(columnLabels = c("Age", "Emotional Valence Score", "Frequency of Emoji Use", 
+                           "Emoji Category", "Emoji Interpretation", "Operating System")
     ) 
 ```
 
@@ -482,7 +489,11 @@ emoji |>
 kable(contrasts(emoji_clean$em_cat), col.names = c("E1", "E2"), 
       caption = "Emoji Category Treatment Contrast Coding Scheme",
       booktabs = T) |>
-  kable_styling(full_width = T)
+  kable_styling(htmltable_class = "lightable-classic", full_width = T)
+```
+
+```{r}
+plot(m2intq2,which = 2)
 ```
 
 ## Accuracy of Emoji Interpretation
@@ -491,7 +502,7 @@ kable(contrasts(emoji_clean$em_cat), col.names = c("E1", "E2"),
 kable(contrasts(emoji_q3_analysis$em_cat), col.names = c("E1", "E2"), 
       caption = "Emoji Category Treatment Contrast Coding Scheme",
       booktabs = T) |>
-  kable_styling(full_width = T)
+  kable_styling(htmltable_class = "lightable-classic", full_width = T)
 ```
 
 ```{r q3-stand-dev-res-plot, fig.cap= "Standardised Deviance Residuals for Logistic Regression Model"}
@@ -499,13 +510,27 @@ p_stand <- plot(rstandard(m1q3, type = 'deviance'),ylab = 'Standardised Deviance
 ```
 
 ```{r vif-q3}
-kable(car::vif(m1q3)[,1:2]) %>%
-  kable_styling()
+vif_q3 <- car::vif(m1q3)[,1:2]
+
+rownames(vif_q3) <-c("Emoji use frequency","Age","Emoji category","Age:Emoji category")
+
+kable(vif_q3, digits = 2) |>
+  kable_styling(htmltable_class = "lightable-classic")
 ```
 
 ```{r q3-cooks-plot, fig.cap= "Cook's Distances for Logistic Regression Model"}
 plot(m1q3, which=4) 
 ```
+
+```{r}
+infl_q3 <-influence.measures(m1q3)$infmat 
+
+infl_q3[c(218, 75, 13),]
+emoji_q3_analysis[c(218, 75, 13),]
+
+
+```
+
 
 ```{r sensitivity analysis}
  
