@@ -187,19 +187,22 @@ m2intq2 <- (lm(EVS ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean))
 anova(m2intq2)
 summary(m2intq2)
 # plot interactions 
-plotdat <- expand_grid(
-  EVS = -0.03:37, 
-  em_cat = c("loudly crying", "slightly smiling", "thumbs up")
-)
-p2 <- interactions::interact_plot(m2intq2, pred = "age", modx = "em_cat", interval = TRUE)
+p2 <- interactions::interact_plot(m2intq2, pred = "age", modx = "em_cat", interval = TRUE, x.label = "Age", y.label = "Emotional Valence Score", main.title = "The interaction of Age and Emoji Category on the EVS", legend.main = "Emoji Category")
 p2
 ```
 
 
 ```{r}
+# estimated means
 emmeans(m2intq2, pairwise ~ em_cat * I(age-mean(age)))$contrasts |>
   kable(digits = 3) |>
   kable_styling()
+
+# meg does mean calculations ew
+coef(m2intq2)
+
+
+
 ```
 
 
@@ -311,6 +314,8 @@ arm::binnedplot(fitted(m1q3),
 plot(rstandard(m1q3, type = 'deviance'),ylab = 'Studentized Deviance Residuals')
 ```
 #Exam Numbers: "B155926, B239086, B239979, B244840, B246814"
+
+# Assumptions for Interaction model and Logistic Regression model
 
 # Notes for report (to be deleted)
 
