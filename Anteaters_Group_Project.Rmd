@@ -85,7 +85,7 @@ excl_tab <- emoji |>
   filter(exclusion_reason != "not excluded")
 ```
 
-Before describing the data, we conducted some initial checks to ensure that all observations were entered within their possible ranges (for continuous variables) or levels (for categorical variables). We used some initial visualisations of the marginal distributions and relationships amongst the variables to find these impossible values (see Figure \@ref(fig:ini-pairs-panels) for these for the pre-processed data in the Appendix). We excluded impossible values along with any observation containing missing data (N~excluded~ = `r nrow(excl_tab)`). Table \@ref(tab:exclude) in the Appendix provides an overview of these excluded data points and the reason for exclusion. Additionally, the spelling of "Apple" was corrected in the operating system entry of `r nrow(filter(emoji, opsys=="appple"))` observations from "Appple".
+Before describing the data, we conducted some initial checks to ensure that all observations were entered within their possible ranges (for continuous variables) or levels (for categorical variables). We used some initial visualisations of the marginal distributions and relationships amongst the variables to find these impossible values (see Figure \@ref(fig:ini-pairs-panels) for these for the pre-processed data in the Appendix). We excluded impossible values along with any observation containing missing data (N~excluded~ = `r nrow(excl_tab)`). Table \@ref(tab:exclude) in the Appendix provides an overview of these excluded data points and the reason for exclusion. Additionally, the spelling of 'Apple' was corrected in the operating system entry of `r nrow(filter(emoji, opsys=="appple"))` observations from 'Appple'.
 
 # Data Description
 
@@ -519,8 +519,23 @@ emoji |>
 ## Data Description
 
 ```{r qq-plot-freq, fig.cap="QQPlot"}
-qqnorm(emoji_clean$freq_emu)
-qqline(emoji_clean$freq_emu)
+emoji_qq1 <- emoji_clean|>
+  filter(opsys=="Apple")
+
+qqnorm(
+       main = "Normal Q-Q Plot: Apple",
+       emoji_qq1$freq_emu)
+qqline(emoji_qq1$freq_emu)
+
+```
+```{r}
+emoji_qq2 <- emoji_clean|>
+  filter(opsys=="Android")
+
+qqnorm(
+  main = "Normal Q-Q Plot: Android",
+  emoji_qq2$freq_emu)
+qqline(emoji_qq2$freq_emu)
 ```
 
 ## The Emotional Effect of Emojis
