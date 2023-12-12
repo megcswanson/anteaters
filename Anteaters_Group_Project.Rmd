@@ -154,7 +154,11 @@ q1b_cor_boot<- confint(car::Boot(lm(scale(age)~scale(freq_emu), data = emoji_cle
 
 Correlation test Interpretation
 
+
 A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of `r nrow(emoji_clean)` individuals were included in the analysis, with a mean age of `r round(mean(emoji_clean$age),2 )` (*sd* = `r round(sd(emoji_clean$age),2)`) and a mean frequency of use of emoji of `r round(mean(emoji_clean$freq_emu),2)` (*sd* = `r round(sd(emoji_clean$freq_emu),2)`).There was a strong negative correlation between age of an individual and the frequency of emoji use (*r* = `r round(q1b_cortest$estimate,2)`, *t*(`r round(q1b_cortest$parameter,1)`) = `r round(q1b_cortest$statistic,2)`), *p* `r print_p(q1b_cortest$p.value)`. We therefore reject the null hypothesis that there is no correlation between age and frequency of emoji use. Figure 1 provides a visualization of the relationship. 
+
+A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of `r nrow(emoji_clean)` individuals were included in the analysis, with a mean age of `r round(mean(emoji_clean$age),2 )` (*sd* = `r round(sd(emoji_clean$age),2 )`) and a mean frequency of use of emoji of `r round(mean(emoji_clean$freq_emu),2 )` (*sd* = `r round(sd(emoji_clean$freq_emu),2 )`).There was a strong negative correlation between age of an individual and the frequency of emoji use (*r* = `r round(q1b_cortest$estimate,2)`, *t*(`r round(q1b_cortest$parameter,1)`) = `r round(q1b_cortest$statistic,2)`), *p* `r print_p(q1b_cortest$p.value)`. We therefore reject the null hypothesis that there is no correlation between age and frequency of emoji use. \@ref(fig:cor-plot) provides a visualization of the relationship. 
+
 
 ## Balance of Users of Operating Systems for Emoji Categories (Meg and Julie)
 
@@ -262,12 +266,12 @@ interaction term: `r round(-sum(m2intq2$coefficients[6:7]),2) `
 
 ```{r}
 # estimated means
-emmeans(m2intq2, pairwise ~ em_cat * I(age-mean(age)))$contrasts |>
-  kable(digits = 3) |>
-  kable_styling()
+#emmeans(m2intq2, pairwise ~ em_cat * I(age-mean(age)))$contrasts |>
+  #kable(digits = 3) |>
+  #kable_styling()
 
 # meg does mean calculations ew
-coef(m2intq2)
+#coef(m2intq2)
 ```
 
 
