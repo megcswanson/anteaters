@@ -93,7 +93,7 @@ Before describing the data, we conducted some initial checks to ensure that all 
 
 We explored whether there's a difference in the frequency of emoji use between Apple and Android users. We did this in two ways - we created violin plots, and conducted a Welch two sample t-test. 
 
-From Figure \@ref(fig:q1b-violin-plot), we can see that the lower quartile and median of the two operating systems are very similar. However,  the upper quartile is higher and overall range is larger for Apple than Android. It seems that Apple users seem more likely to use a higher number of emojis per day. Android users, however, are more densely concentrated around the median. There are only a couple of unusually high values at 24 emojis per day for one Apple user.
+From Figure \@ref(fig:q1b-violin-plot), we can see that the lower quartile and median of the two operating systems are very similar. However,  the upper quartile is higher and overall range is larger for Apple than Android. It seems that Apple users seem more likely to use a higher number of emojis per day. Android users, however, are more densely concentrated around the median. There are only three  unusually high values at 24 emojis per day, which are all reported by Apple users.
 
 ```{r q1b-violin-plot, fig.cap="Frequency of Emoji Use on Apple and Android Operating System", fig.align='center', fig.height = 3.3}
 emoji_clean |>
@@ -169,7 +169,6 @@ Correlation test Interpretation
 
 The Spearman's rank correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of `r nrow(emoji_clean)` individuals were included in the analysis, with a mean age of `r round(mean(emoji_clean$age),2 )` (*sd* = `r round(sd(emoji_clean$age),2 )`) and a mean frequency of use of emoji of `r round(mean(emoji_clean$freq_emu),2 )` (*sd* = `r round(sd(emoji_clean$freq_emu),2 )`).There was a strong negative correlation between age of an individual and the frequency of emoji use (*R* = `r round(q1b_cortest_np$estimate,2)`, *S*(`r round(q1b_cortest_np$parameter,1)`) = `r round(q1b_cortest_np$statistic,2)`), *p* < `r print_p(q1b_cortest_np$p.value)`. We therefore reject the null hypothesis that there is no correlation between age and frequency of emoji use. \@ref(fig:cor-plot) provides a visualization of the relationship. 
 
-
 ## Balance of Users of Operating Systems for Emoji Categories (Meg and Julie)
 
 **To do**
@@ -222,7 +221,7 @@ prop <- emoji_clean |>
     prop = round(n/total_n*100,2)) 
 ```
 
-For each emoji category, we found no significant difference between the observed proportions of Apple and Android users, and a hypothesised set of equal proportions. For loudly crying face emoji [`r emoji::emoji("loudly crying face")`], $\chi^2$ (`r q1_chisq_cry$parameter`) = `r round(q1_chisq_cry$statistic, 2)`, *p* `r print_p(q1_chisq_cry$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Loudly crying face"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Loudly crying face")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "Loudly crying face")$prop` %). For the slightly smiling face  emoji [`r emoji::emoji("slightly smiling face")`],  $\chi^2$ (`r q1_chisq_smile$parameter`) = `r round(q1_chisq_smile$statistic, 2)`, *p* `r print_p(q1_chisq_smile$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Slightly smiling face"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Slightly smiling face")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "Slightly smiling face")$prop` %). Finally, for the thumbs up Emoji [`r emoji::emoji("thumbs up")`], $\chi^2$ (`r q1_chisq_thumb$parameter`) = `r round(q1_chisq_thumb$statistic, 2)`, *p* `r print_p(q1_chisq_thumb$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Thumbs up"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Thumbs up")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "Thumbs up")$prop` %). Thus, we found no evidence of imbalance of users of Apple and Android operated phones in each emoji category.
+For each emoji category, we found no significant difference between the observed proportions of Apple and Android users, and a hypothesised set of equal proportions. For loudly crying face emoji [`r emoji::emoji("loudly crying face")`], $\chi^2$ (`r q1_chisq_cry$parameter`) = `r round(q1_chisq_cry$statistic, 2)`, *p* `r print_p(q1_chisq_cry$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Loudly crying face"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Loudly crying face")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "Loudly crying face")$prop` %). For the slightly smiling face  emoji [`r emoji::emoji("slightly smiling face")`],  $\chi^2$ (`r q1_chisq_smile$parameter`) = `r round(q1_chisq_smile$statistic, 2)`, *p* `r print_p(q1_chisq_smile$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Slightly smiling face")`), *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Slightly smiling face")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "Slightly smiling face")$prop` %). Finally, for the thumbs up Emoji [`r emoji::emoji("thumbs up")`], $\chi^2$ (`r q1_chisq_thumb$parameter`) = `r round(q1_chisq_thumb$statistic, 2)`, *p* `r print_p(q1_chisq_thumb$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Thumbs up"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Thumbs up")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "Thumbs up")$prop` %). Thus, we found no evidence of imbalance of users of Apple and Android operated phones in each emoji category.
 
 # The Emotional Effect of Emojis (Renia & Meg)
 
@@ -235,58 +234,45 @@ For each emoji category, we found no significant difference between the observed
 * write up analysis
 * add interaction plot + comment
 
-One of the main aims we address in this research is the investigation of factors influencing emotional valence. We fitted a multiple regression model to predict whether the type of emoji and the frequency of use of the emoji, as well as the age of the participants, has an effect on their emotional valence. We mean-centered age for interpretation of coefficients and intercepts.
+One of the main aims we address in this research is the investigation of factors influencing emotional valence. We fitted a multiple regression model to predict whether the frequency of use of the emoji, the type of emoji, as well as the age of the participants, and the interaction between age and emoji categoyr has an effect on their emotional valence. We mean-centered age and scaled the emotional valence score for interpretation of coefficients and intercepts.
+
+Prior to conducting our analyses, we assessed whether the assumptions for conducting a linear model were met. Model residuals seemed normally distributed \@ref(fig:q3-residuals). Despite a significant Shapiro-Wilks (*W* = `r round(shapiro_wilks_int$statistic,2)`, *p* `r print_p(shapiro_wilks_int$p.value)`, this was not particularly problematic due to the large sample size of the study (`r nrow(emoji_clean)`). Visual inspection of Scale Location (ncvTest_int) showed a straight line, but  datapoints were not evenly spread out. Furthermore, the Breusch-Pagan test were significant ($\chi^2$ (`r (ncvTest_int$Df)`) = `r round(ncvTest_int$ChiSquare,2)`, *p* `r print_p(ncvTest_int$p)`, which might also not be a problem due to... Given the previously found strong correlation between age and frequency of emoji use, we checked for multicollinarity between the variables. Multicollinarity did not seem to be a problem, as all GVIF were <5 \@ref(fig:q3-vif). We furthermore conducted a Cooks Distance analysis and identified three outliers \@ref(fig:q3-vif). The threshold for this determination was given by $4/(N-k-1)$, in which *N* is the number of observations and *k* is the number of predictors. Given this threshold of 0.017, it was determined that we should exclude three observations and fit a new model without them. 
 
 ```{r linear model}
-# add interactions to address the aim that states "The researchers are interested in whether the age of the user also has an effect, although they are not sure whether the effect will be the same for all types of emoji."
 
-contrasts(emoji_clean$em_cat) <- "contr.sum"
-
-m2intq2 <- (lm(EVS ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean))
+m2intq2 <- (lm(scale(EVS) ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean))
 anova(m2intq2)
 summary(m2intq2)
 
 plot(m2intq2,which=4)
 # 13, 175 and 2 are outliers
 # cook's distance: may need to include plot in appendix
-
-
+summary(influence.measures(m2intq2))
 ```
 
-In this model, we evaluated the effect of the frequency of emoji use, age, and emoji category on the emotional valence score. The emoji category was found to not be a significant influence on the EVS (*p*> 0.05), and the interaction between age and emoji category was also found to be non-significant (*p*> 0.05). However, both the frequency of emoji use and the age of the participant were found to be significant (*p*< 0.001 and *p*< 0.05, respectively). An analysis of variance on this model fit indicated that the full model including the frequecy of emoji use, age, emoji category, and the interaction between age and emoji category explained 32% (adjusted *R*^2^) of the variance in emotional valence scores. 
-
-Cook's distance was also computed to determine which, if any, data points contributed undue influence on this model. The threshold for this determination was given by $4/(N-k-1)$, in which *N* is the number of observations and *k* is the number of predictors. Given this threshold of 0.017, it was determined that we should exclude three observations and fit a new model without them. 
-
 ```{r q2 sensitivity analysis}
-m2intq2_sensitivity <- (lm(EVS ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean[-c(2,13,175), ]))
-anova(m2intq2_sensitivity)
+m2intq2_sensitivity <- (lm(scale(EVS) ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean[-c(2,13,175), ]))
+anova_sense <- anova(m2intq2_sensitivity)
 summary(m2intq2_sensitivity)
 ```
 
-```{r q2-interaction-plot}
+```{r anova-sense}
+anova_sense
+```
 
+```{r tab-model}
+tab_model(m2intq2, m2intq2_sensitivity, title = "(\\#tab-model) Linear Regression Model")
+```
+An analysis of variance was conducted on the model that excluded the three outlying values. This analysis indicated that frequency of emoji use was a significant predictor of the emotional valence score (*p*<0.001), and the interaction between age and emoji category was also found to be a significant predictor (*p*<0.001). This model explained 46% (adjusted *R^2^*) of the variance within the data.
+
+Prior to removing the three values that were shown to have undue influence on the model fit, we fit a model including all values present in the dataset. The two models are compared in \@ref(tab:tab-model). When the three influential values were removed, the interaction between all three categories of emoji and age reached significance (*p~slightly_smiling~* <0.001, *p~thumbs_up~* <0.001, *p~loudly_crying~* <0.001). These interactions are plotted in \@ref(fig:q2-interaction-plot). Additionally, the refitted model explained 14% more of the variance in the data. 
+
+```{r q2-interaction-plot, fig.cap="The interaction of Age and Emoji Category on the EVS"}
 # plot interactions 
-p2 <- interactions::interact_plot(m2intq2, pred = "age", modx = "em_cat", interval = TRUE, x.label = "Age", y.label = "Emotional Valence Score", main.title = "The interaction of Age and Emoji Category on the EVS", legend.main = "Emoji Category")
+p2 <- interactions::interact_plot(m2intq2_sensitivity, pred = "age", modx = "em_cat", interval = TRUE, x.label = "Age", y.label = "Emotional Valence Score", legend.main = "Emoji Category")
 p2
-
-m2intq2 <- lm(EVS ~ freq_emu + age_mc*em_cat, data = mutate(emoji_clean,
-                                                            age_mc = I(age-mean(age))))
-ano_q2 <- anova(m2intq2)
-
 ```
 
-thumbs up regression coef: `r round(-sum(m2intq2$coefficients[4:5]),2)` 
-interaction term: `r round(-sum(m2intq2$coefficients[6:7]),2) `
-
-```{r}
-# estimated means
-#emmeans(m2intq2, pairwise ~ em_cat * I(age-mean(age)))$contrasts |>
-  #kable(digits = 3) |>
-  #kable_styling()
-
-# meg does mean calculations ew
-#coef(m2intq2)
-```
 
 ```{r assumptions}
 shapiro_wilks_int <- shapiro.test(residuals(m2intq2)) #normality
@@ -294,7 +280,10 @@ ncvTest_int <- ncvTest(m2intq2)#(testing) constant variance #above the text - ot
 ncvTest_int
 ```
 
-Prior to conducting our analyses, we assessed whether the assumptions for conducting a linear model were met. Model residuals seemed normally distributed \@ref(fig:q3-residuals). Despite a significant Shapiro-Wilks (*W* = `r round(shapiro_wilks_int$statistic,2)`, *p* `r print_p(shapiro_wilks_int$p.value)`, this was not particularly problematic due to the large sample size of the study (`r nrow(emoji_clean)`). Visual inspection of Scale Location (ncvTest_int) showed a straight line, but  datapoints were not evenly spread out. Furthermore, the Breusch-Pagan test were significant (*ChiSquare* (`r (ncvTest_int$Df)`) = `r round(ncvTest_int$ChiSquare,2), *p* `r print_p(ncvTest_int$p)`), which might also not be a problem due to... Given the previously found strong correlation between age and frequency of emoji use, we checked for multicollinarity between the variables. Multicollinarity did not seem to be a problem, as all GVIF were <5 \@ref(fig:q3-vif). We furthermore conducted a Cooks Distance analysis and identified three outliers \@ref(fig:q3-vif). We conducted a sensitivity analysis and found that excluding these variables...
+Prior to conducting our analyses, we assessed whether the assumptions for conducting a linear model were met. Model residuals seemed normally distributed \@ref(fig:q3-residuals). Despite a significant Shapiro-Wilks (*W* = `r round(shapiro_wilks_int$statistic,2)`, *p* `r print_p(shapiro_wilks_int$p.value)`, this was not particularly problematic due to the large sample size of the study (`r nrow(emoji_clean)`). Visual inspection of Scale Location (ncvTest_int) showed a straight line, but  datapoints were not evenly spread out. Furthermore, the Breusch-Pagan test were significant (*ChiSquare* (`r (ncvTest_int$Df)`) = `r round(ncvTest_int$ChiSquare,2)`, *p* `r print_p(ncvTest_int$p)`), which might also not be a problem due to... Given the previously found strong correlation between age and frequency of emoji use, we checked for multicollinarity between the variables. Multicollinarity did not seem to be a problem, as all GVIF were <5 \@ref(fig:q3-vif). We furthermore conducted a Cooks Distance analysis and identified three outliers \@ref(fig:q3-vif). We conducted a sensitivity analysis and found that excluding these variables...
+
+
+
 
 # Accuracy of Emoji Interpretation (Julie)
 
@@ -306,7 +295,7 @@ Prior to conducting our analyses, we assessed whether the assumptions for conduc
 * write up reg coef table
 * write up relations to coef table for plot
 
-Finally, we address the research aim of what factors make participants more or less likely to correctly interpret Emoji (according to the researchers' coding scheme). The predictors of interest were the same as the previous regression model;frequency of emoji use first as its effect on interpreting Emoji is already known, and additionally age and Emoji category along with the interaction between these to investigate if the effect of age on interpretation accuracy is dependent on the Emoji being interpreted. Figure \@ref(fig:q3-desc-plots) provides an overview of the marginal distributions of these variables (Figures \@ref(fig:q3-desc-plots)C-F) and the relationships with Emoji interpretation accuracy for age by Emoji category (Figure \@ref(fig:q3-desc-plots)A) and for frequency of Emoji use (Figure \@ref(fig:q3-desc-plots)B). As noted previously, neither age (approximately uniform; Figure \@ref(fig:q3-desc-plots)C) nor frequency of Emoji use (approximately Poison distributed; Figure \@ref(fig:q3-desc-plots)D) were normally distributed, and there were slightly more participants who interpreted the loudly crying face Emoji [`r emoji::emoji("loudly crying face")`] than the other Emoji categories (Figure \@ref(fig:q3-desc-plots)E). Generally, a slightly higher proportion of participants interpreted their Emoji incorrectly as compared to correct interpretations (Figure \@ref(fig:q3-desc-plots)F). Examining the median age and frequency in Figures \@ref(fig:q3-desc-plots)A-B, it seems that incorrect responses are more common for participants with higher age and lower frequency use. Although correct responses were more evenly distributed across frequency of Emoji use relative to incorrect responses, which tended to be below five Emoji per day. Figure \@ref(fig:q3-desc-plots)A provided some indication that the Emoji being interpreted may moderate the relationship between lower age for correct interpretations - specifically, that the thumbs up Emoji [`r emoji::emoji("thumbs up")`] seem to have slightly lower median age for correct interpretations.
+Finally, we address the research aim of what factors make participants more or less likely to correctly interpret Emoji (according to the researchers' coding scheme). The predictors of interest were the same as the previous regression model; frequency of emoji use first as its effect on interpreting Emoji is already known, and additionally age and Emoji category along with the interaction between these to investigate if the effect of age on interpretation accuracy is dependent on the Emoji being interpreted. Figure \@ref(fig:q3-desc-plots) provides an overview of the marginal distributions of these variables (Figures \@ref(fig:q3-desc-plots)C-F) and the relationships with Emoji interpretation accuracy for age by Emoji category (Figure \@ref(fig:q3-desc-plots)A) and for frequency of Emoji use (Figure \@ref(fig:q3-desc-plots)B). As noted previously, neither age (approximately uniform; Figure \@ref(fig:q3-desc-plots)C) nor frequency of Emoji use (approximately Poison distributed; Figure \@ref(fig:q3-desc-plots)D) were normally distributed, and there were slightly more participants who interpreted the loudly crying face Emoji [`r emoji::emoji("loudly crying face")`] than the other Emoji categories (Figure \@ref(fig:q3-desc-plots)E). Generally, a slightly higher proportion of participants interpreted their Emoji incorrectly as compared to correct interpretations (Figure \@ref(fig:q3-desc-plots)F). Examining the median age and frequency in Figures \@ref(fig:q3-desc-plots)A-B, it seems that incorrect responses are more common for participants with higher age and lower frequency use. Although correct responses were more evenly distributed across frequency of Emoji use relative to incorrect responses, which tended to be below five Emoji per day. Figure \@ref(fig:q3-desc-plots)A provided some indication that the Emoji being interpreted may moderate the relationship between lower age for correct interpretations - specifically, that the thumbs up Emoji [`r emoji::emoji("thumbs up")`] seem to have slightly lower median age for correct interpretations.
 
 ```{r q3-desc-plots, fig.cap="Relationships (A-B) and Marginal Distributions (C-F) of Variables of Interest for Interpretation Accuracy", fig.width=10, fig.height= 6}
 
