@@ -222,7 +222,6 @@ For each emoji category, we found no significant difference between the observed
 
 One of the main aims we address in this research is the investigation of factors influencing emotional valence. We fitted a multiple regression model to predict whether the frequency of use of the emoji, the type of emoji, as well as the age of the participants, and the interaction between age and emoji category has an effect on their emotional valence. We mean-centered age and scaled the emotional valence score for interpretation of coefficients and intercepts. Emoji category was treatment coded with the "loudly crying face [`r emoji::emoji("loudly crying face")`]" as the reference level.
 
-
 As noted previously, neither age (approximately uniform; Figure \@ref(fig:q2-desc-plots)D) nor frequency of Emoji use (approximately Poisson distributed; Figure \@ref(fig:q2-desc-plots)E) were normally distributed. There were slightly more participants in the loudly crying face emoji [`r emoji::emoji("loudly crying face")`] than the other emoji categories (Figure \@ref(fig:q2-desc-plots)). Figure \@ref(fig:q2-desc-plots) B also indicates a negative relationship between age and emotional valence score; as age increases, the emotional valence score decreases. In particular, the loudly crying face emoji [`r emoji::emoji("loudly crying face")`] shows a steep negative correlation with age. These relationships will be more closely evaluated in our linear regression model. 
 
 ```{r}
@@ -235,12 +234,13 @@ shapiro_wilks_int <- shapiro.test(residuals(m2intq2)) #normality
 ncvTest_int <- ncvTest(m2intq2)#(testing) constant variance #above the text - otherwise can't see them. 
 ncvTest_int
 
-shapiro_wilks_sensitivity <- shapiro.test(residuals(m2intq2_sensitivity))
-ncvTest_sensitivity <- ncvTest(m2intq2_sensitivity)
-
 # Sensitivity analyses ----
 m2intq2_sensitivity <- (lm(scale(EVS) ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean[-c(2,13,175), ]))
 ano_q2_sense <- anova(m2intq2_sensitivity)
+
+shapiro_wilks_sensitivity <- shapiro.test(residuals(m2intq2_sensitivity))
+ncvTest_sensitivity <- ncvTest(m2intq2_sensitivity)
+
 ```
 
 ```{r q2-desc-plots, fig.cap="Relationships (A-B) and Marginal Distributions (C-F) of Variables of Interest for Emotional Effect", fig.width=11}
@@ -299,10 +299,7 @@ p_freq <- ggplot(emoji_clean, aes(x = freq_emu))+
 (p_freq_evs| p_age_evs) / (p_evs|p_age|p_freq|p_em_cat) + plot_layout(heights = c(2.5,1))
 ```
 
-Prior to conducting our analyses, we assessed whether the assumptions for conducting a linear model were met. Given the previously found strong correlation between age and frequency of emoji use, we checked for multicollinarity between the variables. Multicollinarity did not seem to be a problem, as all GVIF were <5 \@ref(fig:q2-vif). Heteroscedacity did not appear to be a problem based on visual inspection of this figure: \@ref(fig:q2-residuals-vs-fitted). While a significant Shapiro-Wilks (*W* = `r round(shapiro_wilks_int$statistic,2)`, *p* `r print_p(shapiro_wilks_int$p.value)`) indicated non-normality, model residuals looked normally distributed \@ref(fig:q2-residuals), with the exception of three outliers. Breusch-Pagan was also significant (*$\chi^2$* (`r (ncvTest_int$Df)`) = `r round(ncvTest_int$ChiSquare,2)`, *p* `r print_p(ncvTest_int$p)`), indicating non-constant variance, despite the plot (ncvTest_int) showing a seemingly straight line. We furthermore conducted a Cooks Distance analysis and identified three outliers \@ref(fig:q3-vif). The threshold for this determination was given by $4/(N-k-1)$, in which *N* is the number of observations and *k* is the number of predictors. Given this threshold of 0.017, it was determined that we should exclude three observations and fit a new model without them. 
-
-Prior to conducting our analyses, we assessed whether the assumptions for conducting a linear model were met. Model residuals seemed normally distributed \@ref(fig:q3-residuals). Despite a significant Shapiro-Wilks (*W* = `r round(shapiro_wilks_int$statistic,2)`, *p* `r print_p(shapiro_wilks_int$p.value)`, this was not particularly problematic due to the large sample size of the study (`r nrow(emoji_clean)`). Visual inspection of Scale Location (ncvTest_int) showed a straight line, but  datapoints were not evenly spread out. Furthermore, the Breusch-Pagan test was significant ($\chi^2$ (`r (ncvTest_int$Df)`) = `r round(ncvTest_int$ChiSquare,2)`, *p* `r print_p(ncvTest_int$p)`, which might also not be a problem due to... Given the previously found strong correlation between age and frequency of emoji use, we checked for multicollinarity between the variables. Multicollinarity did not seem to be a problem, as all GVIF were <5 \@ref(fig:q3-vif). We furthermore conducted a Cooks Distance analysis and identified three outliers \@ref(fig:q3-vif). The threshold for this determination was given by $4/(N-k-1)$, in which *N* is the number of observations and *k* is the number of predictors. Given this threshold of 0.017, it was determined that we should exclude three observations and fit a new model without them. 
-
+Prior to conducting our analyses, we assessed whether the assumptions for conducting a linear model were met. Given the previously found strong correlation between age and frequency of emoji use, we checked for multicollinarity between the variables. Multicollinarity did not seem to be a problem, as all GVIF were <5 \@ref(fig:q2-vif). Heteroscedacity did not appear to be a problem based on visual inspection of this figure: \@ref(fig:q2-residuals-vs-fitted). While a significant Shapiro-Wilks (*W* = `r round(shapiro_wilks_int$statistic,2)`, *p* `r print_p(shapiro_wilks_int$p.value)`) indicated non-normality, model residuals looked normally distributed \@ref(fig:q2-residuals), with the exception of three outliers. Breusch-Pagan was also significant (*$\chi^2$* (`r (ncvTest_int$Df)`) = `r round(ncvTest_int$ChiSquare,2)`, *p* `r print_p(ncvTest_int$p)`), indicating non-constant variance, despite the plot (ncvTest_int) showing a seemingly straight line. We furthermore conducted a Cook's Distance analysis and identified three outliers \@ref(fig:q3-vif). The threshold for this determination was given by $4/(N-k-1)$, in which *N* is the number of observations and *k* is the number of predictors. Given this threshold of 0.017, it was determined that we should exclude three observations and fit a new model without them. 
 
 ```{r}
 ano_row <- c( 
@@ -363,7 +360,7 @@ p2
 ## Conclusion
 
 
-# Accuracy of Emoji Interpretation (Julie)
+# Accuracy of Emoji Interpretation
 
 ```{r logistic regression and anova}
 # data prep ----
@@ -608,14 +605,13 @@ emoji |>
 emoji_qq1 <- emoji_clean|>
   filter(opsys=="Apple")
 
+par(mfrow = c(1, 2)) #combining plots in one line 
+
 qqnorm(
        main = "Normal Q-Q Plot: Apple",
        emoji_qq1$freq_emu)
 qqline(emoji_qq1$freq_emu)
 
-```
-
-```{r}
 emoji_qq2 <- emoji_clean|>
   filter(opsys=="Android")
 
@@ -623,6 +619,10 @@ qqnorm(
   main = "Normal Q-Q Plot: Android",
   emoji_qq2$freq_emu)
 qqline(emoji_qq2$freq_emu)
+```
+
+```{r}
+
 ```
 
 ## The Emotional Effect of Emojis
@@ -635,19 +635,24 @@ kable(contrasts(emoji_clean$em_cat), col.names = c("E1", "E2"),
 ```
 
 ```{r residuals-vs-fitted}
+par(mfrow = c(2, 2))
+
 plot(m2intq2, which = 1)
+plot(m2intq2, which = 2)
+plot(m2intq2, which = 3)
+plot(m2intq2, which = 4)
 ```
 
 ```{r q3-residuals}
-plot(m2intq2, which = 2)
+
 ```
 
 ```{r q3-scalelocation}
-plot(m2intq2, which = 3)
+
 ```
 
 ```{r q3-cooksdistance}
-plot(m2intq2, which = 4)
+
 ```
 
 ```{r q3-vif}
@@ -662,7 +667,9 @@ summary(influence.measures(m2intq2))
 ## Accuracy of Emoji Interpretation
 
 ```{r q3-stand-dev-res-plot, fig.cap= "Standardised Deviance Residuals for Logistic Regression Model"}
+par(mfrow = c(1, 2))
 plot(rstandard(m1q3, type = 'deviance'),ylab = 'Standardised Deviance Residuals')
+plot(m1q3, which=4)
 ```
 
 ```{r vif-q3}
@@ -675,7 +682,7 @@ kable(vif_q3, digits = 2) |>
 ```
 
 ```{r q3-cooks-plot, fig.cap= "Cook's Distances for Logistic Regression Model"}
-plot(m1q3, which=4) 
+
 ```
 
 ```{r}
