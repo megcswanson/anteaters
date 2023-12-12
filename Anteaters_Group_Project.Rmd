@@ -141,13 +141,7 @@ Following this, we conducted a Welch two sample t-test to assess whether the mea
 
 ## Correlation Between Age and Frequency of Emoji Use (Renia)
 
-**To do**
-
-* Introduction to the test
-* plot commentary
-* solution for non-normality
-
-```{r cor-plot, fig.cap="Relationship Between Age and Frequency of Emoji Use", fig.align='center', fig.height = 4}
+```{r cor-plot, fig.cap="Relationship Between Age and Frequency of Emoji Use: This scatterplot visually illustrates a clear negative correlation between Age and the Frequency of Emoji Use. The accompanying histogram on the side of the plot reveals that the frequency of emoji use follows the Poisson distribution. Additionally, the histogram positioned above the scatterplot provides that age is uniformly distributed.", fig.align='center', fig.height = 4}
 p_cor <- ggplot(emoji_clean, aes(x=age, y=freq_emu)) + 
   geom_point(alpha = 0.5) + 
   labs(x = "Age",
@@ -155,30 +149,29 @@ p_cor <- ggplot(emoji_clean, aes(x=age, y=freq_emu)) +
   theme_light()
 ggMarginal(p_cor, type = "hist", xparams = list(binwidth = 1, fill = "#CBD6E8"), yparams = list(binwidth = 1, fill = "#F4CAE3"))
 ```
-\@ref(fig:cor-plot) Relationship Between Age and Frequency of Emoji Use: This scatterplot visually illustrates a clear negative correlation between Age and the Frequency of Emoji Use. The accompanying histogram on the side of the plot reveals that the frequency of emoji use follows the Poisson distribution. Additionally, the histogram positioned above the scatterplot provides that age is uniformly distributed.
 
 ```{r}
-shappy_wilks #<- shapiro.test(emoji_clean$freq_emu) # greater than 0.05
+#shappy_wilks <- shapiro.test(emoji_clean$freq_emu) # greater than 0.05
 shappy_wilks2 <- shapiro.test(emoji_clean$age) # greater than 0.05
-shappy_wilks2
+#shappy_wilks2
 ```
 
-In order to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji we were going to conduct a Pearson correlation test. While looking at \@ref(fig:cor-plot), it is clear that the age and frequency of emoji use are neither normally distributed nor linearly related (also verified by Shapiro–Wilk test *frequency of emoji use* = `r round(shappy_wilks$statistic, 2)`, *p* < `r print_p(shappy_wilks$p.value)`, *age* = `r round(shappy_wilks2$statistic, 2)`, *p*< `r print_p(shappy_wilks2$p.value)` ). Since both a normal distribution and a linear relationship are assumptions of a Pearson correlation test, we decided to conduct a Spearman's rank correlation test, which assumes neither normality nor a linear relationship. 
+In order to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji we were going to conduct a Pearson correlation test. While looking at \@ref(fig:cor-plot), it is clear that the age and frequency of emoji use are neither normally distributed nor linearly related (also verified by Shapiro–Wilk test *w(frequency of emoji use)* = `r round(shappy_wilks$statistic, 2)`, *p* `r print_p(shappy_wilks$p.value)`, *w(age)* = `r round(shappy_wilks2$statistic, 2)`, *p* `r print_p(shappy_wilks2$p.value)` ). Since both a normal distribution and a linear relationship are assumptions of a Pearson correlation test, we decided to conduct a Spearman's rank correlation test, which assumes neither normality nor a linear relationship. 
 
 ```{r correlation test}
-q1b_cortest <- cor.test(emoji_clean$age, emoji_clean$freq_emu)
-q1b_cortest
+#q1b_cortest <- cor.test(emoji_clean$age, emoji_clean$freq_emu)
+#q1b_cortest
 
 q1b_cortest_np <- cor.test(emoji_clean$age, emoji_clean$freq_emu, method= "spearman")
-q1b_cortest_np
+#q1b_cortest_np
 
 #q1b_cor_boot<- confint(car::Boot(lm(scale(age)~scale(freq_emu), data = emoji_clean)))
 #q1b_cor_boot
 ```
 
-Correlation test Interpretation
+**Correlation test Interpretation**
 
-The Spearman's rank correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of `r nrow(emoji_clean)` individuals were included in the analysis, with a mean age of `r round(mean(emoji_clean$age),2 )` (*sd* = `r round(sd(emoji_clean$age),2 )`) and a mean frequency of use of emoji of `r round(mean(emoji_clean$freq_emu),2 )` (*sd* = `r round(sd(emoji_clean$freq_emu),2 )`).There was a strong negative correlation between age of an individual and the frequency of emoji use (*R* = `r round(q1b_cortest_np$estimate,2)`, *S* = `r round(q1b_cortest_np$statistic,2)`), *p* < `r print_p(q1b_cortest_np$p.value)`. We therefore reject the null hypothesis that there is no correlation between age and frequency of emoji use. \@ref(fig:cor-plot) provides a visualization of the relationship. 
+The Spearman's rank correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of `r nrow(emoji_clean)` individuals were included in the analysis, with a mean age of `r round(mean(emoji_clean$age),2 )` (*sd* = `r round(sd(emoji_clean$age),2 )`) and a mean frequency of use of emoji of `r round(mean(emoji_clean$freq_emu),2 )` (*sd* = `r round(sd(emoji_clean$freq_emu),2 )`).There was a strong negative correlation between age of an individual and the frequency of emoji use (*R* = `r round(q1b_cortest_np$estimate,2)`, *S* `r print_p(q1b_cortest_np$statistic)`), *p* `r print_p(q1b_cortest_np$p.value)`. We therefore reject the null hypothesis that there is no correlation between age and frequency of emoji use. Figure \@ref(fig:cor-plot) provides a visualization of the relationship. 
 
 ## Balance of Users of Operating Systems for Emoji Categories (Meg and Julie)
 
