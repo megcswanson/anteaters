@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="6 Notes for report (to be deleted) | Aggregating Anteaters Project" />
+<meta property="og:type" content="book" />
+
+
+
+
+
+<meta name="date" content="2023-11-16" />
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: { equationNumbers: { autoNumber: "AMS" } }
+});
+</script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<meta name="description" content="6 Notes for report (to be deleted) | Aggregating Anteaters Project">
+
+<title>6 Notes for report (to be deleted) | Aggregating Anteaters Project</title>
+
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="libs/navigation-1.1/tabsets.js"></script>
+<script src="libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+/* show arrow before summary tag as in bootstrap
+TODO: remove if boostrap in updated in html_document (rmarkdown#1485) */
+details > summary {
+  display: list-item;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container-fluid main-container">
+
+
+<div class="row">
+<div class="col-sm-12">
+<div id="TOC">
+<ul>
+<li><a href="1-data-preparation.html#data-preparation" id="toc-data-preparation"><span class="toc-section-number">1</span> Data Preparation</a></li>
+<li class="has-sub"><a href="2-data-description.html#data-description" id="toc-data-description"><span class="toc-section-number">2</span> Data Description</a>
+<ul>
+<li><a href="2.1-renia-question-1b.html#renia-question-1b" id="toc-renia-question-1b"><span class="toc-section-number">2.1</span> Renia : Question 1b</a></li>
+<li><a href="2.2-meg---1c-chisq-tests-and-balance.html#meg---1c-chisq-tests-and-balance" id="toc-meg---1c-chisq-tests-and-balance"><span class="toc-section-number">2.2</span> Meg - 1c chisq tests and balance</a></li>
+</ul></li>
+<li><a href="3-the-emotional-effect-of-emojis-renia-megs.html#the-emotional-effect-of-emojis-renia-megs" id="toc-the-emotional-effect-of-emojis-renia-megs"><span class="toc-section-number">3</span> The Emotional Effect of Emojis (Renia &amp; MegS)</a></li>
+<li><a href="4-accuracy-of-emoji-interpretation-jmep.html#accuracy-of-emoji-interpretation-jmep" id="toc-accuracy-of-emoji-interpretation-jmep"><span class="toc-section-number">4</span> Accuracy of Emoji Interpretation (JMEP)</a></li>
+<li><a href="5-appendix-a-supplementary-tables-and-figures.html#appendix-a-supplementary-tables-and-figures" id="toc-appendix-a-supplementary-tables-and-figures"><span class="toc-section-number">5</span> Appendix A: Supplementary Tables and Figures</a></li>
+<li><a href="6-notes-for-report-to-be-deleted.html#notes-for-report-to-be-deleted" id="toc-notes-for-report-to-be-deleted"><span class="toc-section-number">6</span> Notes for report (to be deleted)</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="row">
+<div class="col-sm-12">
+<div id="notes-for-report-to-be-deleted" class="section level1" number="6">
+<h1><span class="header-section-number">6</span> Notes for report (to be deleted)</h1>
+<p>(JMEP; 16/11/2023 - midnight zoomies) found this cool way of generating lm equation :0 equatiomatic</p>
+<p>(JMEP; 16/11/2023 - midnight zoomies) Would be helpful if we could do all our code for each section in one chunk. Then we can call tables/figures where we need them and refer to numbers in inline code. Inline code example: NA (there is an NA in age, booo)</p>
+<p>(JMEP; 16/11/2023 - midnight zoomies) I looked into age. There is one NA, one person who is -100 years old and one that is 1 year old. I think we can reliably remove them (done in emoji_clean). There are also a bunch (23 to be exact) that are under 18 (between 14 and 17), whom I am not sure if we should remove??
+I also noticed some other unusual stuff. Frequency ratings below 0, and a typo in “Apple” for one of the operating systems (“Appple”). There are also only two Windows users which isn’t really helpful in terms of analysis - might wanna exclude them.</p>
+<p>#Code to possibly be deleted:
+<img src="Anteaters_Group_Project_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<p>#probably to delete but just in case
+For each emoji category, we found no significant difference between the observed proportions of Apple and Android users, and a hypothesised set of equal proportions. The results for each emoji category are as follows: loudly crying face emoji [😭]: <em>n</em> = 88, <em>proportion<sub>Apple</sub></em> = 51.14 %, <em>proportion<sub>Android</sub></em> = 48.86 %; <span class="math inline">\(\chi^2\)</span> (1) = 0.05, <em>p</em> = 0.831; slightly smiling face emoji [🙂]: <em>n</em> = 72, <em>proportion<sub>Apple</sub></em> = 52.78 %, <em>proportion<sub>Android</sub></em> = 47.22 %; <span class="math inline">\(\chi^2\)</span> (1) = 0.22, <em>p</em> = 0.637; thumbs up emoji [👍]: <em>n</em> = 75, <em>proportion<sub>Apple</sub></em> = 57.33 %, <em>proportion<sub>Android</sub></em> = 42.67 %; <span class="math inline">\(\chi^2\)</span> (1) = 1.61, <em>p</em> = 0.204.</p>
+</div>
+<p style="text-align: center;">
+<a href="5-appendix-a-supplementary-tables-and-figures.html"><button class="btn btn-default">Previous</button></a>
+</p>
+</div>
+</div>
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+$(document).ready(function () {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+});
+
+</script>
+
+</body>
+</html>

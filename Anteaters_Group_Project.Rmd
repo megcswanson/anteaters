@@ -232,7 +232,23 @@ prop <- emoji_clean |>
 For each emoji category, we found no significant difference between the observed proportions of Apple and Android users, and a hypothesised set of equal proportions. For loudly crying face emoji [`r emoji::emoji("loudly crying face")`], $\chi^2$ (`r q1_chisq_cry$parameter`) = `r round(q1_chisq_cry$statistic, 2)`, *p* `r print_p(q1_chisq_cry$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Loudly crying face"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Loudly crying face")$prop` %). For the slightly smiling face  emoji [`r emoji::emoji("slightly smiling face")`],  $\chi^2$ (`r q1_chisq_smile$parameter`) = `r round(q1_chisq_smile$statistic, 2)`, *p* `r print_p(q1_chisq_smile$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Slightly smiling face"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Slightly smiling face")$prop` %). Finally, for the thumbs up Emoji [`r emoji::emoji("thumbs up")`], $\chi^2$ (`r q1_chisq_thumb$parameter`) = `r round(q1_chisq_thumb$statistic, 2)`, *p* `r print_p(q1_chisq_thumb$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Thumbs up"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Thumbs up")$prop` %). Thus, we found no evidence of imbalance of users of Apple and Android operated phones in each emoji category.
 
 
-# The Emotional Effect of Emojis (Renia & Meg)
+# The Emotional Effect of Emojis (Renia, Meg & Julie)
+
+```{r}
+# Original model ----
+m2intq2 <- (lm(scale(EVS) ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean))
+ano_q2 <- anova(m2intq2)
+
+# Assumptions ----
+shapiro_wilks_int <- shapiro.test(residuals(m2intq2)) #normality
+ncvTest_int <- ncvTest(m2intq2)#(testing) constant variance #above the text - otherwise can't see them. 
+ncvTest_int
+
+# Sensitivity analyses ----
+m2intq2_sensitivity <- (lm(scale(EVS) ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean[-c(2,13,175), ]))
+ano_q2_sense <- anova(m2intq2_sensitivity)
+```
+
 
 **To do**
 * generate relevant plots
@@ -243,7 +259,7 @@ For each emoji category, we found no significant difference between the observed
 * write up analysis
 * add interaction plot + comment
 
-```{r}
+```{r eval=FALSE}
 p_age_evs <- ggplot(emoji_clean, aes(x = EVS, y = age, color = em_cat))+
   geom_smooth(method = "lm")+
   geom_jitter(alpha = .3, height = 0)+
@@ -302,40 +318,22 @@ p_freq <- ggplot(emoji_clean, aes(x = freq_emu))+
   theme_light()+
   theme(plot.title = element_text(size = 11))
 
-(p_freq_acc| p_age_acc) / (p_age|p_freq|p_em_cat|p_EI) + plot_layout(heights = c(2.5,1))
+(p_freq_evs| p_age_evs) / (p_age|p_freq|p_em_cat|p_EI) + plot_layout(heights = c(2.5,1))
 
 ```
 
-One of the main aims we address in this research is the investigation of factors influencing emotional valence. We fitted a multiple regression model to predict whether the frequency of use of the emoji, the type of emoji, as well as the age of the participants, and the interaction between age and emoji categoyr has an effect on their emotional valence. We mean-centered age and scaled the emotional valence score for interpretation of coefficients and intercepts. This model was treatment coded with the "loudly crying face [`r emoji::emoji("loudly crying face)`]" as the reference level, as there is no intuituve 
+One of the main aims we address in this research is the investigation of factors influencing emotional valence. We fitted a multiple regression model to predict whether the frequency of use of the emoji, the type of emoji, as well as the age of the participants, and the interaction between age and emoji categoyr has an effect on their emotional valence. We mean-centered age and scaled the emotional valence score for interpretation of coefficients and intercepts. This model was treatment coded with the "loudly crying face [`r emoji::emoji("loudly crying face")`]" as the reference level, as there is no intuituve 
 
 Prior to conducting our analyses, we assessed whether the assumptions for conducting a linear model were met. Model residuals seemed normally distributed \@ref(fig:q3-residuals). Despite a significant Shapiro-Wilks (*W* = `r round(shapiro_wilks_int$statistic,2)`, *p* `r print_p(shapiro_wilks_int$p.value)`, this was not particularly problematic due to the large sample size of the study (`r nrow(emoji_clean)`). Visual inspection of Scale Location (ncvTest_int) showed a straight line, but  datapoints were not evenly spread out. Furthermore, the Breusch-Pagan test were significant ($\chi^2$ (`r (ncvTest_int$Df)`) = `r round(ncvTest_int$ChiSquare,2)`, *p* `r print_p(ncvTest_int$p)`, which might also not be a problem due to... Given the previously found strong correlation between age and frequency of emoji use, we checked for multicollinarity between the variables. Multicollinarity did not seem to be a problem, as all GVIF were <5 \@ref(fig:q3-vif). We furthermore conducted a Cooks Distance analysis and identified three outliers \@ref(fig:q3-vif). The threshold for this determination was given by $4/(N-k-1)$, in which *N* is the number of observations and *k* is the number of predictors. Given this threshold of 0.017, it was determined that we should exclude three observations and fit a new model without them. 
 
-```{r linear model}
-
-m2intq2 <- (lm(scale(EVS) ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean))
-anova(m2intq2)
-summary(m2intq2)
-
-plot(m2intq2,which=4)
-# 13, 175 and 2 are outliers
-# cook's distance: may need to include plot in appendix
-plot(cooks.distance(m2intq2),type="b",pch=18)
-summary(influence.measures(m2intq2))
-```
-
-```{r q2 sensitivity analysis}
-m2intq2_sensitivity <- (lm(scale(EVS) ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean[-c(2,13,175), ]))
-anova_sense <- anova(m2intq2_sensitivity)
-summary(m2intq2_sensitivity)
-```
-
-```{r anova-sense}
-anova_sense
+```{r}
+ano_q2_sense
 ```
 
 ```{r tab-model}
 tab_model(m2intq2, m2intq2_sensitivity, title = "(\\#tab-model) Linear Regression Model")
 ```
+
 An analysis of variance was conducted on the model that excluded the three outlying values. This analysis indicated that frequency of emoji use was a significant predictor of the emotional valence score (*p*<0.001), and the interaction between age and emoji category was also found to be a significant predictor (*p*<0.001). This model explained 46% (adjusted *R^2^*) of the variance within the data.
 
 Prior to removing the three values that were shown to have undue influence on the model fit, we fit a model including all values present in the dataset. The two models are compared in \@ref(tab:tab-model). When the three influential values were removed, the interaction between all three categories of emoji and age reached significance (*p~slightly_smiling~* <0.001, *p~thumbs_up~* <0.001, *p~loudly_crying~* <0.001). These interactions are plotted in \@ref(fig:q2-interaction-plot). Additionally, the refitted model explained 14% more of the variance in the data. 
@@ -346,47 +344,7 @@ p2 <- interactions::interact_plot(m2intq2_sensitivity, pred = "age", modx = "em_
 p2
 ```
 
-
-```{r assumptions}
-shapiro_wilks_int <- shapiro.test(residuals(m2intq2)) #normality
-ncvTest_int <- ncvTest(m2intq2)#(testing) constant variance #above the text - otherwise can't see them. 
-ncvTest_int
-```
-
-
-
-thumbs up regression coef: `r round(-sum(m2intq2$coefficients[4:5]),2)` 
-interaction term: `r round(-sum(m2intq2$coefficients[6:7]),2) `
-
-```{r estimated-means, echo=FALSE}
-# estimated means
-library(emmeans)
-emmeans(m2intq2, pairwise ~ em_cat * age_mc)$contrasts |>
-  kable(digits = 3) |>
-  kable_styling()
-```
-
-
-```{r estimated-means, echo=FALSE}
-# estimated means - doesn't run and we prob shouldn't include these
-#emmeans(m2intq2, pairwise ~ em_cat * I(age-mean(age)))$contrasts |>
-#  kable(digits = 3) |>
-#  kable_styling()
-
-# meg does mean calculations ew
-coef(m2intq2)
-```
-
-
 # Accuracy of Emoji Interpretation (Julie)
-
-\begin{align}
-\log\left[ \frac {P(Correct)}{P(Incorrect)} \right] = \hat\beta_0 + \hat\beta_{1}·(Frequency) + \hat\beta_{2}(Age) + \hat\beta_{3}·E_{1[thumbs \ up]} + \hat\beta_{4}·E_{2[loudly\ crying]} + \hat\beta_{5}·(Age · E_{1[thumbs \ up]})\\ 
-& \hat\beta_{6}·(Age · E_{2[loudly\ crying]}) + \varepsilon_{i} (\#eq:q3-model)
-\end{align} 
-
-
-We conducted the following tests to address the research question of which factors are associated with more or less likelihood of correctly interpreting the tested Emoji. Firstly, an analysis of deviance was conducted using likelihood ratio tests to test if each predictor significantly reduced model deviance. Secondly, we investigated the associated regression coefficients to elucidate the direction of association. We examined each regression coefficient, its direction, range with 95 % confidence intervals, and significance with *z*-tests ($H_0: \hat\beta_i \neq 0$; $\alpha$ = .05). We also estimated these for slightly smiling face Emoji category ($\hat\beta_0-(\hat\beta_3+\hat\beta_4)$) and its interaction with age ($\hat\beta_0-(\hat\beta_5+\hat\beta_6)$). Before examining the model, we verified that the model fit did not violate assumptions of logistic regression by inspecting the standardised deviance residuals (a priori criterion range: $|standardised \ deviance \ residual| ≤ 3$; see Figure \@ref(fig:q3-stand-dev-res-plot)).
 
 ```{r logistic regression and anova}
 # data prep ----
@@ -537,8 +495,6 @@ rownames(ano_q3)<- c(
 
 # print table
 ano_q3 |>
-  # tidy values
-  rename("p.value" = "Pr(>Chi)") |>
   mutate(Df = ifelse(is.na(Df) == T, "", Df),
          Deviance = ifelse(is.na(Deviance) == T, "", round(Deviance,2)),
          p.value = ifelse(is.na(p.value) == T, "", ifelse(p.value < 0.001, "< 0.001", round(p.value,3)))
@@ -639,6 +595,7 @@ qqnorm(
 qqline(emoji_qq1$freq_emu)
 
 ```
+
 ```{r}
 emoji_qq2 <- emoji_clean|>
   filter(opsys=="Android")
@@ -660,7 +617,6 @@ kable(contrasts(emoji_clean$em_cat), col.names = c("E1", "E2"),
 
 ```{r residuals-vs-fitted}
 plot(m2intq2, which = 1)
-
 ```
 
 ```{r q3-residuals}
@@ -678,6 +634,11 @@ plot(m2intq2, which = 4)
 ```{r q3-vif}
 vif(m2intq2)
 ```
+
+```{r}
+summary(influence.measures(m2intq2))
+```
+
 
 ## Accuracy of Emoji Interpretation
 

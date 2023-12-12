@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="4 Accuracy of Emoji Interpretation (JMEP) | Aggregating Anteaters Project" />
+<meta property="og:type" content="book" />
+
+
+
+
+
+<meta name="date" content="2023-11-16" />
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: { equationNumbers: { autoNumber: "AMS" } }
+});
+</script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<meta name="description" content="4 Accuracy of Emoji Interpretation (JMEP) | Aggregating Anteaters Project">
+
+<title>4 Accuracy of Emoji Interpretation (JMEP) | Aggregating Anteaters Project</title>
+
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="libs/navigation-1.1/tabsets.js"></script>
+<script src="libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+/* show arrow before summary tag as in bootstrap
+TODO: remove if boostrap in updated in html_document (rmarkdown#1485) */
+details > summary {
+  display: list-item;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container-fluid main-container">
+
+
+<div class="row">
+<div class="col-sm-12">
+<div id="TOC">
+<ul>
+<li><a href="1-data-preparation.html#data-preparation" id="toc-data-preparation"><span class="toc-section-number">1</span> Data Preparation</a></li>
+<li class="has-sub"><a href="2-data-description.html#data-description" id="toc-data-description"><span class="toc-section-number">2</span> Data Description</a>
+<ul>
+<li><a href="2.1-renia-question-1b.html#renia-question-1b" id="toc-renia-question-1b"><span class="toc-section-number">2.1</span> Renia : Question 1b</a></li>
+<li><a href="2.2-meg---1c-chisq-tests-and-balance.html#meg---1c-chisq-tests-and-balance" id="toc-meg---1c-chisq-tests-and-balance"><span class="toc-section-number">2.2</span> Meg - 1c chisq tests and balance</a></li>
+</ul></li>
+<li><a href="3-the-emotional-effect-of-emojis-renia-megs.html#the-emotional-effect-of-emojis-renia-megs" id="toc-the-emotional-effect-of-emojis-renia-megs"><span class="toc-section-number">3</span> The Emotional Effect of Emojis (Renia &amp; MegS)</a></li>
+<li><a href="4-accuracy-of-emoji-interpretation-jmep.html#accuracy-of-emoji-interpretation-jmep" id="toc-accuracy-of-emoji-interpretation-jmep"><span class="toc-section-number">4</span> Accuracy of Emoji Interpretation (JMEP)</a></li>
+<li><a href="5-appendix-a-supplementary-tables-and-figures.html#appendix-a-supplementary-tables-and-figures" id="toc-appendix-a-supplementary-tables-and-figures"><span class="toc-section-number">5</span> Appendix A: Supplementary Tables and Figures</a></li>
+<li><a href="6-notes-for-report-to-be-deleted.html#notes-for-report-to-be-deleted" id="toc-notes-for-report-to-be-deleted"><span class="toc-section-number">6</span> Notes for report (to be deleted)</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="row">
+<div class="col-sm-12">
+<div id="accuracy-of-emoji-interpretation-jmep" class="section level1" number="4">
+<h1><span class="header-section-number">4</span> Accuracy of Emoji Interpretation (JMEP)</h1>
+<p><em>include</em></p>
+<ul>
+<li>maximum likelihood estimation</li>
+</ul>
+<p>Finally, we address the research aim of what factors make participants more or less likely to correctly interpret emoji according to the researchers’ coding scheme. Given the binary outcome (correct vs. incorrect interpretation), we fitted a multiple logistic regression model. We included the same predictors as the previous linear regression; frequency of emoji use first as its effect on interpreting emoji is already known, and additionally age as well as emoji category and the interaction between these to investigate if the effect of age on interpretation differs for the emoji being interpreted. Like the previous model, we mean-centered age, which estimates the coefficients and intercept at the mean age rather than age 0. Secondly, we used treatment coding (exact contrast coding in table <strong>Ax</strong>) for the emoji category since the three different kinds of emoji have no natural reference group. Each coefficient is then the difference between the mean level and the grand mean, and that all other coefficients are interpreted across levels rather than within a reference level. The final model has the following equation (note, E1 and E2 refers to the sum to zero coded variables in Table <strong>Ax</strong>):</p>
+<p><span class="math display">\[
+\log\left[ \frac {P(\operatorname{Emoji Interpretation} = \operatorname{correct})}{P(\operatorname{Emoji Interpretation} = \operatorname{incorrect})} \right] = \beta_0 + \beta_{1}(\operatorname{Emoji use frequency}) + \beta_{2}(\operatorname{Age_{mean-centered}}) + \beta_{3}·E_1 + \beta_{4}·E_2 + \beta_{5}(\operatorname{Age_{mean-centered}} \times \operatorname{E_1}) + \beta_{6}(\operatorname{Age_{mean-centered}} \times \operatorname{E_2})
+\]</span></p>
+<p>To answer the research question, we conduct the following tests. Firstly, an analysis of deviance is conducted using a <span class="math inline">\(\chi^2\)</span> test to test if each predictor significantly reduces model deviance. Secondly, we investigate the associated regression coefficients of significant predictors. We examine their direction and significance using z-tests (<span class="math inline">\(\alpha\)</span> = .05).</p>
+<p>The model fit had residuals of reasonable size (see Figure Ax), suggesting that no assumptions were violated</p>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:q3-dev-tab">Table 4.1: </span>Emoji Interpretation: Analysis of Deviance Table
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Df
+</th>
+<th style="text-align:left;">
+Deviance
+</th>
+<th style="text-align:right;">
+Residual Df
+</th>
+<th style="text-align:right;">
+Residual Deviance
+</th>
+<th style="text-align:left;">
+p-value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Intercept-only
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:right;">
+236
+</td>
+<td style="text-align:right;">
+324.49
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Emoji use frequency
+</td>
+<td style="text-align:left;">
+1
+</td>
+<td style="text-align:left;">
+96.51
+</td>
+<td style="text-align:right;">
+235
+</td>
+<td style="text-align:right;">
+227.97
+</td>
+<td style="text-align:left;">
+&lt; 0.001
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Age
+</td>
+<td style="text-align:left;">
+1
+</td>
+<td style="text-align:left;">
+24.04
+</td>
+<td style="text-align:right;">
+234
+</td>
+<td style="text-align:right;">
+203.94
+</td>
+<td style="text-align:left;">
+&lt; 0.001
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Emoji category
+</td>
+<td style="text-align:left;">
+2
+</td>
+<td style="text-align:left;">
+1.91
+</td>
+<td style="text-align:right;">
+232
+</td>
+<td style="text-align:right;">
+202.03
+</td>
+<td style="text-align:left;">
+0.385
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Age:Emoji category
+</td>
+<td style="text-align:left;">
+2
+</td>
+<td style="text-align:left;">
+7.12
+</td>
+<td style="text-align:right;">
+230
+</td>
+<td style="text-align:right;">
+194.91
+</td>
+<td style="text-align:left;">
+0.028
+</td>
+</tr>
+</tbody>
+</table>
+<p>As shown in Table x,</p>
+<table style="border-collapse:collapse; border:none;">
+<caption style="font-weight: bold; text-align:left;">
+<span id="tab:tab-model-table">Table 4.2: </span> Logistic Regression Model
+</caption>
+<tr>
+<th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; ">
+ 
+</th>
+<th colspan="5" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; ">
+Correct Emoji Interpretation
+</th>
+</tr>
+<tr>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; ">
+Predictors
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+Odds Ratio
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+std. Error
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+95 % CI
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+z-statistic
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+p-value
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+Intercept
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.32
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.11
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.16 – 0.63
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-3.22
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>0.001</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+Emoji use frequency
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.12
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.08
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.99 – 1.29
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.68
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.092
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+Age
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.87
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.03
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.82 – 0.92
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-4.47
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+Emoji [😭]
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.64
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.42
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.99 – 2.76
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.91
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.056
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+Emoji [🙂]
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.09
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.30
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.63 – 1.90
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.31
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.760
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+Age:Emoji [😭]
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.06
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.03
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.00 – 1.12
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+2.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>0.044</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+Age:Emoji [🙂]
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.04
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.03
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.98 – 1.10
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.19
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.235
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
+Observations
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="5">
+237
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+Deviance
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="5">
+194.912
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+log-Likelihood
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="5">
+-97.456
+</td>
+</tr>
+</table>
+<p>Across emoji categories, the chance of correctly interpreting an emoji was. Which emoji was interpreted and emoji use frequency predicted no significant change in this likelihood. Age, on the other hand, reduced the predicted probability of correct interpretation; for each year above the sample mean, <strong>xx</strong>.</p>
+<div class="figure"><span style="display:block;" id="fig:q3-model-plots"></span>
+<img src="Anteaters_Group_Project_files/figure-html/q3-model-plots-1.png" alt="Predicted Probability of Correct Emoji Interpretation for (A) Emoji Use Frequency and (B) Age for Each Emoji Tested" width="672" />
+<p class="caption">
+Figure 4.1: Predicted Probability of Correct Emoji Interpretation for (A) Emoji Use Frequency and (B) Age for Each Emoji Tested
+</p>
+</div>
+<p>see <a href="4-accuracy-of-emoji-interpretation-jmep.html#fig:q3-model-plots">4.1</a></p>
+</div>
+<p style="text-align: center;">
+<a href="3-the-emotional-effect-of-emojis-renia-megs.html"><button class="btn btn-default">Previous</button></a>
+<a href="5-appendix-a-supplementary-tables-and-figures.html"><button class="btn btn-default">Next</button></a>
+</p>
+</div>
+</div>
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+$(document).ready(function () {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+});
+
+</script>
+
+</body>
+</html>
