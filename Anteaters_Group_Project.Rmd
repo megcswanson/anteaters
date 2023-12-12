@@ -227,7 +227,7 @@ One of the main aims we address in this research is the investigation of factors
 ```{r linear model}
 # add interactions to address the aim that states "The researchers are interested in whether the age of the user also has an effect, although they are not sure whether the effect will be the same for all types of emoji."
 
-m2intq2 <- (lm(EVS ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean))
+m2intq2 <- (lm(scale(EVS) ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean))
 anova(m2intq2)
 summary(m2intq2)
 
@@ -261,16 +261,6 @@ m2intq2 <- lm(EVS ~ freq_emu + age_mc*em_cat, data = mutate(emoji_clean,
                                                             age_mc = I(age-mean(age))))
 ano_q2 <- anova(m2intq2)
 
-```
-
-```{r}
-# estimated means
-#emmeans(m2intq2, pairwise ~ em_cat * I(age-mean(age)))$contrasts |>
-  #kable(digits = 3) |>
-  #kable_styling()
-
-# meg does mean calculations ew
-#coef(m2intq2)
 ```
 
 ```{r assumptions}
