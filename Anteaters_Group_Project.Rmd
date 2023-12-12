@@ -230,6 +230,9 @@ shapiro_wilks_int <- shapiro.test(residuals(m2intq2)) #normality
 ncvTest_int <- ncvTest(m2intq2)#(testing) constant variance #above the text - otherwise can't see them. 
 ncvTest_int
 
+shapiro_wilks_sensitivity <- shapiro.test(residuals(m2intq2_sensitivity))
+ncvTest_sensitivity <- ncvTest(m2intq2_sensitivity)
+
 # Sensitivity analyses ----
 m2intq2_sensitivity <- (lm(scale(EVS) ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean[-c(2,13,175), ]))
 ano_q2_sense <- anova(m2intq2_sensitivity)
