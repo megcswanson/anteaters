@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = FALSE,
 
 # Load required libraries ----
 library(bookdown)
+library(car)
 library(tinytex)
 library(tidyverse)
 library(GGally)
@@ -22,7 +23,6 @@ library(kableExtra)
 library(patchwork)
 library(MKinfer)
 library(RColorBrewer)
-library(emmeans)
 
 # Download data ----
 source("https://edin.ac/4616rYu")
@@ -154,7 +154,11 @@ q1b_cor_boot<- confint(car::Boot(lm(scale(age)~scale(freq_emu), data = emoji_cle
 
 Correlation test Interpretation
 
-A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of `r nrow(emoji_clean)` individuals were included in the analysis, with a mean age of `r round(mean(emoji_clean$age),2 )` (*sd* = `r round(sd(emoji_clean$age),2 )`) and a mean frequency of use of emoji of `r round(mean(emoji_clean$freq_emu),2 )` (*sd* = `r round(sd(emoji_clean$freq_emu),2 )`).There was a strong negative correlation between age of an individual and the frequency of emoji use (*r* = `r round(q1b_cortest$estimate,2)`, *t*(`r round(q1b_cortest$parameter,1)`) = `r round(q1b_cortest$statistic,2)`), *p* `r print_p(q1b_cortest$p.value)`. We therefore reject the null hypothesis that there is no correlation between age and frequency of emoji use. Figure 1 provides a visualization of the relationship. 
+
+A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of `r nrow(emoji_clean)` individuals were included in the analysis, with a mean age of `r round(mean(emoji_clean$age),2 )` (*sd* = `r round(sd(emoji_clean$age),2)`) and a mean frequency of use of emoji of `r round(mean(emoji_clean$freq_emu),2)` (*sd* = `r round(sd(emoji_clean$freq_emu),2)`).There was a strong negative correlation between age of an individual and the frequency of emoji use (*r* = `r round(q1b_cortest$estimate,2)`, *t*(`r round(q1b_cortest$parameter,1)`) = `r round(q1b_cortest$statistic,2)`), *p* `r print_p(q1b_cortest$p.value)`. We therefore reject the null hypothesis that there is no correlation between age and frequency of emoji use. Figure 1 provides a visualization of the relationship. 
+
+A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of `r nrow(emoji_clean)` individuals were included in the analysis, with a mean age of `r round(mean(emoji_clean$age),2 )` (*sd* = `r round(sd(emoji_clean$age),2 )`) and a mean frequency of use of emoji of `r round(mean(emoji_clean$freq_emu),2 )` (*sd* = `r round(sd(emoji_clean$freq_emu),2 )`).There was a strong negative correlation between age of an individual and the frequency of emoji use (*r* = `r round(q1b_cortest$estimate,2)`, *t*(`r round(q1b_cortest$parameter,1)`) = `r round(q1b_cortest$statistic,2)`), *p* `r print_p(q1b_cortest$p.value)`. We therefore reject the null hypothesis that there is no correlation between age and frequency of emoji use. \@ref(fig:cor-plot) provides a visualization of the relationship. 
+
 
 ## Balance of Users of Operating Systems for Emoji Categories (Meg and Julie)
 
@@ -217,17 +221,32 @@ For each emoji category, we found no significant difference between the observed
 * plot commentary
 * check assumptions
 * check for multicolinearity (vif)
-* check for influential values (cooks distances + inf matrix) - Meg - i've started writing up cooks distances analysis
-* write up analysis - Meg - i've written up the model but please check
-* add interaction plot + comment - Meg - interaction plot has been added but I need some help on what (if anything) I need to comment on 
+* check for influential values (cooks distances + inf matrix)
+* write up analysis
+* add interaction plot + comment
 
-One of the main aims we address in this research is the investigation of factors influencing emotional valence. We fitted a multiple regression model to predict whether the type of emoji and the frequency of use of the emoji, as well as the age of the participants, has an effect on their emotional valence. We mean-centered age for interpretation of coefficients and intercepts. We additionally used sum-to-zero contrasting for this linear regression model, as there is no intuitive reference level between in the emoji categories. The interaction coefficients in this model refer to the movement between the overall grand mean, represented by the intercept coefficient (*b* = -1.80), and the different emoji categories.
+```{r assumptions}
+shapiro_wilks_int <- shapiro.test(residuals(m2intq2)) #normality
+ncvTest_int <- ncvTest(m2intq2)#(testing) constant variance #above the text - otherwise can't see them. 
+ncvTest_int
+```
 
-```{r linear model, echo=FALSE, include=FALSE}
+Prior to conducting our analyses, we assessed whether the assumptions for conducting a linear model were met. Model residuals seemed normally distributed \@ref(fig:q3-residuals). Despite a significant Shapiro-Wilks (*W* = `r round(shapiro_wilks_int$statistic,2)`, *p* `r print_p(shapiro_wilks_int$p.value)`, this was not particularly problematic due to the large sample size of the study (`r nrow(emoji_clean)`). Visual inspection of Scale Location (ncvTest_int) showed a straight line, but  datapoints were not evenly spread out. Furthermore, the Breusch-Pagan test were significant (*ChiSquare* (`r (ncvTest_int$Df)`) = `r round(ncvTest_int$ChiSquare,2), *p* `r print_p(ncvTest_int$p)`), which might also not be a problem due to... Given the previously found strong correlation between age and frequency of emoji use, we checked for multicollinarity between the variables. Multicollinarity did not seem to be a problem, as all GVIF were <5 \@ref(fig:q3-vif). We furthermore conducted a Cooks Distance analysis and identified three outliers \@ref(fig:q3-vif). We conducted a sensitivity analysis and found that excluding these variables...
+
+```{r q2 sensitivity analysis}
+m2intq2_sensitivity <- (lm(EVS ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean[-c(2,13,175), ]))
+anova(m2intq2_sensitivity)
+summary(m2intq2_sensitivity)
+
+```
+
+
+One of the main aims we address in this research is the investigation of factors influencing emotional valence. We fitted a multiple regression model to predict whether the type of emoji and the frequency of use of the emoji, as well as the age of the participants, has an effect on their emotional valence. We mean-centered age for interpretation of coefficients and intercepts.
+
+```{r linear model}
 # add interactions to address the aim that states "The researchers are interested in whether the age of the user also has an effect, although they are not sure whether the effect will be the same for all types of emoji."
 
 contrasts(emoji_clean$em_cat) <- "contr.sum"
-
 
 m2intq2 <- (lm(EVS ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean))
 anova(m2intq2)
@@ -246,43 +265,30 @@ Cook's distance was also computed to determine which, if any, data points contri
 
 
 ```{r q2-interaction-plot}
+
 # plot interactions 
 p2 <- interactions::interact_plot(m2intq2, pred = "age", modx = "em_cat", interval = TRUE, x.label = "Age", y.label = "Emotional Valence Score", main.title = "The interaction of Age and Emoji Category on the EVS", legend.main = "Emoji Category")
 p2
-```
 
-The interactions in the linear model between age and emoji category were plotted. Across all emoji categories, there were no statistically significant interactions between category and age. For the interaction between the 'loudly crying emoji' [`r emoji::emoji("loudly crying face")`] and age, 
-
-```{r anova-linear-regression, echo=FALSE}
 m2intq2 <- lm(EVS ~ freq_emu + age_mc*em_cat, data = mutate(emoji_clean,
                                                             age_mc = I(age-mean(age))))
 ano_q2 <- anova(m2intq2)
 
 ```
 
-
-
 thumbs up regression coef: `r round(-sum(m2intq2$coefficients[4:5]),2)` 
 interaction term: `r round(-sum(m2intq2$coefficients[6:7]),2) `
 
-```{r estimated-means, echo=FALSE}
+```{r}
 # estimated means
-library(emmeans)
-emmeans(m2intq2, pairwise ~ em_cat * age_mc)$contrasts |>
-  kable(digits = 3) |>
-  kable_styling()
-```
-
-
-```{r estimated-means, echo=FALSE}
-# estimated means - doesn't run and we prob shouldn't include these
 #emmeans(m2intq2, pairwise ~ em_cat * I(age-mean(age)))$contrasts |>
-#  kable(digits = 3) |>
-#  kable_styling()
+  #kable(digits = 3) |>
+  #kable_styling()
 
 # meg does mean calculations ew
-coef(m2intq2)
+#coef(m2intq2)
 ```
+
 
 
 # Accuracy of Emoji Interpretation (Julie)
@@ -354,12 +360,14 @@ p_freq <- ggplot(emoji_clean, aes(x = freq_emu))+
 
 ```
 
-Given the binary outcome (correct vs. incorrect interpretation; see Figure \@ref(fig:q3-desc-plots)F), we fitted a multiple logistic regression model using maximum likelihood estimation. This will estimate the change in log-odds for correct interpretation for each predictor (see eq. \@ref(eq:q3-model)). We included the predictors as outlined above and as in the earlier model (see The Emotional Effect of Emoji). Like the previous model, we mean-centered age so that the log-odds of the intercept are estimated at the mean age of the sample rather than extrapolated to age 0. Secondly, we used treatment coding (exact contrast coding in Table \@ref(tab:cat-code-tab-q3) in the Appendix) for the Emoji category since the three different kinds of Emoji had no intuitive reference group. In this way, the two regression coefficients for Emoji category would be the difference between the mean log-odds of correct interpretation across Emoji categories and the Emoji-specific mean log-odds for the loudly crying face Emoji and the thumbs up Emoji. We specifically chose to include these two categories due to the seemingly lower age for correctly interpreting the thumbs up Emoji. Thus, we fitted a model where the intercept was the log-odds of correctly interpreting an Emoji averaged across the different categories for a mean-aged participant reporting using 0 Emoji per day. Equation \@ref(eq:q3-model) (note, E1 and E2 refers to the sum-to-zero coding in Table \@ref(tab:cat-code-tab-q3) in the Appendix):
+Given the binary outcome (correct vs. incorrect interpretation; see Figure \@ref(fig:q3-desc-plots)F), we fitted a multiple logistic regression model using maximum likelihood estimation, which will estimate the change in log-odds for correct interpretation for each predictor. We included the predictors as outlined above and as in the earlier model (see The Emotional Effect of Emoji). Like the previous model, we mean-centered age so that the log-odds of the intercept are estimated at the mean age of the sample rather than extrapolated to age 0. Secondly, we used treatment coding (exact contrast coding in Table \@ref(tab:cat-code-tab-q3) in the Appendix) for the Emoji category since the three different kinds of Emoji had no intuitive reference group. In this way, the two regression coefficients for Emoji category would be the difference between the mean log-odds of correct interpretation across Emoji categories and the Emoji-specific mean log-odds for the loudly crying face Emoji and the thumbs up Emoji. We specifically chose to include these two categories due to the seemingly lower age for correctly interpreting the thumbs up Emoji. Thus, we fitted a model where the intercept was the log-odds of correctly interpreting an Emoji averaged across the different categories for a mean-aged participant reporting using 0 Emoji per day. This model has the following regression equation (note, E1 and E2 refers to the sum-to-zero coding in Table \@ref(tab:cat-code-tab-q3) in the Appendix):
+
 
 \begin{align}
-\log[ \frac {P(Correct)}{P(Incorrect)}] = & \ \hat\beta_0 + \hat\beta_{1}(Frequency) + \hat\beta_{2}(Age) + \hat\beta_{3}E_{1[thumbs \ up]} + \hat\beta_{4}E_{2[loudly\ crying]} \ + \\ 
-& \hat\beta_{5}(Age · E_{1[thumbs \ up]}) + \hat\beta_{6}(Age · E_{2[loudly\ crying]}) + \varepsilon_{i} (\#eq:q3-model)
+\log\left[ \frac {P(Correct)}{P(Incorrect)} \right] = \hat\beta_0 + \hat\beta_{1}·(Frequency) + \hat\beta_{2}(Age) + \hat\beta_{3}·E_{1[thumbs \ up]} + \hat\beta_{4}·E_{2[loudly\ crying]} + \hat\beta_{5}·(Age · E_{1[thumbs \ up]})\\ 
+& \hat\beta_{6}·(Age · E_{2[loudly\ crying]}) + \varepsilon_{i} (\#eq:q3-model)
 \end{align} 
+
 
 We conducted the following tests to address the research question of which factors are associated with more or less likelihood of correctly interpreting the tested Emoji. Firstly, an analysis of deviance was conducted using likelihood ratio tests to test if each predictor significantly reduced model deviance. Secondly, we investigated the associated regression coefficients to elucidate the direction of association. We examined each regression coefficient, its direction, range with 95 % confidence intervals, and significance with *z*-tests ($H_0: \hat\beta_i \neq 0$; $\alpha$ = .05). We also estimated these for slightly smiling face Emoji category ($\hat\beta_0-(\hat\beta_3+\hat\beta_4)$) and its interaction with age ($\hat\beta_0-(\hat\beta_5+\hat\beta_6)$). Before examining the model, we verified that the model fit did not violate assumptions of logistic regression by inspecting the standardised deviance residuals (a priori criterion range: $|standardised \ deviance \ residual| ≤ 3$; see Figure \@ref(fig:q3-stand-dev-res-plot)).
 
@@ -544,8 +552,25 @@ kable(contrasts(emoji_clean$em_cat), col.names = c("E1", "E2"),
   kable_styling(htmltable_class = "lightable-classic", full_width = T)
 ```
 
-```{r}
-plot(m2intq2,which = 2)
+```{r residuals-vs-fitted}
+plot(m2intq2, which = 1)
+
+```
+
+```{r q3-residuals}
+plot(m2intq2, which = 2)
+```
+
+```{r q3-scalelocation}
+plot(m2intq2, which = 3)
+```
+
+```{r q3-cooksdistance}
+plot(m2intq2, which = 4)
+```
+
+```{r q3-vif}
+vif(m2intq2)
 ```
 
 ## Accuracy of Emoji Interpretation
