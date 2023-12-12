@@ -606,7 +606,7 @@ emoji_qq1 <- emoji_clean|>
 par(mfrow = c(1, 2)) #combining plots in one line 
 
 qqnorm(
-       main = "Normal Q-Q Plot: Apple",
+       main = "A) Normal Q-Q Plot: Apple",
        emoji_qq1$freq_emu)
 qqline(emoji_qq1$freq_emu)
 
@@ -614,7 +614,7 @@ emoji_qq2 <- emoji_clean|>
   filter(opsys=="Android")
 
 qqnorm(
-  main = "Normal Q-Q Plot: Android",
+  main = "B) Normal Q-Q Plot: Android",
   emoji_qq2$freq_emu)
 qqline(emoji_qq2$freq_emu)
 ```
@@ -635,10 +635,10 @@ kable(contrasts(emoji_clean$em_cat), col.names = c("E1", "E2"),
 ```{r residuals-vs-fitted}
 par(mfrow = c(2, 2))
 
-plot(m2intq2, which = 1)
-plot(m2intq2, which = 2)
-plot(m2intq2, which = 3)
-plot(m2intq2, which = 4)
+plot(m2intq2, which = 1, main = "A")
+plot(m2intq2, which = 2, main = "B")
+plot(m2intq2, which = 3, main = "C")
+plot(m2intq2, which = 4, main = "D")
 ```
 
 ```{r q3-residuals}
@@ -666,8 +666,8 @@ summary(influence.measures(m2intq2))
 
 ```{r q3-stand-dev-res-plot, fig.cap= "Standardised Deviance Residuals for Logistic Regression Model"}
 par(mfrow = c(1, 2))
-plot(rstandard(m1q3, type = 'deviance'),ylab = 'Standardised Deviance Residuals')
-plot(m1q3, which=4)
+plot(rstandard(m1q3, type = 'deviance'),ylab = 'Standardised Deviance Residuals', main = "A")
+plot(m1q3, which=4, main = "B")
 ```
 
 ```{r vif-q3}
