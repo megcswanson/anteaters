@@ -103,7 +103,7 @@ Before describing the data, we conducted some initial checks to ensure that all 
 
 ## Association Between Operating System and Frequency of Emoji Use
 
-We explored whether there's a difference in the frequency of emoji use between Apple and Android users. We did this in two ways - we created violin plots, and conducted some sorta tests. 
+We explored whether there's a difference in the frequency of emoji use between Apple and Android users. We did this in two ways - we created violin plots, and conducted a bootstrapped t-test. 
 
 From Figure \@ref(fig:q1b-violin-plot), we can see that the lower quartile and median of the two operating systems are very similar. However,  the upper quartile is higher and overall range is larger for Apple than Android. It seems that Apple users seem more likely to use a higher number of emojis per day. Android users, however, are more densely concentrated around the median. There are only three  unusually high values at 24 emojis per day, which are all reported by Apple users.
 
