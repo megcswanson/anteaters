@@ -227,8 +227,6 @@ One of the main aims we address in this research is the investigation of factors
 ```{r linear model}
 # add interactions to address the aim that states "The researchers are interested in whether the age of the user also has an effect, although they are not sure whether the effect will be the same for all types of emoji."
 
-contrasts(emoji_clean$em_cat) <- "contr.sum"
-
 m2intq2 <- (lm(EVS ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean))
 anova(m2intq2)
 summary(m2intq2)
@@ -236,24 +234,27 @@ summary(m2intq2)
 plot(m2intq2,which=4)
 # 13, 175 and 2 are outliers
 # cook's distance: may need to include plot in appendix
+summary(influence.measures(m2intq2))
+```
 
+```{r q2 sensitivity analysis}
+m2intq2_sensitivity <- (lm(EVS ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean[-c(2,13,175), ]))
+anova_sense <- anova(m2intq2_sensitivity)
+summary(m2intq2_sensitivity)
+```
 
+```{r tab model}
+tab_model(m2intq2, m2intq2_sensitivity)
 ```
 
 In this model, we evaluated the effect of the frequency of emoji use, age, and emoji category on the emotional valence score. The emoji category was found to not be a significant influence on the EVS (*p*> 0.05), and the interaction between age and emoji category was also found to be non-significant (*p*> 0.05). However, both the frequency of emoji use and the age of the participant were found to be significant (*p*< 0.001 and *p*< 0.05, respectively). An analysis of variance on this model fit indicated that the full model including the frequecy of emoji use, age, emoji category, and the interaction between age and emoji category explained 32% (adjusted *R*^2^) of the variance in emotional valence scores. 
 
-Cook's distance was also computed to determine which, if any, data points contributed undue influence on this model. The threshold for this determination was given by $4/(N-k-1)$, in which *N* is the number of observations and *k* is the number of predictors. Given this threshold of 0.017, it was determined that we should exclude three observations and fit a new model without them. 
-
-```{r q2 sensitivity analysis}
-m2intq2_sensitivity <- (lm(EVS ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean[-c(2,13,175), ]))
-anova(m2intq2_sensitivity)
-summary(m2intq2_sensitivity)
-```
+Cook's distance was also computed to determine which, if any, data points contributed undue influence on this model. The threshold for this determination was given by $4/(N-k-1)$, in which *N* is the number of observations and *k* is the number of predictors. Given this threshold of 0.017, it was determined that we should exclude three observations and fit a new model without them. A sensitivity analysis was run to compare the model fits for both. When the three influential values were removed, the interaction between all three categories of emoji and age reached significance (*p~slightly_smiling~* <0.001, *p~thumbs_up~* <0.001, *p~loudly_crying~* <0.001). 
 
 ```{r q2-interaction-plot}
 
 # plot interactions 
-p2 <- interactions::interact_plot(m2intq2, pred = "age", modx = "em_cat", interval = TRUE, x.label = "Age", y.label = "Emotional Valence Score", main.title = "The interaction of Age and Emoji Category on the EVS", legend.main = "Emoji Category")
+p2 <- interactions::interact_plot(m2intq2_sensitivity, pred = "age", modx = "em_cat", interval = TRUE, x.label = "Age", y.label = "Emotional Valence Score", main.title = "The interaction of Age and Emoji Category on the EVS", legend.main = "Emoji Category")
 p2
 
 m2intq2 <- lm(EVS ~ freq_emu + age_mc*em_cat, data = mutate(emoji_clean,
@@ -261,9 +262,6 @@ m2intq2 <- lm(EVS ~ freq_emu + age_mc*em_cat, data = mutate(emoji_clean,
 ano_q2 <- anova(m2intq2)
 
 ```
-
-thumbs up regression coef: `r round(-sum(m2intq2$coefficients[4:5]),2)` 
-interaction term: `r round(-sum(m2intq2$coefficients[6:7]),2) `
 
 ```{r}
 # estimated means
@@ -281,7 +279,7 @@ ncvTest_int <- ncvTest(m2intq2)#(testing) constant variance #above the text - ot
 ncvTest_int
 ```
 
-Prior to conducting our analyses, we assessed whether the assumptions for conducting a linear model were met. Model residuals seemed normally distributed \@ref(fig:q3-residuals). Despite a significant Shapiro-Wilks (*W* = `r round(shapiro_wilks_int$statistic,2)`, *p* `r print_p(shapiro_wilks_int$p.value)`, this was not particularly problematic due to the large sample size of the study (`r nrow(emoji_clean)`). Visual inspection of Scale Location (ncvTest_int) showed a straight line, but  datapoints were not evenly spread out. Furthermore, the Breusch-Pagan test were significant (*ChiSquare* (`r (ncvTest_int$Df)`) = `r round(ncvTest_int$ChiSquare,2), *p* `r print_p(ncvTest_int$p)`), which might also not be a problem due to... Given the previously found strong correlation between age and frequency of emoji use, we checked for multicollinarity between the variables. Multicollinarity did not seem to be a problem, as all GVIF were <5 \@ref(fig:q3-vif). We furthermore conducted a Cooks Distance analysis and identified three outliers \@ref(fig:q3-vif). We conducted a sensitivity analysis and found that excluding these variables...
+Prior to conducting our analyses, we assessed whether the assumptions for conducting a linear model were met. Model residuals seemed normally distributed \@ref(fig:q3-residuals). Despite a significant Shapiro-Wilks (*W* = `r round(shapiro_wilks_int$statistic,2)`, *p* `r print_p(shapiro_wilks_int$p.value)`, this was not particularly problematic due to the large sample size of the study (`r nrow(emoji_clean)`). Visual inspection of Scale Location (ncvTest_int) showed a straight line, but  datapoints were not evenly spread out. Furthermore, the Breusch-Pagan test were significant (*ChiSquare* (`r (ncvTest_int$Df)`) = `r round(ncvTest_int$ChiSquare,2)`, *p* `r print_p(ncvTest_int$p)`), which might also not be a problem due to... Given the previously found strong correlation between age and frequency of emoji use, we checked for multicollinarity between the variables. Multicollinarity did not seem to be a problem, as all GVIF were <5 \@ref(fig:q3-vif). We furthermore conducted a Cooks Distance analysis and identified three outliers \@ref(fig:q3-vif). We conducted a sensitivity analysis and found that excluding these variables...
 
 # Accuracy of Emoji Interpretation (Julie)
 
