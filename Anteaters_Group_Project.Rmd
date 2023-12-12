@@ -323,10 +323,52 @@ Prior to conducting our analyses, we assessed whether the assumptions for conduc
 
 ```{r}
 ano_q2_sense
+
+ano_row <- c( 
+  "Emoji usage", 
+  "Age",
+  "Emoji category",
+  "Age:Emoji category",
+  "Residuals")
+
+rownames(ano_q2_sense) <- ano_row
+  
+ano_q2_sense |>
+  rename("p.value" = "Pr(>F)") |>
+  rename("f.value" = "F value") |>
+  mutate(Df = ifelse(is.na(Df) == T, "", Df),
+         f.value = ifelse(is.na(f.value) == T, "", round(f.value,2)),
+         p.value = ifelse(is.na(p.value) == T, "", ifelse(p.value < 0.001, "< 0.001", round(p.value,3)))) |>
+  kable(digits = 2, 
+        # proper column names
+        col.names = c("Df", 
+                      "Sum of Squares", 
+                      "Mean Sum of Squares", 
+                      "F value", 
+                      "P value"),
+        caption = "Emotional Effect of Emojis: Analysis of Variance Table (Sensitivity Analysis)",
+        booktabs = T) |> 
+  kable_styling(htmltable_class = "lightable-classic", position = "float_right", full_width = F)
 ```
 
 ```{r tab-model}
 tab_model(m2intq2, m2intq2_sensitivity, title = "(\\#tab-model) Linear Regression Model")
+
+tab_model(m2intq2, m2intq2_sensitivity,show.stat=T, 
+          dv.labels = c("Emotional Valence (Full Dataset Model)", "Emotional Valence (Reduced Dataset Model"), 
+          pred.labels = c("Intercept", 
+                          "Emoji use frequency", 
+                          "Age", 
+                          str_c("Emoji [", emoji::emoji("slightly smiling face"),"]"), 
+                          str_c("Emoji [", emoji::emoji("thumbs up"),"]"), 
+                          str_c("Age:Emoji [", emoji::emoji("slightly smiling face"),"]"), 
+                          str_c("Age:Emoji [", emoji::emoji("thumbs up"),"]")), 
+          string.stat = "t-statistic ", 
+          string.p = "p-value ", 
+          string.ci = "95 % CI",
+          show.r2 = T,
+          show.se = T,
+          title = "(\\#tab-model) Linear Regression Model")
 ```
 
 An analysis of variance was conducted on the model that excluded the three outlying values. This analysis indicated that frequency of emoji use was a significant predictor of the emotional valence score (*p*<0.001), and the interaction between age and emoji category was also found to be a significant predictor (*p*<0.001). This model explained 46% (adjusted *R^2^*) of the variance within the data.
