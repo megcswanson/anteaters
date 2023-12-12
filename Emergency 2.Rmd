@@ -1,0 +1,669 @@
+---
+title: "Aggregating Anteaters Project"
+output: bookdown::html_document2
+date: "2023-11-16"
+---
+
+```{r setup, include=FALSE}
+# Formatting ----
+knitr::opts_chunk$set(echo = FALSE,
+                      warning = FALSE, # (JMEP) makes sure html doc doesn't print warnings
+                      message = FALSE) # (JMEP) makes sure html doc doesn't print messages
+
+
+# Load required libraries ----
+library(bookdown)
+library(car)
+library(tinytex)
+library(tidyverse)
+library(GGally)
+library(ggExtra)
+library(sjPlot)
+library(kableExtra)
+library(patchwork)
+library(MKinfer)
+library(RColorBrewer)
+
+# Download data ----
+source("https://edin.ac/4616rYu")
+get_my_data(group_name = "aggregating_anteaters")
+
+# functions ----
+print_p <- function(p) {
+  print <- ifelse(p < 0.001, "< 0.001", str_c("= ", round(p,3)))
+  return(print)
+}
+
+l2p <- function(logits) {
+  odds <- exp(logits)
+  prob <- odds/(1 + odds)
+  return(prob)
+}
+```
+
+# Data Preparation
+
+```{r data cleaning}
+# (JMEP) cleaning data ----
+emoji_clean <- emoji |>
+  filter(is.na(age) == F,
+         age > 2,
+         em_cat != "upside-down face",
+         freq_emu >= 0) |>
+  mutate(opsys = ifelse(opsys == "appple", "apple", opsys),
+         opsys = factor(opsys, labels = sapply(unique(opsys), str_to_sentence)),
+         em_cat_emoji = sapply(em_cat, emoji::emoji),
+         em_cat = factor(em_cat,labels = sapply(unique(em_cat), str_to_sentence)),
+         EI = factor(EI, labels = sapply(unique(EI), str_to_sentence)))
+
+# (JMEP) exlcuded data table ----
+excl_tab <- emoji |> 
+  mutate(
+    exclusion_reason = ifelse(is.na(name) == T, 
+                              "Name is missing",
+                        ifelse(is.na(age) == T, 
+                               "Age is missing",
+                        ifelse(age < 7,
+                               "Impossible or unlikely age",
+                        ifelse(is.na(opsys) == T,
+                               "Operating system is missing",
+                        ifelse(is.na(freq_emu) == T,
+                               "Frequency of Emoji use is missing",
+                        ifelse(freq_emu < 0,
+                               "Impossible frequency value (negative) is reported",
+                        ifelse(is.na(em_cat) == T,
+                               "Emoji category is missing",
+                        ifelse(em_cat != "loudly crying face" &
+                                 em_cat != "slightly smiling face" &
+                                 em_cat != "thumbs up",
+                               "Emoji not in study materials is reported",
+                        ifelse(is.na(EVS) == T,
+                               "Emotional valence score is missing",
+                        ifelse(is.na(EI) == T,
+                               "Emoji Interpretation is missing",
+                               "not excluded"))))))))))) |>
+  filter(exclusion_reason != "not excluded")
+```
+
+Before describing the data, we conducted some initial checks to ensure that all observations were entered within their possible ranges (for continuous variables) or levels (for categorical variables). We used some initial visualisations of the marginal distributions and relationships amongst the variables to find these impossible values (see Figure \@ref(fig:ini-pairs-panels) for these for the pre-processed data in the Appendix). We excluded impossible values along with any observation containing missing data (N~excluded~ = `r nrow(excl_tab)`). Table \@ref(tab:exclude) in the Appendix provides an overview of these excluded data points and the reason for exclusion. Additionally, the spelling of "Apple" was corrected in the operating system entry of `r nrow(filter(emoji, opsys=="appple"))` observations from "Appple".
+
+# Data Description
+
+## Association Between Operating System and Frequency of Emoji Use (Julie and Ella)
+
+We explored whether there's a difference in the frequency of emoji use between Apple and Android users. We did this in two ways - we created violin plots, and conducted a Welch two sample t-test. 
+
+From Figure \@ref(fig:q1b-violin-plot), we can see that the lower quartile and median of the two operating systems are very similar. However,  the upper quartile is higher and overall range is larger for Apple than Android. It seems that Apple users seem more likely to use a higher number of emojis per day. Android users, however, are more densely concentrated around the median. There are only a couple of unusually high values at 24 emojis per day for one Apple user.
+
+```{r q1b-violin-plot, fig.cap="Frequency of Emoji Use on Apple and Android Operating System", fig.align='center', fig.height = 3.3}
+emoji_clean |>
+  filter(opsys !="Windows") |>
+ggplot(aes(x = opsys, y = freq_emu, fill = opsys)) + 
+  geom_jitter(alpha = .3, height = 0)+
+  geom_violin(alpha = 0.5) +
+  geom_boxplot(width=0.1) + 
+  scale_fill_brewer(palette = "Accent")+
+  labs(x = "Operating system", y = "Frequency of emoji use (emoji/day)", fill="Operating System")+
+  theme_light()
+```
+
+
+```{r}
+# t-test ----
+q1t_test <-t.test(freq_emu ~ opsys, data = filter(emoji_clean, opsys != "Windows"))
+
+# shapiro Wilks + equal variance test ----
+shappy_wilks <- shapiro.test(emoji_clean$freq_emu) # greater than 0.05
+var_test <- var.test(freq_emu ~ opsys, filter(emoji_clean, opsys != "Windows"))
+
+# bootstrap standard error
+boot_t_test <- boot.t.test(freq_emu ~ opsys, data = filter(emoji_clean, opsys != "Windows"))
+```
+
+Following this, we conducted a Welch two sample t-test to assess whether the mean frequency of emoji use was different between Android (*n* = `r nrow(filter(emoji_clean, opsys == "Android"))` ; *m* = `r round(q1t_test$estimate [1],1)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "Android")$freq_emu), 2)` and Apple users (*n* = `r nrow(filter(emoji_clean, opsys == "Apple"))`; *m* = `r round(q1t_test$estimate[2],2)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "Apple")$freq_emu), 2)`). There was a significant difference in emoji use among Android and Apple users, *t*(`r round(q1t_test$parameter,2)`) = `r round(q1t_test$statistic,2 )`, *p* `r print_p(q1t_test$p.value)`, two-tailed).Therefore, we reject the null hypothesis that there is no difference in emoji use between Apple and Android users. From these two mechanisms, we have concluded that there is a difference between the two operating systems.
+ 
+
+## Correlation Between Age and Frequency of Emoji Use (Renia)
+
+**To do**
+
+* Introduction to the test
+* plot commentary
+* solution for non-normality
+
+```{r cor-plot, fig.cap="Relationship Between Age and Frequency of Emoji Use", fig.align='center', fig.height = 4}
+p_cor <- ggplot(emoji_clean, aes(x=age, y=freq_emu)) + 
+  geom_point(alpha = 0.5) + 
+  labs(x = "Age",
+       y = "Frequency of emoji use (emoji/day)")+
+  theme_light()
+ggMarginal(p_cor, type = "hist", xparams = list(binwidth = 1, fill = "#CBD6E8"), yparams = list(binwidth = 1, fill = "#F4CAE3"))
+```
+
+
+```{r correlation test}
+q1b_cortest <- cor.test(emoji_clean$age, emoji_clean$freq_emu)
+q1b_cortest_np <- cor.test(emoji_clean$age, emoji_clean$freq_emu, method= "spearman")
+
+q1b_cor_boot<- confint(car::Boot(lm(scale(age)~scale(freq_emu), data = emoji_clean)))
+```
+
+Correlation test Interpretation
+
+A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of `r nrow(emoji_clean)` individuals were included in the analysis, with a mean age of `r round(mean(emoji_clean$age),2 )` (*sd* = `r round(sd(emoji_clean$age),2)`) and a mean frequency of use of emoji of `r round(mean(emoji_clean$freq_emu),2)` (*sd* = `r round(sd(emoji_clean$freq_emu),2)`).There was a strong negative correlation between age of an individual and the frequency of emoji use (*r* = `r round(q1b_cortest$estimate,2)`, *t*(`r round(q1b_cortest$parameter,1)`) = `r round(q1b_cortest$statistic,2)`), *p* `r print_p(q1b_cortest$p.value)`. We therefore reject the null hypothesis that there is no correlation between age and frequency of emoji use. Figure 1 provides a visualization of the relationship. 
+
+A correlation test was conducted to assess whether there is a relationship between the age of an individual, and the frequency by which they use emoji. A total of `r nrow(emoji_clean)` individuals were included in the analysis, with a mean age of `r round(mean(emoji_clean$age),2 )` (*sd* = `r round(sd(emoji_clean$age),2 )`) and a mean frequency of use of emoji of `r round(mean(emoji_clean$freq_emu),2 )` (*sd* = `r round(sd(emoji_clean$freq_emu),2 )`).There was a strong negative correlation between age of an individual and the frequency of emoji use (*r* = `r round(q1b_cortest$estimate,2)`, *t*(`r round(q1b_cortest$parameter,1)`) = `r round(q1b_cortest$statistic,2)`), *p* `r print_p(q1b_cortest$p.value)`. We therefore reject the null hypothesis that there is no correlation between age and frequency of emoji use. \@ref(fig:cor-plot) provides a visualization of the relationship. 
+
+
+## Balance of Users of Operating Systems for Emoji Categories (Meg and Julie)
+
+**To do**
+
+* plot commentary
+
+```{r q1c-bar-plot, fig.cap="Distribution of Participants on Apple and Android Operating System for Each Emoji Category", fig.height = 2.5, fig.align='center'}
+ggplot(data = filter(emoji_clean, opsys != "Windows"), aes(x = em_cat, fill = opsys))+
+  geom_bar(position = "dodge", color = "black") +
+  labs(fill = "Operating System Used", x = "Emoji Category", y = "Number of Participants")+
+  scale_fill_brewer(palette = "Pastel2")+
+  theme_light()
+```
+
+Finally, we investigated whether there is a balance between Apple and Android users for each category of emoji. We conducted a $\chi^2$ goodness of fit test for each emoji category, which tests if the observed proportion of participants using Apple and Android deviates from hypothesised equal proportions of users (50% of the data each) indicating balance.
+
+```{r chi square test}
+# chi square tests ----
+# chi square for loudly crying face
+q1_chisq_cry <- emoji_clean |>
+  filter((opsys == "Apple" | opsys == "Android") & em_cat == "Loudly crying face") |>
+  droplevels() |>
+  select(opsys) |>
+  table() |>
+  chisq.test()
+
+# chi square for slightly smiling face
+q1_chisq_smile <-emoji_clean |>
+  filter((opsys == "Apple" | opsys == "Android") & em_cat == "Slightly smiling face") |>
+  droplevels() |>
+  select(opsys) |>
+  table() |>
+  chisq.test()
+
+# chi square for thumbs up
+q1_chisq_thumb <-emoji_clean |>
+  filter((opsys == "Apple" | opsys == "Android") & em_cat == "Thumbs up") |>
+  droplevels() |>
+  select(opsys) |>
+  table() |>
+  chisq.test()
+
+# proportion table ----
+prop <- emoji_clean |>
+  filter(opsys != "Windows") |>
+  droplevels() |>
+  group_by(em_cat,opsys)|>
+  summarise(n = n()) |>
+  mutate(total_n =sum(n[em_cat == em_cat]),
+    prop = round(n/total_n*100,2)) 
+```
+
+For each emoji category, we found no significant difference between the observed proportions of Apple and Android users, and a hypothesised set of equal proportions. For loudly crying face emoji [`r emoji::emoji("loudly crying face")`], $\chi^2$ (`r q1_chisq_cry$parameter`) = `r round(q1_chisq_cry$statistic, 2)`, *p* `r print_p(q1_chisq_cry$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Loudly crying face"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Loudly crying face")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "Loudly crying face")$prop` %). For the slightly smiling face  emoji [`r emoji::emoji("slightly smiling face")`],  $\chi^2$ (`r q1_chisq_smile$parameter`) = `r round(q1_chisq_smile$statistic, 2)`, *p* `r print_p(q1_chisq_smile$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Slightly smiling face"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Slightly smiling face")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "Slightly smiling face")$prop` %). Finally, for the thumbs up Emoji [`r emoji::emoji("thumbs up")`], $\chi^2$ (`r q1_chisq_thumb$parameter`) = `r round(q1_chisq_thumb$statistic, 2)`, *p* `r print_p(q1_chisq_thumb$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Thumbs up"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Thumbs up")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "Thumbs up")$prop` %). Thus, we found no evidence of imbalance of users of Apple and Android operated phones in each emoji category.
+
+# The Emotional Effect of Emojis (Renia & Meg)
+
+**To do**
+* generate relevant plots
+* plot commentary
+* check assumptions
+* check for multicolinearity (vif)
+* check for influential values (cooks distances + inf matrix)
+* write up analysis
+* add interaction plot + comment
+
+```{r assumptions}
+shapiro_wilks_int <- shapiro.test(residuals(m2intq2)) #normality
+ncvTest_int <- ncvTest(m2intq2)#(testing) constant variance #above the text - otherwise can't see them. 
+ncvTest_int
+
+shapiro_wilks_sensitivity <- shapiro.test(residuals(m2intq2_sensitivity))
+ncvTest_sensitivity <- ncvTest(m2intq2_sensitivity)
+
+```
+
+Prior to conducting our analyses, we assessed whether the assumptions for conducting a linear model were met. Given the previously found strong correlation between age and frequency of emoji use, we checked for multicollinarity between the variables. Multicollinarity did not seem to be a problem, as all GVIF were <5 \@ref(fig:q2-vif). Heteroscedacity did not appear to be a problem based on visual inspection of this figure: \@ref(fig:q2-residuals-vs-fitted). While a significant Shapiro-Wilks (*W* = `r round(shapiro_wilks_int$statistic,2)`, *p* `r print_p(shapiro_wilks_int$p.value)`) indicated non-normality, model residuals looked normally distributed \@ref(fig:q2-residuals), with the exception of three outliers. Breusch-Pagan was also significant (*$\chi^2$* (`r (ncvTest_int$Df)`) = `r round(ncvTest_int$ChiSquare,2)`, *p* `r print_p(ncvTest_int$p)`), indicating non-constant variance, despite the plot (ncvTest_int) showing a seemingly straight line. Furthermore, the same outliers were found in as influential in a Cooks Distance analysis (See the appendix, figure \@ref(fig:q2-cooksdistance)). A sensitivity analysis excluding the three outliers changed Shapiro-Wilk (*p* `r print_p(shapiro_wilks_sensitivity$p.value)`) and Breusch-Pagan (*p* `r print_p(ncvTest_sensitivity$p)`) to non-significant. We therefore removed the outliers from the analysis. 
+
+```{r q2 sensitivity analysis}
+m2intq2_sensitivity <- (lm(EVS ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean[-c(2,13,175), ]))
+anova(m2intq2_sensitivity)
+summary(m2intq2_sensitivity)
+
+```
+
+One of the main aims we address in this research is the investigation of factors influencing emotional valence. We fitted a multiple regression model to predict whether the type of emoji and the frequency of use of the emoji, as well as the age of the participants, has an effect on their emotional valence. We mean-centered age for interpretation of coefficients and intercepts.
+
+```{r linear model}
+# add interactions to address the aim that states "The researchers are interested in whether the age of the user also has an effect, although they are not sure whether the effect will be the same for all types of emoji."
+
+contrasts(emoji_clean$em_cat) <- "contr.sum"
+
+m2intq2 <- (lm(EVS ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean))
+anova(m2intq2)
+summary(m2intq2)
+# plot interactions 
+p2 <- interactions::interact_plot(m2intq2, pred = "age", modx = "em_cat", interval = TRUE, x.label = "Age", y.label = "Emotional Valence Score", main.title = "The interaction of Age and Emoji Category on the EVS", legend.main = "Emoji Category")
+p2
+
+m2intq2 <- lm(EVS ~ freq_emu + age_mc*em_cat, data = mutate(emoji_clean,
+                                                            age_mc = I(age-mean(age))))
+ano_q2 <- anova(m2intq2)
+
+```
+
+thumbs up regression coef: `r round(-sum(m2intq2$coefficients[4:5]),2)` 
+interaction term: `r round(-sum(m2intq2$coefficients[6:7]),2) `
+
+```{r}
+# estimated means
+#emmeans(m2intq2, pairwise ~ em_cat * I(age-mean(age)))$contrasts |>
+  #kable(digits = 3) |>
+  #kable_styling()
+
+# meg does mean calculations ew
+#coef(m2intq2)
+```
+
+
+
+# Accuracy of Emoji Interpretation (Julie)
+
+**To do**
+
+* add diagnostics and VIF to write-up
+* run sensitivity analysis without cook's distance outliers
+* write up analysis of deviance
+* write up reg coef table
+* write up relations to coef table for plot
+
+Finally, we address the research aim of what factors make participants more or less likely to correctly interpret Emoji (according to the researchers' coding scheme). The predictors of interest were the same as the previous regression model;frequency of emoji use first as its effect on interpreting Emoji is already known, and additionally age and Emoji category along with the interaction between these to investigate if the effect of age on interpretation accuracy is dependent on the Emoji being interpreted. Figure \@ref(fig:q3-desc-plots) provides an overview of the marginal distributions of these variables (Figures \@ref(fig:q3-desc-plots)C-F) and the relationships with Emoji interpretation accuracy for age by Emoji category (Figure \@ref(fig:q3-desc-plots)A) and for frequency of Emoji use (Figure \@ref(fig:q3-desc-plots)B). As noted previously, neither age (approximately uniform; Figure \@ref(fig:q3-desc-plots)C) nor frequency of Emoji use (approximately Poisson distributed; Figure \@ref(fig:q3-desc-plots)D) were normally distributed, and there were slightly more participants who interpreted the loudly crying face Emoji [`r emoji::emoji("loudly crying face")`] than the other Emoji categories (Figure \@ref(fig:q3-desc-plots)E). Generally, a slightly higher proportion of participants interpreted their Emoji incorrectly as compared to correct interpretations (Figure \@ref(fig:q3-desc-plots)F). Examining the median age and frequency in Figures \@ref(fig:q3-desc-plots)A-B, it seems that incorrect responses are more common for participants with higher age and lower frequency use. Although correct responses were more evenly distributed across frequency of Emoji use relative to incorrect responses, which tended to be below five Emoji per day. Figure \@ref(fig:q3-desc-plots)A provided some indication that the Emoji being interpreted may moderate the relationship between lower age for correct interpretations - specifically, that the thumbs up Emoji [`r emoji::emoji("thumbs up")`] seem to have slightly lower median age for correct interpretations.
+
+```{r q3-desc-plots, fig.cap="Relationships (A-B) and Marginal Distributions (C-F) of Variables of Interest for Interpretation Accuracy", fig.width=10, fig.height= 6}
+
+p_age_acc <- ggplot(emoji_clean, aes(x = EI, y = age, fill = em_cat))+
+  geom_jitter(alpha = .3, height = 0)+
+  geom_violin(alpha = 0.5) +
+  geom_boxplot(width = 0.2) + 
+  facet_wrap(~em_cat)+
+  scale_fill_brewer(palette = "Accent")+
+  labs(x = "Interpretation accuracy", y = "Age",
+       title = "(B) Emoji Interpretation Accuracy for Age and Emoji Category")+ 
+  theme_light()+
+  theme(legend.position = "none",
+        strip.background = element_rect(fill ="white", color = "grey"),
+        strip.text = element_text(color = "black"),
+        plot.title = element_text(size = 11))
+
+p_freq_acc <- ggplot(emoji_clean, aes(x = EI, y = freq_emu, fill = EI))+
+  geom_jitter(alpha = .3, height = 0)+
+  geom_violin(alpha = 0.5) +
+  geom_boxplot(width = 0.2) + 
+  scale_fill_brewer(palette = "Set3")+
+  labs(x = "Interpretation accuracy", y = "Frequency (emoji/day)", 
+       title = "(A) Emoji Interpretation Accuracy Frequency of Emoji Use")+
+  theme_light()+
+  theme(legend.position = "none",
+        plot.title = element_text(size = 11))
+
+
+p_em_cat <- ggplot(emoji_clean, aes(x = em_cat))+
+  geom_bar(color = "black", fill = "#FB8072")+
+  labs(x = "Emoji category", y = "Number of participants", title = "(E) Emoji Category")+
+  theme_light()+
+  theme(plot.title = element_text(size = 11),
+        axis.text.x = element_text(angle = 14))
+
+p_EI <- ggplot(emoji_clean, aes(x = EI))+
+  geom_bar(color = "black", fill = "#80B1D3")+
+  labs(x = "Interpretation accuracy", y = "Number of participants", title = "(F) Interpretation Accuracy")+
+  theme_light()+
+  theme(plot.title = element_text(size = 11))
+
+p_age <- ggplot(emoji_clean, aes(x = age))+
+  geom_density(color = "black", fill = "#CBD6E8") +
+  labs(x = "Age", y = "Density", title = "(C) Age" )+
+  theme_light()+
+  theme(plot.title = element_text(size = 11))
+
+p_freq <- ggplot(emoji_clean, aes(x = freq_emu))+
+  geom_density(color = "black", fill = "#F4CAE3") +
+  labs(x = "Frequency (emoji/day)", y = "Density", title = "(D) Frequency of Emoji Use") +
+  theme_light()+
+  theme(plot.title = element_text(size = 11))
+
+(p_freq_acc| p_age_acc) / (p_age|p_freq|p_em_cat|p_EI) + plot_layout(heights = c(2.5,1))
+
+```
+
+Given the binary outcome (correct vs. incorrect interpretation; see Figure \@ref(fig:q3-desc-plots)F), we fitted a multiple logistic regression model using maximum likelihood estimation, which will estimate the change in log-odds for correct interpretation for each predictor. We included the predictors as outlined above and as in the earlier model (see The Emotional Effect of Emoji). Like the previous model, we mean-centered age so that the log-odds of the intercept are estimated at the mean age of the sample rather than extrapolated to age 0. Secondly, we used treatment coding (exact contrast coding in Table \@ref(tab:cat-code-tab-q3) in the Appendix) for the Emoji category since the three different kinds of Emoji had no intuitive reference group. In this way, the two regression coefficients for Emoji category would be the difference between the mean log-odds of correct interpretation across Emoji categories and the Emoji-specific mean log-odds for the loudly crying face Emoji and the thumbs up Emoji. We specifically chose to include these two categories due to the seemingly lower age for correctly interpreting the thumbs up Emoji. Thus, we fitted a model where the intercept was the log-odds of correctly interpreting an Emoji averaged across the different categories for a mean-aged participant reporting using 0 Emoji per day. This model has the following regression equation (note, E1 and E2 refers to the sum-to-zero coding in Table \@ref(tab:cat-code-tab-q3) in the Appendix):
+
+
+\begin{align}
+\log\left[ \frac {P(Correct)}{P(Incorrect)} \right] = \hat\beta_0 + \hat\beta_{1}·(Frequency) + \hat\beta_{2}(Age) + \hat\beta_{3}·E_{1[thumbs \ up]} + \hat\beta_{4}·E_{2[loudly\ crying]} + \hat\beta_{5}·(Age · E_{1[thumbs \ up]})\\ 
+& \hat\beta_{6}·(Age · E_{2[loudly\ crying]}) + \varepsilon_{i} (\#eq:q3-model)
+\end{align} 
+
+
+We conducted the following tests to address the research question of which factors are associated with more or less likelihood of correctly interpreting the tested Emoji. Firstly, an analysis of deviance was conducted using likelihood ratio tests to test if each predictor significantly reduced model deviance. Secondly, we investigated the associated regression coefficients to elucidate the direction of association. We examined each regression coefficient, its direction, range with 95 % confidence intervals, and significance with *z*-tests ($H_0: \hat\beta_i \neq 0$; $\alpha$ = .05). We also estimated these for slightly smiling face Emoji category ($\hat\beta_0-(\hat\beta_3+\hat\beta_4)$) and its interaction with age ($\hat\beta_0-(\hat\beta_5+\hat\beta_6)$). Before examining the model, we verified that the model fit did not violate assumptions of logistic regression by inspecting the standardised deviance residuals (a priori criterion range: $|standardised \ deviance \ residual| ≤ 3$; see Figure \@ref(fig:q3-stand-dev-res-plot)).
+
+```{r logistic regression and anova}
+# data prep ----
+emoji_q3_analysis <- emoji_clean |>
+  mutate(EI_bi = ifelse(EI == "Incorrect", 0, 1),
+         age_mc = I(age-mean(age)))
+
+# Emoji category recoding
+emoji_q3_analysis$em_cat <- relevel(emoji_q3_analysis$em_cat, "Thumbs up")
+contrasts(emoji_q3_analysis$em_cat) <- "contr.sum"
+
+# model fit and analysis of deviance----
+# model fit
+m1q3 <- glm(EI_bi ~ freq_emu + age_mc*em_cat, data = emoji_q3_analysis, family = binomial)
+
+# analysis of deviance
+ano_q3 <- anova(m1q3, test = "Chisq") 
+
+# Model coefficient plots ----
+
+# Frequency while keeping age and emoji category constant
+q3_plotdata <- tibble(
+  freq_emu = seq(min(emoji_clean$freq_emu), max(emoji_clean$freq_emu)),
+  age_mc = rep(0, 25),
+  em_cat = rep(unique(emoji_clean$em_cat)[1], 25)
+)
+
+# Age for each emoji category while keeping frequency constant
+q3_plotdata_age_em <- tibble(
+  freq_emu = rep(0, 45*3),
+  age_mc = rep(seq(min(emoji_q3_analysis$age_mc), max(emoji_q3_analysis$age_mc), 1),3),
+  em_cat = c(rep(unique(emoji_clean$em_cat) [1], 45), 
+             rep(unique(emoji_clean$em_cat) [2], 45),
+             rep(unique(emoji_clean$em_cat) [3], 45))
+)
+
+# Frequency plot
+q3_p1<- broom::augment(m1q3, newdata = q3_plotdata, 
+               type.predict = "link",
+               se_fit=TRUE) |>
+  mutate(
+    .lower = l2p(.fitted - 1.96*.se.fit),
+    .upper = l2p(.fitted + 1.96*.se.fit),
+    .fitted = l2p(.fitted)
+  ) |> 
+  ggplot(aes(group = em_cat, x=freq_emu,y=.fitted,ymin=.lower,
+             ymax=.upper))+
+  geom_line(color = "#386BB0")+
+  geom_ribbon(alpha=.2, fill = "#386BB0")+
+  scale_colour_brewer(palette = "Accent")+
+  scale_fill_brewer(palette = "Accent")+
+  labs(x = "Emoji Use Frequency", y = "Probability of Correct Emoji Interpretation", 
+       title = "(A)")+
+  theme_light()
+
+# Age and emoji category plot
+q3_p2 <- broom::augment(m1q3, newdata = q3_plotdata_age_em, 
+               type.predict = "link",
+               se_fit=TRUE) |>
+  mutate(
+    .lower = l2p(.fitted - 1.96*.se.fit),
+    .upper = l2p(.fitted + 1.96*.se.fit),
+    .fitted = l2p(.fitted),
+    age = I(age_mc + mean(emoji_clean$age))
+  ) |> 
+  ggplot(aes(x=age,y=.fitted, group = em_cat, ymin=.lower,
+             ymax=.upper))+
+  geom_line(aes(color = em_cat))+
+  geom_ribbon(alpha=.2, aes(fill = em_cat))+
+  scale_colour_brewer(palette = "Dark2")+
+  scale_fill_brewer(palette = "Dark2")+
+  labs(x = "Age", y = "Probability of Correct Emoji Interpretation", 
+       color =  "Emoji Category", fill ="Emoji Category",
+       title = "(B)")+
+  theme_light()
+```
+
+```{r q3-dev-tab}
+# proper row names
+rownames(ano_q3)<- c(
+  "Intercept-only", 
+  "Emoji use frequency", 
+  "Age",
+  "Emoji category",
+  "Age:Emoji category"
+  )
+
+# print table
+ano_q3 |>
+  # tidy values
+  rename("p.value" = "Pr(>Chi)") |>
+  mutate(Df = ifelse(is.na(Df) == T, "", Df),
+         Deviance = ifelse(is.na(Deviance) == T, "", round(Deviance,2)),
+         p.value = ifelse(is.na(p.value) == T, "", ifelse(p.value < 0.001, "< 0.001", round(p.value,3)))
+         ) |>
+  kable(digits = 2, 
+        # proper column names
+        col.names = c("Df", 
+                      "Deviance", 
+                      "Residual Df", 
+                      "Residual Deviance", 
+                      "p-value"),
+        caption = "Emoji Interpretation: Analysis of Deviance Table",
+        booktabs = T) |> 
+  kable_styling(htmltable_class = "lightable-classic")
+```
+
+As shown in Table \@ref(tab:q3-dev-tab),  
+
+```{r q3-tab-model}
+tab_model(m1q3, 
+          transform = "exp",
+          show.stat=T, 
+          dv.labels = "Correct Emoji Interpretation", 
+          pred.labels = c("Intercept", 
+                          "Emoji use frequency", 
+                          "Age", 
+                          str_c("Emoji [", emoji::emoji("thumbs up"),"]"), 
+                          str_c("Emoji [", emoji::emoji("loudly crying face"),"]"), 
+                          str_c("Age:Emoji [", emoji::emoji("thumbs up"),"]"), 
+                          str_c("Age:Emoji [", emoji::emoji("loudly crying face"),"]")), 
+          string.stat = "z-statistic ", 
+          string.p = "p-value ", 
+          string.ci = "95 % CI", 
+          string.est = "Odds Ratio ",
+          show.r2 = F,
+          show.dev = T,
+          show.loglik = T,
+          show.se = T,
+          title = "(\\#tab:q3-tab-model) Logistic Regression Model")
+```
+
+Table \@ref(tab:q3-tab-model)
+
+Across emoji categories, the chance of correctly interpreting an emoji was. Which emoji was interpreted and emoji use frequency predicted no significant change in this likelihood. Age, on the other hand, reduced the predicted probability of correct interpretation; for each year above the sample mean, **xx**.
+
+Due to the linear transformation of the logistic regression model, the increase in probability of correctly interpreting an Emoji is not constant across its predictors (only the log-odds have this attribute). Figure \@ref(fig:q3-model-plots)A visualises the change in predicted probability of correctly interpreting the loudly crying emoji for the mean age across the reported range of frequency of Emoji use. Figure \@ref(fig:q3-model-plots)B provides the a similar visualisation across the sample age range for each Emoji category holding frequency of Emoji use at 0.
+
+```{r q3-model-plots, fig.cap="Predicted Probability of Correct Emoji Interpretation for (A) Emoji Use Frequency and (B) Age for Each Emoji Tested", fig.height= 4, fig.width=9, fig.align='center'}
+q3_p1|q3_p2
+```
+
+# Appendix: Supplementary Tables and Figures
+
+## Data Preparation
+
+```{r exclude} 
+excl_tab |>
+  mutate(opsys = factor(opsys, labels = c("Android", "Apple"))) |>
+  kable(col.names = c("Name", "Age", "Operating system", "Emoji use frequency",
+                      "Emoji category", "Emotional valence score",
+                      "Emoji Interpretation", "Reason for exlcusion"),
+        caption = "Excluded Observations",
+        booktabs = T) |> 
+  kable_styling(htmltable_class = "lightable-classic")
+```
+
+```{r ini-pairs-panels, fig.cap="Marginal Distributions and Between-Variable Relationships for Pre-Processed Data", fig.width=11,fig.height=16}
+emoji |> 
+  select("age", "EVS", "freq_emu", "em_cat", "EI", "opsys") |>
+  mutate(em_cat = factor(em_cat, labels = c("Cry", "Smile", "Thumbs", "Upside-down"))) |>
+  ggpairs(columnLabels = c("Age", "Emotional Valence Score", "Frequency of Emoji Use", 
+                           "Emoji Category", "Emoji Interpretation", "Operating System")
+    ) 
+```
+
+## Data Description
+
+```{r qq-plot-freq, fig.cap="QQPlot"}
+
+qqnorm(emoji_clean$freq_emu)
+qqline(emoji_clean$freq_emu)
+            
+```
+
+## The Emotional Effect of Emojis
+
+```{r cat-code-tab-q2}
+kable(contrasts(emoji_clean$em_cat), col.names = c("E1", "E2"), 
+      caption = "Emoji Category Treatment Contrast Coding Scheme",
+      booktabs = T) |>
+  kable_styling(htmltable_class = "lightable-classic", full_width = T)
+```
+
+```{r q2-residuals-vs-fitted, fig.cap= "Residuals vs. Fitted for Model of Emotional Valence"}
+plot(m2intq2, which = 1)
+```
+
+```{r q2-residuals, fig.cap= "Residuals for Model of Emotional Valence"}
+plot(m2intq2, which = 2)
+```
+
+```{r q2-scalelocation, fig.cap="Scale-Location for Model of Emotional Valence"}
+plot(m2intq2, which = 3)
+```
+
+```{r q2-cooksdistance, fig.cap="Cook's Distance for Model of Emotional Valence"}
+plot(m2intq2, which = 4)
+```
+
+```{r q3-vif, fig.cap= VIF for Model of Emotional Valence}
+vif(m2intq2)
+```
+
+## Accuracy of Emoji Interpretation
+
+```{r cat-code-tab-q3}
+kable(contrasts(emoji_q3_analysis$em_cat), col.names = c("E1", "E2"), 
+      caption = "Emoji Category Treatment Contrast Coding Scheme",
+      booktabs = T) |>
+  kable_styling(htmltable_class = "lightable-classic", full_width = T)
+```
+
+```{r q3-stand-dev-res-plot, fig.cap= "Standardised Deviance Residuals for Logistic Regression Model"}
+p_stand <- plot(rstandard(m1q3, type = 'deviance'),ylab = 'Standardised Deviance Residuals')
+```
+
+```{r vif-q3}
+vif_q3 <- car::vif(m1q3)[,1:2]
+
+rownames(vif_q3) <-c("Emoji use frequency","Age","Emoji category","Age:Emoji category")
+
+kable(vif_q3, digits = 2) |>
+  kable_styling(htmltable_class = "lightable-classic")
+```
+
+```{r q3-cooks-plot, fig.cap= "Cook's Distances for Logistic Regression Model"}
+plot(m1q3, which=4) 
+```
+
+```{r}
+infl_q3 <-influence.measures(m1q3)$infmat 
+
+infl_q3[c(13, 75, 218, 146),]
+emoji_q3_analysis[c(13, 75, 218, 146),]
+```
+
+
+```{r sensitivity analysis}
+m2q3 <- glm(EI_bi ~ freq_emu + age_mc*em_cat, data = emoji_q3_analysis[-c(75, 218),], family = binomial)
+summary(m2q3)
+
+# Age for each emoji category while keeping frequency constant
+q3_plotdata_age_em_2 <- tibble(
+  freq_emu = rep(0, 45*3),
+  age_mc = rep(seq(min(emoji_q3_analysis$age_mc), max(emoji_q3_analysis$age_mc), 1),3),
+  em_cat = c(rep(unique(emoji_clean$em_cat) [1], 45), 
+             rep(unique(emoji_clean$em_cat) [2], 45),
+             rep(unique(emoji_clean$em_cat) [3], 45))
+)
+
+# Age and emoji category plot
+(broom::augment(m2q3, newdata = q3_plotdata_age_em_2, 
+               type.predict = "link",
+               se_fit=TRUE) |>
+  mutate(
+    .lower = l2p(.fitted - 1.96*.se.fit),
+    .upper = l2p(.fitted + 1.96*.se.fit),
+    .fitted = l2p(.fitted),
+    age = I(age_mc + mean(emoji_clean$age))
+  ) |> 
+  ggplot(aes(x=age,y=.fitted, group = em_cat, ymin=.lower,
+             ymax=.upper))+
+  geom_line(aes(color = em_cat))+
+  geom_ribbon(alpha=.2, aes(fill = em_cat))+
+  scale_colour_brewer(palette = "Dark2")+
+  scale_fill_brewer(palette = "Dark2")+
+  labs(x = "Age", y = "Probability of Correct Emoji Interpretation", 
+       color =  "Emoji Category", fill ="Emoji Category",
+       title = "(B)")+
+  theme_light() ) | q3_p2
+
+anova(m2q3, test = "Chisq")
+
+plot(m2q3, which=4) 
+```
+
+# Exam Numbers: "B155926, B239086, B239979, B244840, B246814"
+
+# Assumptions for Interaction model and Logistic Regression model
+
+# Notes for report (to be deleted)
+
+(JMEP; 16/11/2023 - midnight zoomies) found this cool way of generating lm equation :0 equatiomatic
+
+(JMEP; 16/11/2023 - midnight zoomies) Would be helpful if we could do all our code for each section in one chunk. Then we can call tables/figures where we need them and refer to numbers in inline code. Inline code example: `r mean(emoji$age)` (there is an NA in age, booo)
+
+(JMEP; 16/11/2023 - midnight zoomies) I looked into age. There is one NA, one person who is -100 years old and one that is 1 year old. I think we can reliably remove them (done in emoji_clean). There are also a bunch (`r nrow(filter(emoji, is.na(age) == F & age < 18 & age > 1))` to be exact) that are under 18 (between `r range(filter(emoji, is.na(age) == F & age < 18 & age > 1)$age)[1]` and `r range(filter(emoji, is.na(age) == F & age < 18 & age > 1)$age)[2]`), whom I am not sure if we should remove??
+I also noticed some other unusual stuff. Frequency ratings below 0, and a typo in "Apple" for one of the operating systems ("Appple"). There are also only two Windows users which isn't really helpful in terms of analysis - might wanna exclude them.
+
+## Code to possibly be deleted:
+```{r}
+# proportion plot for Q1c
+p2<- emoji_clean |>
+  filter(opsys != "Windows") |>
+  droplevels() |>
+  group_by(em_cat,opsys)|>
+  summarise(n = n()) |>
+  mutate(total_n =sum(n[em_cat == em_cat]),
+    prop = n/total_n) |>
+  ggplot( aes(x = em_cat, y = prop, fill = opsys))+
+  geom_col(position = "dodge")+
+  ylim(0,1)
+
+p_pairs<-emoji_clean |>
+  select("age", "EVS", "freq_emu", "em_cat", "EI", "opsys") |>
+  mutate(em_cat = factor(em_cat, labels = c("Cry", "Smile", "Thumbs"))) |>
+  ggpairs(columnLabels = c("Age", "Emotional Valence Score", 
+                           "Frequency of Emoji Use", "Emoji Category", 
+                           "Emoji Interpretation", "Operating System"))
+```
+
+##  probably to delete but just in case
+For each emoji category, we found no significant difference between the observed proportions of Apple and Android users, and a hypothesised set of equal proportions. The results for each emoji category are as follows: loudly crying face emoji [`r emoji::emoji("loudly crying face")`]: *n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Loudly crying face"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Loudly crying face")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "Loudly crying face")$prop` %; $\chi^2$ (`r q1_chisq_cry$parameter`) = `r round(q1_chisq_cry$statistic, 2)`, *p* `r print_p(q1_chisq_cry$p.value)`; slightly smiling face  emoji [`r emoji::emoji("slightly smiling face")`]: *n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Slightly smiling face"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Slightly smiling face")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "Slightly smiling face")$prop` %; $\chi^2$ (`r q1_chisq_smile$parameter`) = `r round(q1_chisq_smile$statistic, 2)`, *p* `r print_p(q1_chisq_smile$p.value)`; thumbs up emoji [`r emoji::emoji("thumbs up")`]: *n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Thumbs up"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Thumbs up")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "Thumbs up")$prop` %; $\chi^2$ (`r q1_chisq_thumb$parameter`) = `r round(q1_chisq_thumb$statistic, 2)`, *p* `r print_p(q1_chisq_thumb$p.value)`.
