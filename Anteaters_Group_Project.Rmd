@@ -233,12 +233,13 @@ shapiro_wilks_int <- shapiro.test(residuals(m2intq2)) #normality
 ncvTest_int <- ncvTest(m2intq2)#(testing) constant variance #above the text - otherwise can't see them. 
 ncvTest_int
 
-shapiro_wilks_sensitivity <- shapiro.test(residuals(m2intq2_sensitivity))
-ncvTest_sensitivity <- ncvTest(m2intq2_sensitivity)
-
 # Sensitivity analyses ----
 m2intq2_sensitivity <- (lm(scale(EVS) ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean[-c(2,13,175), ]))
 ano_q2_sense <- anova(m2intq2_sensitivity)
+
+shapiro_wilks_sensitivity <- shapiro.test(residuals(m2intq2_sensitivity))
+ncvTest_sensitivity <- ncvTest(m2intq2_sensitivity)
+
 ```
 
 ```{r q2-desc-plots, fig.cap="Relationships (A-B) and Marginal Distributions (C-F) of Variables of Interest for Emotional Effect", fig.width=11}
@@ -605,14 +606,13 @@ emoji |>
 emoji_qq1 <- emoji_clean|>
   filter(opsys=="Apple")
 
+par(mfrow = c(1, 2)) #combining plots in one line 
+
 qqnorm(
        main = "Normal Q-Q Plot: Apple",
        emoji_qq1$freq_emu)
 qqline(emoji_qq1$freq_emu)
 
-```
-
-```{r}
 emoji_qq2 <- emoji_clean|>
   filter(opsys=="Android")
 
@@ -620,6 +620,10 @@ qqnorm(
   main = "Normal Q-Q Plot: Android",
   emoji_qq2$freq_emu)
 qqline(emoji_qq2$freq_emu)
+```
+
+```{r}
+
 ```
 
 ## The Emotional Effect of Emojis
@@ -632,19 +636,24 @@ kable(contrasts(emoji_clean$em_cat), col.names = c("E1", "E2"),
 ```
 
 ```{r residuals-vs-fitted}
+par(mfrow = c(2, 2))
+
 plot(m2intq2, which = 1)
+plot(m2intq2, which = 2)
+plot(m2intq2, which = 3)
+plot(m2intq2, which = 4)
 ```
 
 ```{r q3-residuals}
-plot(m2intq2, which = 2)
+
 ```
 
 ```{r q3-scalelocation}
-plot(m2intq2, which = 3)
+
 ```
 
 ```{r q3-cooksdistance}
-plot(m2intq2, which = 4)
+
 ```
 
 ```{r q3-vif}
@@ -659,7 +668,9 @@ summary(influence.measures(m2intq2))
 ## Accuracy of Emoji Interpretation
 
 ```{r q3-stand-dev-res-plot, fig.cap= "Standardised Deviance Residuals for Logistic Regression Model"}
+par(mfrow = c(1, 2))
 plot(rstandard(m1q3, type = 'deviance'),ylab = 'Standardised Deviance Residuals')
+plot(m1q3, which=4)
 ```
 
 ```{r vif-q3}
@@ -672,7 +683,7 @@ kable(vif_q3, digits = 2) |>
 ```
 
 ```{r q3-cooks-plot, fig.cap= "Cook's Distances for Logistic Regression Model"}
-plot(m1q3, which=4) 
+
 ```
 
 ```{r}
