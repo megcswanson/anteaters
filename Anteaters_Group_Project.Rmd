@@ -328,8 +328,6 @@ ano_q2_sense |>
 ```
 
 ```{r tab-model}
-tab_model(m2intq2, m2intq2_sensitivity, title = "(\\#tab-model) Linear Regression Model")
-
 tab_model(m2intq2, m2intq2_sensitivity,show.stat=T, 
           dv.labels = c("Emotional Valence (Full Dataset Model)", "Emotional Valence (Reduced Dataset Model"), 
           pred.labels = c("Intercept", 
@@ -344,7 +342,7 @@ tab_model(m2intq2, m2intq2_sensitivity,show.stat=T,
           string.ci = "95 % CI",
           show.r2 = T,
           show.se = T,
-          title = "(\\#tab-model) Linear Regression Model")
+          title = "(\\#tab:tab-model) Linear Regression Model")
 ```
 
 An analysis of variance was conducted on the model that excluded the three outlying values. This analysis indicated that frequency of emoji use was a significant predictor of the emotional valence score (*p*<0.001), and the interaction between age and emoji category was also found to be a significant predictor (*p*<0.001). This model explained 46% (adjusted *R^2^*) of the variance within the data.
