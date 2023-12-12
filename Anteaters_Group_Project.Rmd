@@ -239,7 +239,7 @@ summary(influence.measures(m2intq2))
 ```
 
 ```{r q2 sensitivity analysis}
-m2intq2_sensitivity <- (lm(EVS ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean[-c(2,13,175), ]))
+m2intq2_sensitivity <- (lm(scale(EVS) ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean[-c(2,13,175), ]))
 anova_sense <- anova(m2intq2_sensitivity)
 summary(m2intq2_sensitivity)
 ```
@@ -253,20 +253,15 @@ tab_model(m2intq2, m2intq2_sensitivity, title = "(\\#tab-model) Linear Regressio
 ```
 An analysis of variance was conducted on the model that excluded the three outlying values. This analysis indicated that frequency of emoji use was a significant predictor of the emotional valence score (*p*<0.001), and the interaction between age and emoji category was also found to be a significant predictor (*p*<0.001). This model explained 46% (adjusted *R^2^*) of the variance within the data.
 
-Prior to removing the three values that were shown to have undue influence on the model fit, we fit a model including all values present in the dataset. The two models are compared in \@ref(tab:tab-model). When the three influential values were removed, the interaction between all three categories of emoji and age reached significance (*p~slightly_smiling~* <0.001, *p~thumbs_up~* <0.001, *p~loudly_crying~* <0.001). Additionally, the refitted model explained 14% more of the variance in the data. 
+Prior to removing the three values that were shown to have undue influence on the model fit, we fit a model including all values present in the dataset. The two models are compared in \@ref(tab:tab-model). When the three influential values were removed, the interaction between all three categories of emoji and age reached significance (*p~slightly_smiling~* <0.001, *p~thumbs_up~* <0.001, *p~loudly_crying~* <0.001). These interactions are plotted in \@ref(fig:q2-interaction-plot). Additionally, the refitted model explained 14% more of the variance in the data. 
 
-```{r q2-interaction-plot}
-
+```{r q2-interaction-plot, fig.cap="The interaction of Age and Emoji Category on the EVS"}
 # plot interactions 
-p2 <- interactions::interact_plot(m2intq2_sensitivity, pred = "age", modx = "em_cat", interval = TRUE, x.label = "Age", y.label = "Emotional Valence Score", main.title = "The interaction of Age and Emoji Category on the EVS", legend.main = "Emoji Category")
+p2 <- interactions::interact_plot(m2intq2_sensitivity, pred = "age", modx = "em_cat", interval = TRUE, x.label = "Age", y.label = "Emotional Valence Score", legend.main = "Emoji Category")
 p2
-
-m2intq2 <- lm(EVS ~ freq_emu + age_mc*em_cat, data = mutate(emoji_clean,
-                                                            age_mc = I(age-mean(age))))
-ano_q2 <- anova(m2intq2)
-
 ```
-The interaction between age and emoji category were plotted. 
+
+
 ```{r assumptions}
 shapiro_wilks_int <- shapiro.test(residuals(m2intq2)) #normality
 ncvTest_int <- ncvTest(m2intq2)#(testing) constant variance #above the text - otherwise can't see them. 
