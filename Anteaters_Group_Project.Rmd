@@ -103,7 +103,7 @@ Before describing the data, we conducted some initial checks to ensure that all 
 
 ## Association Between Operating System and Frequency of Emoji Use
 
-We explored whether there's a difference in the frequency of emoji use between Apple and Android users. We did this in two ways - we created violin plots, and conducted a Welch two sample t-test. 
+We explored whether there's a difference in the frequency of emoji use between Apple and Android users. We did this in two ways - we created violin plots, and conducted some sorta tests. 
 
 From Figure \@ref(fig:q1b-violin-plot), we can see that the lower quartile and median of the two operating systems are very similar. However,  the upper quartile is higher and overall range is larger for Apple than Android. It seems that Apple users seem more likely to use a higher number of emojis per day. Android users, however, are more densely concentrated around the median. There are only three  unusually high values at 24 emojis per day, which are all reported by Apple users.
 
@@ -125,18 +125,20 @@ ggplot(aes(x = opsys, y = freq_emu, fill = opsys)) +
 q1t_test <-t.test(freq_emu ~ opsys, data = filter(emoji_clean, opsys != "Windows"))
 
 # shapiro Wilks + equal variance test ----
-shappy_wilks <- shapiro.test(emoji_clean$freq_emu) # greater than 0.05
+emoji_qq2 <- emoji_clean|>
+  filter(opsys=="Android")
+shappy_wilks_and <- shapiro.test(emoji_qq2$freq_emu) # greater than 0.05
+emoji_qq1 <- emoji_clean|>
+  filter(opsys=="Apple")
+shappy_wilks_app <- shapiro.test(emoji_qq1$freq_emu) # greater than 0.05
 var_test <- var.test(freq_emu ~ opsys, filter(emoji_clean, opsys != "Windows"))
-
-# wilcoxin
-willy <-wilcox.test(freq_emu ~ opsys, data = filter(emoji_clean, opsys != "Windows"))
-#https://en.wikipedia.org/wiki/Mann%E2%80%93Whitney_U_test
 
 # bootstrap standard error
 boot_t_test <- boot.t.test(freq_emu ~ opsys, data = filter(emoji_clean, opsys != "Windows"))
 ```
 
-Following this, we conducted a Welch two sample t-test to assess whether the mean frequency of emoji use was different between Android (*n* = `r nrow(filter(emoji_clean, opsys == "Android"))` ; *m* = `r round(q1t_test$estimate [1],1)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "Android")$freq_emu), 2)` and Apple users (*n* = `r nrow(filter(emoji_clean, opsys == "Apple"))`; *m* = `r round(q1t_test$estimate[2],2)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "Apple")$freq_emu), 2)`). There was a significant difference in emoji use among Android and Apple users, *t*(`r round(q1t_test$parameter,2)`) = `r round(q1t_test$statistic,2 )`, *p* `r print_p(q1t_test$p.value)`, two-tailed).Therefore, we reject the null hypothesis that there is no difference in emoji use between Apple and Android users. From these two mechanisms, we have concluded that there is a difference between the two operating systems.
+Initially, we conducted a Welch two sample t-test to assess whether the mean frequency of emoji use was different between Android (*Android n* = `r nrow(filter(emoji_clean, opsys == "Android"))` ; *m* = `r round(q1t_test$estimate [1],1)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "Android")$freq_emu), 2)` and Apple users (*n* = `r nrow(filter(emoji_clean, opsys == "Apple"))`; *m* = `r round(q1t_test$estimate[2],2)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "Apple")$freq_emu), 2)`). There was a significant difference in emoji use among Android and Apple users, *t*(`r round(q1t_test$parameter,2)`) = `r round(q1t_test$statistic,2 )`, *p* `r print_p(q1t_test$p.value)`, two-tailed). However, an assumption of the Welch test is normal distribution, but when we ran two Shapiro-Wilks tests (*Android p* = `r print_p(shappy_wilks_and$p.value)`; *Apple p* = `r print_p(shappy_wilks_app$p.value)`) and plotted Q-Q plots we found that neither operating system showed normal distribution (graphs in appendix). To account for the lack of normality, we decided to use a bootstrapped Welch t-test, which confirmed that the difference was significant, even with the non-normal distribution (*Confidence intervals 97.5%* = `r round(boot_t_test$boot.conf.int[2],2)`; *Confidence interval 2.5%* = `r round(boot_t_test$boot.conf.int[1], 2)` ; *Estimate - Android* = `r round(boot_t_test$estimate[1], 2)`; *Estimate - Apple* = `r round(boot_t_test$estimate[2], 2)`). As such, we can reject the null hypothesis that there is no difference in emoji use between Apple and Android users.
+
  
 ## Correlation Between Age and Frequency of Emoji Use
 
@@ -853,3 +855,9 @@ For each emoji category, we found no significant difference between the observed
 ## again probably to delete - includes android proportion
 
 For each emoji category, we found no significant difference between the observed proportions of Apple and Android users, and a hypothesised set of equal proportions. For loudly crying face emoji [`r emoji::emoji("loudly crying face")`], $\chi^2$ (`r q1_chisq_cry$parameter`) = `r round(q1_chisq_cry$statistic, 2)`, *p* `r print_p(q1_chisq_cry$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Loudly crying face"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Loudly crying face")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "Loudly crying face")$prop` %). For the slightly smiling face  emoji [`r emoji::emoji("slightly smiling face")`],  $\chi^2$ (`r q1_chisq_smile$parameter`) = `r round(q1_chisq_smile$statistic, 2)`, *p* `r print_p(q1_chisq_smile$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Slightly smiling face"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Slightly smiling face")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "Slightly smiling face")$prop` %). Finally, for the thumbs up Emoji [`r emoji::emoji("thumbs up")`], $\chi^2$ (`r q1_chisq_thumb$parameter`) = `r round(q1_chisq_thumb$statistic, 2)`, *p* `r print_p(q1_chisq_thumb$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Thumbs up"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Thumbs up")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "Thumbs up")$prop` %). Thus, we found no evidence of imbalance of users of Apple and Android operated phones in each emoji category.
+
+
+##1a deleted
+
+
+Following this, we conducted a Welch two sample t-test to assess whether the mean frequency of emoji use was different between Android (*n* = `r nrow(filter(emoji_clean, opsys == "Android"))` ; *m* = `r round(q1t_test$estimate [1],1)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "Android")$freq_emu), 2)` and Apple users (*n* = `r nrow(filter(emoji_clean, opsys == "Apple"))`; *m* = `r round(q1t_test$estimate[2],2)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "Apple")$freq_emu), 2)`). There was a significant difference in emoji use among Android and Apple users, *t*(`r round(q1t_test$parameter,2)`) = `r round(q1t_test$statistic,2 )`, *p* `r print_p(q1t_test$p.value)`, two-tailed).Therefore, we reject the null hypothesis that there is no difference in emoji use between Apple and Android users. From these two mechanisms, we have concluded that there is a difference between the two operating systems.
