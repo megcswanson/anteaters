@@ -1,6 +1,5 @@
 ---
 title: "Aggregating Anteaters Project"
-author: "B155926, B239086, B239979, B244840, and B246814"
 output: bookdown::html_document2
 date: "2023-11-16"
 ---
@@ -226,7 +225,6 @@ ano_q2 <- anova(m2intq2)
 # Assumptions ----
 shapiro_wilks_int <- shapiro.test(residuals(m2intq2)) #normality
 ncvTest_int <- ncvTest(m2intq2)#(testing) constant variance #above the text - otherwise can't see them. 
-ncvTest_int
 
 # Sensitivity analyses ----
 m2intq2_sensitivity <- (lm(scale(EVS) ~ freq_emu + I(age-mean(age)) * em_cat , data = emoji_clean[-c(2,13,175), ]))
@@ -292,7 +290,7 @@ p_freq <- ggplot(emoji_clean, aes(x = freq_emu))+
 (p_freq_evs| p_age_evs) / (p_evs|p_age|p_freq|p_em_cat) + plot_layout(heights = c(2.5,1))
 ```
 
-Prior to conducting our analyses, we assessed whether the assumptions for conducting a linear model were met. Given the previously found strong correlation between age and frequency of emoji use, we checked for multicollinarity between the variables. Multicollinarity did not seem to be a problem, as all GVIF were <5 \@ref(fig:ass-for-q2). Heteroscedacity did not appear to be a problem based on visual inspection of this figure: \@ref(fig:ass-for-q2). While a significant Shapiro-Wilks (*W* = `r round(shapiro_wilks_int$statistic,2)`, *p* `r print_p(shapiro_wilks_int$p.value)`) indicated non-normality, model residuals looked normally distributed \@ref(fig:ass-for-q2), with the exception of three outliers. Breusch-Pagan was also significant (*$\chi^2$* (`r (ncvTest_int$Df)`) = `r round(ncvTest_int$ChiSquare,2)`, *p* `r print_p(ncvTest_int$p)`), indicating non-constant variance, despite the plot (ncvTest_int) showing a seemingly straight line. We furthermore conducted a Cook's Distance analysis and identified three outliers \@ref(fig:ass-for-q2). The threshold for this determination was given by $4/(N-k-1)$, in which *N* is the number of observations and *k* is the number of predictors. Given this threshold of 0.017, it was determined that we should exclude three observations and fit a new model without them. Excluding the three outliers changed Shapiro-Wilk (*p* `r print_p(shapiro_wilks_sensitivity$p.value)`) and Breusch-Pagan (*p* `r print_p(ncvTest_sensitivity$p)`) to non-significant, ensuring that the data meets the assumptions of a linear model. 
+Prior to conducting our analyses, we assessed whether the assumptions for conducting a linear model were met. Given the previously found strong correlation between age and frequency of emoji use, we checked for multicollinarity between the variables. Multicollinarity did not seem to be a problem, as all GVIF were <5 (Table \@ref(tab:q2-vif)). While a significant Shapiro-Wilks (*W* = `r round(shapiro_wilks_int$statistic,2)`, *p* `r print_p(shapiro_wilks_int$p.value)`) indicated non-normality, model residuals looked normally distributed (Figure \@ref(fig:ass-for-q2)B), with the exception of three outliers. Moreover, Breusch-Pagan was also significant (*$\chi^2$* (`r (ncvTest_int$Df)`) = `r round(ncvTest_int$ChiSquare,2)`, *p* `r print_p(ncvTest_int$p)`), indicating non-constant variance, despite Figure \@ref(fig:ass-for-q2)A and C showing a seemingly straight line. We furthermore conducted a Cook's Distance analysis and identified three outliers (Figure \@ref(fig:ass-for-q2)D). The threshold for this determination was given by $4/(N-k-1)$, in which *N* is the number of observations and *k* is the number of predictors. Given this threshold of 0.017, it was determined that we should exclude three observations and fit a new model without them. Excluding the three outliers changed Shapiro-Wilk (*p* `r print_p(shapiro_wilks_sensitivity$p.value)`) and Breusch-Pagan (*p* `r round (ncvTest_sensitivity$p,2)`) to non-significant, ensuring that the data meets the assumptions of a linear model. 
 
 ```{r}
 ano_row <- c( 
@@ -544,7 +542,6 @@ We found that older age decreased how likely participants were to interpret Emoj
 
 * adjust plot sizing
 * format influence table for q2
-*
 
 ## Data Preparation
 
@@ -612,7 +609,7 @@ vif_q2 <- vif(m2intq2)[,1:2]
 
 rownames(vif_q2) <-c("Emoji use frequency","Age","Emoji category","Age:Emoji category")
 
-kable(vif_q2, digits = 2) |>
+kable(vif_q2, digits = 2, caption = "Variance Inflation Factors for Predictors of Emotional Effect") |>
   kable_styling(htmltable_class = "lightable-classic")
 ```
 
