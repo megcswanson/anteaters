@@ -536,7 +536,7 @@ Figure \@ref(fig:q3-model-plots) visualises the predicted probability of correct
 
 ## Sensitivity Analyses
 
-We conducted two sensitivity analyses of these results due to potential influence. While the first sensitivity analysis demonstrated no change in the regression coefficients () or analysis of deviance (), we found two influential observations, which from their DFBetas indicated a strong influence on the emoji category coefficients and their interactions with age. Upon excluding these, the estimate of for the thumbs up emoji and its interaction became lower but more certain (), thus, the effect on interpretation accuracy of the thumbs up emoji and how it interacts with age may be slightly smaller than what the main analyis suggests. We chose to retain these for the main analysis since they did not affect the significance of any predictors and their low Cook's distances are relatively low.
+We conducted two sensitivity analyses of these results due to potential influence. While the first sensitivity analysis demonstrated no change in the regression coefficients () or analysis of deviance (), we found two influential observations, which from their DFBetas indicated a strong influence on the emoji category coefficients and their interactions with age. Upon excluding these, the estimate of for the thumbs up emoji and its interaction became lower but more certain (), thus, the effect on interpretation accuracy of the thumbs up emoji and how it interacts with age may be slightly smaller than what the main analyis suggests. We chose to retain these for the main analysis since they did not affect the significance of any predictors and their Cook's distances are relatively low (beneath the threshold of 0.017).
 
 ## Conclusion
 
