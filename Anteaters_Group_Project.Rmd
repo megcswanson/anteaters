@@ -319,7 +319,7 @@ ano_q2_sense |>
                       "P value"),
         caption = "Emotional Effect of Emojis: Analysis of Variance Table (Sensitivity Analysis)",
         booktabs = T) |> 
-  kable_styling(htmltable_class = "lightable-classic", position = "float_right", full_width = F)
+  kable_styling(htmltable_class = "lightable-classic", position = "float_right", full_width = T)
 ```
 
 ```{r tab-model}
@@ -342,7 +342,7 @@ tab_model(m2intq2, m2intq2_sensitivity,show.stat=T,
 
 An analysis of variance was conducted on the model that excluded the three outlying values. This analysis indicated that frequency of emoji use was a significant predictor of the emotional valence score (*F*(1,227) = 172.89, *p*<0.001), and the interaction between age and emoji category was also found to be a significant predictor (*F*(2,227) = 12.26, *p*<0.001). Age alone was not a significant predictor (*F*(1,227) = 1.22, *p* = 0.27), nor was emoji category alone (*F*(2,227) = 1.81, *p* = 0.17). This model explained 46% (adjusted *R^2^*) of the variance within the data.
 
-Prior to removing the three values that were shown to have undue influence on the model fit, we fit a model including all values present in the dataset. The two models are compared in \@ref(tab:tab-model). When the three influential values were removed, the interaction between all three categories of emoji and age reached significance (*p~slightly_smiling~* <0.001, *p~thumbs_up~* <0.001, *p~loudly_crying~* <0.001). Therefore, this model indicates that the estimated score for someone of age 35 who has been presented with the loudly crying face [`r emoji::emoji("loudly crying face")`], the estimated emotional valence is 0.6 standard deviations below the mean (. For every year increase in the participant's age, their emotional valence score will decrease by an estimated 0.03 standard deviations, while every one unit increase in emoji use frequency will result in an estimated 0.12 SD increase. As we have established that there is a significant interaction in age and emoji category, we can also state that for every year increase, the emotional valence score will increase by an estimated 0.04 standard deviations more in the slightly smiling face group [`r emoji::emoji("slightly smiling face")`] compared to the loudly crying face group [`r emoji::emoji("loudly crying face")`], and 0.03 standard deviations more in the thumbs up group [`r emoji::emoji("thumbs up")`] compared to the loudly crying face group. These interactions are plotted in \@ref(fig:q2-interaction-plot). 
+Prior to removing the three values that were shown to have undue influence on the model fit, we fit a model including all values present in the dataset. The two models are compared in \@ref(tab:tab-model). When the three influential values were removed, the interaction between all three categories of emoji and age reached significance (*p~slightly_smiling~* <0.001, *p~thumbs_up~* <0.001, *p~loudly_crying~* <0.001). Therefore, this model indicates that the estimated score for someone of age 35 who has been presented with the loudly crying face [`r emoji::emoji("loudly crying face")`], the estimated emotional valence is 0.6 standard deviations below the mean (*CI*[-0.91, -0.38], *t* = -5.46, *p* <0.001). For every year increase in the participant's age, their emotional valence score will decrease by an estimated 0.03 standard deviations (*CI*[-0.04, -0.01], *t* = -3.73, *p* <0.001), while every one unit increase in emoji use frequency will result in an estimated 0.12 SD increase (*CI*[.08, 0.15], *t* = 7.49, *p* <0.001). As we have established that there is a significant interaction in age and emoji category, we can also state that for every year increase, the emotional valence score will increase by an estimated 0.04 standard deviations more in the slightly smiling face group [`r emoji::emoji("slightly smiling face")`] (*CI*[0.02, 0.06], *t* = 4.39, *p* <0.001) compared to the loudly crying face group [`r emoji::emoji("loudly crying face")`], and 0.03 standard deviations more in the thumbs up group [`r emoji::emoji("thumbs up")`] (*CI*[0.02, 0.05], *t* = 3.91, *p* <0.001) compared to the loudly crying face group. These interactions are plotted in \@ref(fig:q2-interaction-plot). 
 
 ```{r q2-interaction-plot, fig.cap="The interaction of Age and Emoji Category on the EVS", fig.height=2.5, fig.width=9, fig.align='center'}
 # plot interactions 
@@ -558,7 +558,7 @@ excl_tab |>
                       "Emoji category", "Emotional valence score",
                       "Emoji Interpretation", "Reason for exlcusion"),
         caption = "Excluded Observations",
-        booktabs = T) |> 
+        booktabs = T, digits = 2) |> 
   kable_styling(htmltable_class = "lightable-classic")
 ```
 
