@@ -218,7 +218,7 @@ For each emoji category, we found no significant difference between the observed
 * maybe have a little section on this " this is the question" lets look at the plots
 * plot commentary
 
-One of the main aims we address in this research is the investigation of factors influencing emotional valence. We fitted a multiple regression model to predict whether the frequency of use of the emoji, the type of emoji, as well as the age of the participants, and the interaction between age and emoji category has an effect on their emotional valence. We mean-centered age and scaled the emotional valence score for interpretation of coefficients and intercepts. Emoji category was treatment coded with the "loudly crying face [`r emoji::emoji("loudly crying face")`]" as the reference level.
+One of the main aims we address in this research is the investigation of factors influencing emotional valence. We fitted a multiple regression model to predict whether the frequency of use of the emoji, the type of emoji, as well as the age of the participants, and the interaction between age and emoji category has an effect on their emotional valence. We mean-centered age and scaled the emotional valence score for interpretation of coefficients and intercepts. Emoji category was treatment coded with the "loudly crying face [`r emoji::emoji("loudly crying face")`]" as the reference level (please see \@ref(tab:cat-code-tab)).
 
 As noted previously, neither age (approximately uniform; Figure \@ref(fig:q2-desc-plots)D) nor frequency of Emoji use (approximately Poisson distributed; Figure \@ref(fig:q2-desc-plots)E) were normally distributed. There were slightly more participants in the loudly crying face emoji [`r emoji::emoji("loudly crying face")`] than the other emoji categories (Figure \@ref(fig:q2-desc-plots)). Figure \@ref(fig:q2-desc-plots) B also indicates a negative relationship between age and emotional valence score; as age increases, the emotional valence score decreases. In particular, the loudly crying face emoji [`r emoji::emoji("loudly crying face")`] shows a steep negative correlation with age. These relationships will be more closely evaluated in our linear regression model. 
 
@@ -297,9 +297,10 @@ p_freq <- ggplot(emoji_clean, aes(x = freq_emu))+
 (p_freq_evs| p_age_evs) / (p_evs|p_age|p_freq|p_em_cat) + plot_layout(heights = c(2.5,1))
 ```
 
-Prior to conducting our analyses, we assessed whether the assumptions for conducting a linear model were met. Given the previously found strong correlation between age and frequency of emoji use, we checked for multicollinarity between the variables. Multicollinarity did not seem to be a problem, as all GVIF were <5 \@ref(fig:q2-vif). Heteroscedacity did not appear to be a problem based on visual inspection of this figure: \@ref(fig:q2-residuals-vs-fitted). While a significant Shapiro-Wilks (*W* = `r round(shapiro_wilks_int$statistic,2)`, *p* `r print_p(shapiro_wilks_int$p.value)`) indicated non-normality, model residuals looked normally distributed \@ref(fig:q2-residuals), with the exception of three outliers. Breusch-Pagan was also significant (*$\chi^2$* (`r (ncvTest_int$Df)`) = `r round(ncvTest_int$ChiSquare,2)`, *p* `r print_p(ncvTest_int$p)`), indicating non-constant variance, despite the plot (ncvTest_int) showing a seemingly straight line. We furthermore conducted a Cook's Distance analysis and identified three outliers \@ref(fig:q3-vif). The threshold for this determination was given by $4/(N-k-1)$, in which *N* is the number of observations and *k* is the number of predictors. Given this threshold of 0.017, it was determined that we should exclude three observations and fit a new model without them. 
+Before conducting our analyses, we assessed whether the assumptions for conducting a linear model were met. Given the previously found strong correlation between age and frequency of emoji use, we checked for multicollinarity between the variables. Multicollinarity did not seem to be a problem, as all GVIF were <5 \@ref(fig:q2-vif). Heteroscedacity did not appear to be a problem based on visual inspection of Figure: \@ref(fig:ass-for-q2). While a significant Shapiro-Wilks (*W* = `r round(shapiro_wilks_int$statistic,2)`, *p* `r print_p(shapiro_wilks_int$p.value)`) indicated non-normality, model residuals looked normally distributed (\@ref(fig:ass-for-q2)), with the exception of three outliers. Breusch-Pagan was also significant (*$\chi^2$* (`r (ncvTest_int$Df)`) = `r round(ncvTest_int$ChiSquare,2)`, *p* `r print_p(ncvTest_int$p)`), indicating non-constant variance, despite the plot (ncvTest_int) showing a seemingly straight line. We furthermore conducted a Cook's Distance analysis and identified three outliers (\@ref(fig:ass-for-q2)). The threshold for this determination was given by $4/(N-k-1)$, in which *N* is the number of observations and *k* is the number of predictors. Given this threshold of 0.017, it was determined that we should exclude three observations and fit a new model without them. 
 
 ```{r}
+coef(m2intq2_sensitivity)
 ano_row <- c( 
   "Emoji usage", 
   "Age",
@@ -345,9 +346,9 @@ tab_model(m2intq2, m2intq2_sensitivity,show.stat=T,
           title = "(\\#tab:tab-model) Linear Regression Model")
 ```
 
-An analysis of variance was conducted on the model that excluded the three outlying values. This analysis indicated that frequency of emoji use was a significant predictor of the emotional valence score (*p*<0.001), and the interaction between age and emoji category was also found to be a significant predictor (*p*<0.001). This model explained 46% (adjusted *R^2^*) of the variance within the data.
+An analysis of variance was conducted on the model that excluded the three outlying values. This analysis indicated that frequency of emoji use was a significant predictor of the emotional valence score (*F*(1,227) = 172.89, *p*<0.001), and the interaction between age and emoji category was also found to be a significant predictor (*F*(2,227) = 12.26, *p*<0.001). Age alone was not a significant predictor (*F*(1,227) = 1.22, *p* = 0.27), nor was emoji category alone (*F*(2,227) = 1.81, *p* = 0.17). This model explained 46% (adjusted *R^2^*) of the variance within the data.
 
-Prior to removing the three values that were shown to have undue influence on the model fit, we fit a model including all values present in the dataset. The two models are compared in \@ref(tab:tab-model). When the three influential values were removed, the interaction between all three categories of emoji and age reached significance (*p~slightly_smiling~* <0.001, *p~thumbs_up~* <0.001, *p~loudly_crying~* <0.001). These interactions are plotted in \@ref(fig:q2-interaction-plot). Additionally, the refitted model explained 14% more of the variance in the data. 
+Prior to removing the three values that were shown to have undue influence on the model fit, we fit a model including all values present in the dataset. The two models are compared in \@ref(tab:tab-model). When the three influential values were removed, the interaction between all three categories of emoji and age reached significance (*p~slightly_smiling~* <0.001, *p~thumbs_up~* <0.001, *p~loudly_crying~* <0.001). Therefore, this model indicates that the estimated score for someone of age 35 who has been presented with the loudly crying face [`r emoji::emoji("loudly crying face")`], the estimated emotional valence is 0.6 standard deviations below the mean. For every year increase in the participant's age, their emotional valence score will decrease by an estimated 0.03 standard deviations, while every one unit increase in emoji use frequency will result in an estimated 0.12 SD increase. As we have established that there is a significant interaction in age and emoji category, we can also state that for every year increase, the emotional valence score will increase by an estimated 0.04 standard deviations more in the slightly smiling face group [`r emoji::emoji("slightly smiling face")`] compared to the loudly crying face group [`r emoji::emoji("loudly crying face")`], and 0.03 standard deviations more in the thumbs up group [`r emoji::emoji("thumbs up")`] compared to the loudly crying face group. These interactions are plotted in \@ref(fig:q2-interaction-plot). 
 
 ```{r q2-interaction-plot, fig.cap="The interaction of Age and Emoji Category on the EVS"}
 # plot interactions 
@@ -356,7 +357,7 @@ p2
 ```
 
 ## Conclusion
-
+Our research in this area was done to determine how emotional valence is affected by the frequency of emoji use, the age of participants, and the category of emoji. The results of our model after reducing the data indicated that the strongest predictor of emotional valence was the frequency of emoji use, followed by the interaction between emoji category and age. Age alone was not a significant predictor of the emotional valence score. 
 
 # Accuracy of Emoji Interpretation
 
@@ -632,7 +633,7 @@ kable(contrasts(emoji_clean$em_cat), col.names = c("E1", "E2"),
   kable_styling(htmltable_class = "lightable-classic", full_width = T)
 ```
 
-```{r residuals-vs-fitted}
+```{r ass-for-q2, fig.cap="Assumptions for Linear Regression Model"}
 par(mfrow = c(2, 2))
 
 plot(m2intq2, which = 1)
