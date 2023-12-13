@@ -99,7 +99,7 @@ Before describing the data, we conducted some initial checks to ensure that all 
 
 # Data Description
 
-## Association Between Operating System and Frequency of Emoji Use
+## Difference Between Operating System and Frequency of Emoji Use
 
 We explored whether there's a difference in the frequency of emoji use between Apple and Android users. We did this in two ways - we created violin plots, and conducted a bootstrapped t-test. 
 
@@ -275,7 +275,7 @@ p_evs <- ggplot(emoji_clean, aes(x = EVS))+
 
 p_em_cat <- ggplot(emoji_clean, aes(x = em_cat))+
   geom_bar(color = "black", fill = "#FB8072")+
-  labs(x = "Emoji category", y = "Number of participants", title = "(F) Emoji Category")+
+  labs(x = "Emoji category", y = "Participant count", title = "(F) Emoji Category")+
   theme_light()+
   theme(plot.title = element_text(size = 11),
         axis.text.x = element_text(angle = 14))
