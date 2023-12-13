@@ -97,7 +97,7 @@ excl_tab <- emoji |>
   filter(exclusion_reason != "not excluded")
 ```
 
-Before describing the data, we conducted some initial checks to ensure that all observations were entered within their possible ranges (for continuous variables) or levels (for categorical variables). We used some initial visualisations of the marginal distributions and relationships amongst the variables to find these impossible values (see Figure \@ref(fig:ini-pairs-panels) for these for the pre-processed data in the Appendix). We excluded impossible values along with any observation containing missing data (N~excluded~ = `r nrow(excl_tab)`). Table \@ref(tab:exclude) in the Appendix provides an overview of these excluded data points and the reason for exclusion. Additionally, the spelling of 'Apple' was corrected in the operating system entry of `r nrow(filter(emoji, opsys=="appple"))` observations from 'Appple'.
+Before describing the data, we conducted some initial checks to ensure that all observations were entered within their possible ranges (for continuous variables) or levels (for categorical variables). We used some initial visualisations of the marginal distributions and relationships amongst the variables to find these impossible values (see Figure \@ref(fig:ini-pairs-panels) for the pre-processed data in the Appendix). We excluded impossible values along with any observations containing missing data (N~excluded~ = `r nrow(excl_tab)`). Table \@ref(tab:exclude) in the Appendix provides an overview of these excluded data points and the reason for exclusion. Additionally, the spelling of 'Apple' was corrected in the operating system entry of `r nrow(filter(emoji, opsys=="appple"))` observations from 'Appple'.
 
 # Data Description
 
@@ -105,7 +105,7 @@ Before describing the data, we conducted some initial checks to ensure that all 
 
 We explored whether there's a difference in the frequency of emoji use between Apple and Android users. We did this in two ways - we created violin plots, and conducted a bootstrapped t-test. 
 
-From Figure \@ref(fig:q1b-violin-plot), we can see that the lower quartile and median of the two operating systems are very similar. However,  the upper quartile is higher and overall range is larger for Apple than Android. It seems that Apple users seem more likely to use a higher number of emojis per day. Android users, however, are more densely concentrated around the median. There are only three  unusually high values at 24 emojis per day, which are all reported by Apple users.
+From Figure \@ref(fig:q1b-violin-plot), we can see that the lower quartile and median of the two operating systems are very similar. However,  the upper quartile is higher and the overall range is larger for Apple than Android. It seems that Apple users are more likely to use a higher number of emojis per day. Android users, however, are more densely concentrated around the median. There are only three  unusually high values at 24 emojis per day, all reported by Apple users.
 
 ```{r q1b-violin-plot, fig.cap="Frequency of Emoji Use on Apple and Android Operating System", fig.align='center', fig.height = 3.3}
 emoji_clean |>
