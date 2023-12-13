@@ -1,5 +1,6 @@
 ---
 title: "Aggregating Anteaters Project"
+author: "B155926, B239086, B239979, B244840, and B246814"
 output: bookdown::html_document2
 date: "2023-11-16"
 ---
@@ -543,6 +544,7 @@ We found that older age decreased how likely participants were to interpret Emoj
 
 * adjust plot sizing
 * format influence table for q2
+*
 
 ## Data Preparation
 
@@ -783,57 +785,3 @@ tab_model(m1q3, m2q3, m3q3,show.stat=T,
        color =  "Emoji Category", fill ="Emoji Category", title = "(B) Sensitivity Analysis 2")+
   theme_light())
 ```
-
-# Exam Numbers: "B155926, B239086, B239979, B244840, B246814"
-
-## Code to possibly be deleted:
-```{r eval=FALSE}
-# proportion plot for Q1c
-p2<- emoji_clean |>
-  filter(opsys != "Windows") |>
-  droplevels() |>
-  group_by(em_cat,opsys)|>
-  summarise(n = n()) |>
-  mutate(total_n =sum(n[em_cat == em_cat]),
-    prop = n/total_n) |>
-  ggplot( aes(x = em_cat, y = prop, fill = opsys))+
-  geom_col(position = "dodge")+
-  ylim(0,1)
-
-p_pairs<-emoji_clean |>
-  select("age", "EVS", "freq_emu", "em_cat", "EI", "opsys") |>
-  mutate(em_cat = factor(em_cat, labels = c("Cry", "Smile", "Thumbs"))) |>
-  ggpairs(columnLabels = c("Age", "Emotional Valence Score", 
-                           "Frequency of Emoji Use", "Emoji Category", 
-                           "Emoji Interpretation", "Operating System"))
-
-# Frequency plot
-q3_p1<- broom::augment(m1q3, newdata = q3_plotdata, 
-               type.predict = "link",
-               se_fit=TRUE) |>
-  mutate(
-    .lower = l2p(.fitted - 1.96*.se.fit),
-    .upper = l2p(.fitted + 1.96*.se.fit),
-    .fitted = l2p(.fitted)
-  ) |> 
-  ggplot(aes(group = em_cat, x=freq_emu,y=.fitted,ymin=.lower,
-             ymax=.upper))+
-  geom_line(color = "#386BB0")+
-  geom_ribbon(alpha=.2, fill = "#386BB0")+
-  scale_colour_brewer(palette = "Accent")+
-  scale_fill_brewer(palette = "Accent")+
-  labs(x = "Emoji Use Frequency", y = "P(Correct Emoji Interpretation)", 
-       title = "(A)")+
-  theme_light()
-```
-
-##  probably to delete but just in case
-For each emoji category, we found no significant difference between the observed proportions of Apple and Android users, and a hypothesised set of equal proportions. The results for each emoji category are as follows: loudly crying face emoji [`r emoji::emoji("loudly crying face")`]: *n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Loudly crying face"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Loudly crying face")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "Loudly crying face")$prop` %; $\chi^2$ (`r q1_chisq_cry$parameter`) = `r round(q1_chisq_cry$statistic, 2)`, *p* `r print_p(q1_chisq_cry$p.value)`; slightly smiling face  emoji [`r emoji::emoji("slightly smiling face")`]: *n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Slightly smiling face"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Slightly smiling face")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "Slightly smiling face")$prop` %; $\chi^2$ (`r q1_chisq_smile$parameter`) = `r round(q1_chisq_smile$statistic, 2)`, *p* `r print_p(q1_chisq_smile$p.value)`; thumbs up emoji [`r emoji::emoji("thumbs up")`]: *n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Thumbs up"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Thumbs up")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "Thumbs up")$prop` %; $\chi^2$ (`r q1_chisq_thumb$parameter`) = `r round(q1_chisq_thumb$statistic, 2)`, *p* `r print_p(q1_chisq_thumb$p.value)`.
-
-## again probably to delete - includes android proportion
-
-For each emoji category, we found no significant difference between the observed proportions of Apple and Android users, and a hypothesised set of equal proportions. For loudly crying face emoji [`r emoji::emoji("loudly crying face")`], $\chi^2$ (`r q1_chisq_cry$parameter`) = `r round(q1_chisq_cry$statistic, 2)`, *p* `r print_p(q1_chisq_cry$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Loudly crying face"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Loudly crying face")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "Loudly crying face")$prop` %). For the slightly smiling face  emoji [`r emoji::emoji("slightly smiling face")`],  $\chi^2$ (`r q1_chisq_smile$parameter`) = `r round(q1_chisq_smile$statistic, 2)`, *p* `r print_p(q1_chisq_smile$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Slightly smiling face"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Slightly smiling face")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "Slightly smiling face")$prop` %). Finally, for the thumbs up Emoji [`r emoji::emoji("thumbs up")`], $\chi^2$ (`r q1_chisq_thumb$parameter`) = `r round(q1_chisq_thumb$statistic, 2)`, *p* `r print_p(q1_chisq_thumb$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Thumbs up"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Thumbs up")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "Thumbs up")$prop` %). Thus, we found no evidence of imbalance of users of Apple and Android operated phones in each emoji category.
-
-##1a deleted
-
-Following this, we conducted a Welch two sample t-test to assess whether the mean frequency of emoji use was different between Android (*n* = `r nrow(filter(emoji_clean, opsys == "Android"))` ; *m* = `r round(q1t_test$estimate [1],1)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "Android")$freq_emu), 2)` and Apple users (*n* = `r nrow(filter(emoji_clean, opsys == "Apple"))`; *m* = `r round(q1t_test$estimate[2],2)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "Apple")$freq_emu), 2)`). There was a significant difference in emoji use among Android and Apple users, *t*(`r round(q1t_test$parameter,2)`) = `r round(q1t_test$statistic,2 )`, *p* `r print_p(q1t_test$p.value)`, two-tailed).Therefore, we reject the null hypothesis that there is no difference in emoji use between Apple and Android users. From these two mechanisms, we have concluded that there is a difference between the two operating systems.
