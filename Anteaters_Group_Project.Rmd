@@ -342,7 +342,7 @@ tab_model(m2intq2, m2intq2_sensitivity,show.stat=T,
 
 An analysis of variance was conducted on the model that excluded the three outlying values. This analysis indicated that frequency of emoji use was a significant predictor of the emotional valence score (*F*(1,227) = 172.89, *p*<0.001), and the interaction between age and emoji category was also found to be a significant predictor (*F*(2,227) = 12.26, *p*<0.001). Age alone was not a significant predictor (*F*(1,227) = 1.22, *p* = 0.27), nor was emoji category alone (*F*(2,227) = 1.81, *p* = 0.17). This model explained 46% (adjusted *R^2^*) of the variance within the data.
 
-Prior to removing the three values that were shown to have undue influence on the model fit, we fit a model including all values present in the dataset. The two models are compared in \@ref(tab:tab-model). When the three influential values were removed, the interaction between all three categories of emoji and age reached significance (*p~slightly_smiling~* <0.001, *p~thumbs_up~* <0.001, *p~loudly_crying~* <0.001). Therefore, this model indicates that the estimated score for someone of age 35 who has been presented with the loudly crying face [`r emoji::emoji("loudly crying face")`], the estimated emotional valence is 0.6 standard deviations below the mean. For every year increase in the participant's age, their emotional valence score will decrease by an estimated 0.03 standard deviations, while every one unit increase in emoji use frequency will result in an estimated 0.12 SD increase. As we have established that there is a significant interaction in age and emoji category, we can also state that for every year increase, the emotional valence score will increase by an estimated 0.04 standard deviations more in the slightly smiling face group [`r emoji::emoji("slightly smiling face")`] compared to the loudly crying face group [`r emoji::emoji("loudly crying face")`], and 0.03 standard deviations more in the thumbs up group [`r emoji::emoji("thumbs up")`] compared to the loudly crying face group. These interactions are plotted in \@ref(fig:q2-interaction-plot). 
+Prior to removing the three values that were shown to have undue influence on the model fit, we fit a model including all values present in the dataset. The two models are compared in \@ref(tab:tab-model). When the three influential values were removed, the interaction between all three categories of emoji and age reached significance (*p~slightly_smiling~* <0.001, *p~thumbs_up~* <0.001, *p~loudly_crying~* <0.001). Therefore, this model indicates that the estimated score for someone of age 35 who has been presented with the loudly crying face [`r emoji::emoji("loudly crying face")`], the estimated emotional valence is 0.6 standard deviations below the mean (. For every year increase in the participant's age, their emotional valence score will decrease by an estimated 0.03 standard deviations, while every one unit increase in emoji use frequency will result in an estimated 0.12 SD increase. As we have established that there is a significant interaction in age and emoji category, we can also state that for every year increase, the emotional valence score will increase by an estimated 0.04 standard deviations more in the slightly smiling face group [`r emoji::emoji("slightly smiling face")`] compared to the loudly crying face group [`r emoji::emoji("loudly crying face")`], and 0.03 standard deviations more in the thumbs up group [`r emoji::emoji("thumbs up")`] compared to the loudly crying face group. These interactions are plotted in \@ref(fig:q2-interaction-plot). 
 
 ```{r q2-interaction-plot, fig.cap="The interaction of Age and Emoji Category on the EVS", fig.height=2.5, fig.width=9, fig.align='center'}
 # plot interactions 
@@ -540,13 +540,16 @@ We found that older age decreased how likely participants were to interpret Emoj
 
 # Appendix: Supplementary Tables and Figures
 
-**To do**
-
-* adjust plot sizing
-* format influence table for q2
-*
-
 ## Data Preparation
+
+```{r ini-pairs-panels, fig.cap="Marginal Distributions and Between-Variable Relationships for Pre-Processed Data", fig.width=11,fig.height=13}
+emoji |> 
+  select("age", "EVS", "freq_emu", "em_cat", "EI", "opsys") |>
+  mutate(em_cat = factor(em_cat, labels = c("Cry", "Smile", "Thumbs", "Upside-down"))) |>
+  ggpairs(columnLabels = c("Age", "Emotional Valence Score", "Frequency of Emoji Use", 
+                           "Emoji Category", "Emoji Interpretation", "Operating System")
+    ) 
+```
 
 ```{r exclude} 
 excl_tab |>
@@ -557,15 +560,6 @@ excl_tab |>
         caption = "Excluded Observations",
         booktabs = T) |> 
   kable_styling(htmltable_class = "lightable-classic")
-```
-
-```{r ini-pairs-panels, fig.cap="Marginal Distributions and Between-Variable Relationships for Pre-Processed Data", fig.width=11,fig.height=13}
-emoji |> 
-  select("age", "EVS", "freq_emu", "em_cat", "EI", "opsys") |>
-  mutate(em_cat = factor(em_cat, labels = c("Cry", "Smile", "Thumbs", "Upside-down"))) |>
-  ggpairs(columnLabels = c("Age", "Emotional Valence Score", "Frequency of Emoji Use", 
-                           "Emoji Category", "Emoji Interpretation", "Operating System")
-    ) 
 ```
 
 ## Data Description
@@ -628,9 +622,14 @@ kable(vif_q2, digits = 2) |>
   kable_styling(htmltable_class = "lightable-classic")
 ```
 
-```{r}
-# we need to clean this up
-summary(influence.measures(m2intq2))
+```{r q2-influence}
+inf_mat_q2<- influence.measures(m2intq2)$infmat
+inf_mat_q2[c(2, 13, 175),] |> 
+  kable(digits = 2,
+        col.names = c("DFBeta intercept", "DFBeta frequency", "DFBeta age", str_c("DFBeta Emoji [", emoji::emoji("slightly smiling face"),"]"), str_c("DFBeta Emoji [", emoji::emoji("thumbs up"),"]"), str_c("DFBeta age:Emoji [", emoji::emoji("slightly smiling face"),"]"), str_c("DFBeta age:Emoji [", emoji::emoji("thumbs up"),"]"), "DFFit", "Covariance ratio", "Cook's Distance", "Hat values"),
+        caption = "Influence Measures for Potentially Influential Values",
+        booktabs = T) |>
+  kable_styling(htmltable_class = "lightable-classic")
 ```
 
 ## Accuracy of Emoji Interpretation
@@ -657,7 +656,7 @@ infl_q3 <-influence.measures(m1q3)$infmat
 
 infl_q3[c(13, 75, 218),] |> 
   kable(digits = 2,
-        col.names = c("DFBeta intercept", "DFBeta frequency", "DFBeta age", "DFBeta emoji[slightly smiling face]", "DFBeta emoji[thumbs up]", "DFBeta age:emoji[slightly smiling face]", "DFBeta eage:moji[thumbs up]", "DFFit", "Covariance ratio", "Cook's Distance", "Hat values"),
+        col.names = c("DFBeta intercept", "DFBeta frequency", "DFBeta age", str_c("DFBeta Emoji [", emoji::emoji("slightly smiling face"),"]"), str_c("DFBeta Emoji [", emoji::emoji("thumbs up"),"]"), str_c("DFBeta age:Emoji [", emoji::emoji("slightly smiling face"),"]"), str_c("DFBeta age:Emoji [", emoji::emoji("thumbs up"),"]"), "DFFit", "Covariance ratio", "Cook's Distance", "Hat values"),
         caption = "Influence Measures for Potentially Influential Values",
         booktabs = T) |>
   kable_styling(htmltable_class = "lightable-classic")
