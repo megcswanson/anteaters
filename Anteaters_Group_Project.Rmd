@@ -103,7 +103,7 @@ Before describing the data, we conducted some initial checks to ensure that all 
 
 ## Association Between Operating System and Frequency of Emoji Use
 
-We explored whether there's a difference in the frequency of emoji use between Apple and Android users. We did this in two ways - we created violin plots, and conducted a Welch two sample t-test. 
+We explored whether there's a difference in the frequency of emoji use between Apple and Android users. We did this in two ways - we created violin plots, and conducted a bootstrapped t-test. 
 
 From Figure \@ref(fig:q1b-violin-plot), we can see that the lower quartile and median of the two operating systems are very similar. However,  the upper quartile is higher and overall range is larger for Apple than Android. It seems that Apple users seem more likely to use a higher number of emojis per day. Android users, however, are more densely concentrated around the median. There are only three  unusually high values at 24 emojis per day, which are all reported by Apple users.
 
@@ -125,18 +125,20 @@ ggplot(aes(x = opsys, y = freq_emu, fill = opsys)) +
 q1t_test <-t.test(freq_emu ~ opsys, data = filter(emoji_clean, opsys != "Windows"))
 
 # shapiro Wilks + equal variance test ----
-shappy_wilks <- shapiro.test(emoji_clean$freq_emu) # greater than 0.05
+emoji_qq2 <- emoji_clean|>
+  filter(opsys=="Android")
+shappy_wilks_and <- shapiro.test(emoji_qq2$freq_emu) # greater than 0.05
+emoji_qq1 <- emoji_clean|>
+  filter(opsys=="Apple")
+shappy_wilks_app <- shapiro.test(emoji_qq1$freq_emu) # greater than 0.05
 var_test <- var.test(freq_emu ~ opsys, filter(emoji_clean, opsys != "Windows"))
-
-# wilcoxin
-willy <-wilcox.test(freq_emu ~ opsys, data = filter(emoji_clean, opsys != "Windows"))
-#https://en.wikipedia.org/wiki/Mann%E2%80%93Whitney_U_test
 
 # bootstrap standard error
 boot_t_test <- boot.t.test(freq_emu ~ opsys, data = filter(emoji_clean, opsys != "Windows"))
 ```
 
-Following this, we conducted a Welch two sample t-test to assess whether the mean frequency of emoji use was different between Android (*n* = `r nrow(filter(emoji_clean, opsys == "Android"))` ; *m* = `r round(q1t_test$estimate [1],1)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "Android")$freq_emu), 2)` and Apple users (*n* = `r nrow(filter(emoji_clean, opsys == "Apple"))`; *m* = `r round(q1t_test$estimate[2],2)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "Apple")$freq_emu), 2)`). There was a significant difference in emoji use among Android and Apple users, *t*(`r round(q1t_test$parameter,2)`) = `r round(q1t_test$statistic,2 )`, *p* `r print_p(q1t_test$p.value)`, two-tailed).Therefore, we reject the null hypothesis that there is no difference in emoji use between Apple and Android users. From these two mechanisms, we have concluded that there is a difference between the two operating systems.
+Initially, we conducted a Welch two sample t-test to assess whether the mean frequency of emoji use was different between Android (*Android n* = `r nrow(filter(emoji_clean, opsys == "Android"))` ; *m* = `r round(q1t_test$estimate [1],1)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "Android")$freq_emu), 2)` and Apple users (*n* = `r nrow(filter(emoji_clean, opsys == "Apple"))`; *m* = `r round(q1t_test$estimate[2],2)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "Apple")$freq_emu), 2)`). There was a significant difference in emoji use among Android and Apple users, *t*(`r round(q1t_test$parameter,2)`) = `r round(q1t_test$statistic,2 )`, *p* `r print_p(q1t_test$p.value)`, two-tailed). However, an assumption of the Welch test is normal distribution, but when we ran two Shapiro-Wilks tests (*Android p* = `r print_p(shappy_wilks_and$p.value)`; *Apple p* = `r print_p(shappy_wilks_app$p.value)`) and plotted Q-Q plots we found that neither operating system showed normal distribution (graphs in appendix). To account for the lack of normality, we decided to use a bootstrapped Welch t-test, which confirmed that the difference was significant, even with the non-normal distribution (*Confidence intervals 97.5%* = `r round(boot_t_test$boot.conf.int[2],2)`; *Confidence interval 2.5%* = `r round(boot_t_test$boot.conf.int[1], 2)` ; *Estimate - Android* = `r round(boot_t_test$estimate[1], 2)`; *Estimate - Apple* = `r round(boot_t_test$estimate[2], 2)`). As such, we can reject the null hypothesis that there is no difference in emoji use between Apple and Android users.
+
  
 ## Correlation Between Age and Frequency of Emoji Use
 
@@ -218,7 +220,7 @@ For each emoji category, we found no significant difference between the observed
 * maybe have a little section on this " this is the question" lets look at the plots
 * plot commentary
 
-One of the main aims we address in this research is the investigation of factors influencing emotional valence. We fitted a multiple regression model to predict whether the frequency of use of the emoji, the type of emoji, as well as the age of the participants, and the interaction between age and emoji category has an effect on their emotional valence. We mean-centered age and scaled the emotional valence score for interpretation of coefficients and intercepts. Emoji category was treatment coded with the "loudly crying face [`r emoji::emoji("loudly crying face")`]" as the reference level.
+One of the main aims we address in this research is the investigation of factors influencing emotional valence. We fitted a multiple regression model to predict whether the frequency of use of the emoji, the type of emoji, as well as the age of the participants, and the interaction between age and emoji category has an effect on their emotional valence. We mean-centered age and scaled the emotional valence score for interpretation of coefficients and intercepts. Emoji category was treatment coded with the "loudly crying face [`r emoji::emoji("loudly crying face")`]" as the reference level (please see \@ref(tab:cat-code-tab)).
 
 As noted previously, neither age (approximately uniform; Figure \@ref(fig:q2-desc-plots)D) nor frequency of Emoji use (approximately Poisson distributed; Figure \@ref(fig:q2-desc-plots)E) were normally distributed. There were slightly more participants in the loudly crying face emoji [`r emoji::emoji("loudly crying face")`] than the other emoji categories (Figure \@ref(fig:q2-desc-plots)). Figure \@ref(fig:q2-desc-plots) B also indicates a negative relationship between age and emotional valence score; as age increases, the emotional valence score decreases. In particular, the loudly crying face emoji [`r emoji::emoji("loudly crying face")`] shows a steep negative correlation with age. These relationships will be more closely evaluated in our linear regression model. 
 
@@ -300,6 +302,7 @@ p_freq <- ggplot(emoji_clean, aes(x = freq_emu))+
 Prior to conducting our analyses, we assessed whether the assumptions for conducting a linear model were met. Given the previously found strong correlation between age and frequency of emoji use, we checked for multicollinarity between the variables. Multicollinarity did not seem to be a problem, as all GVIF were <5 \@ref(fig:q2-vif). Heteroscedacity did not appear to be a problem based on visual inspection of this figure: \@ref(fig:q2-residuals-vs-fitted). While a significant Shapiro-Wilks (*W* = `r round(shapiro_wilks_int$statistic,2)`, *p* `r print_p(shapiro_wilks_int$p.value)`) indicated non-normality, model residuals looked normally distributed \@ref(fig:q2-residuals), with the exception of three outliers. Breusch-Pagan was also significant (*$\chi^2$* (`r (ncvTest_int$Df)`) = `r round(ncvTest_int$ChiSquare,2)`, *p* `r print_p(ncvTest_int$p)`), indicating non-constant variance, despite the plot (ncvTest_int) showing a seemingly straight line. We furthermore conducted a Cook's Distance analysis and identified three outliers \@ref(fig:q2-vif). The threshold for this determination was given by $4/(N-k-1)$, in which *N* is the number of observations and *k* is the number of predictors. Given this threshold of 0.017, it was determined that we should exclude three observations and fit a new model without them. Excluding the three outliers changed Shapiro-Wilk (*p* `r print_p(shapiro_wilks_sensitivity$p.value)`) and Breusch-Pagan (*p* `r print_p(ncvTest_sensitivity$p)`) to non-significant, ensuring that the data meets the assumptions of a linear model. 
 
 ```{r}
+coef(m2intq2_sensitivity)
 ano_row <- c( 
   "Emoji usage", 
   "Age",
@@ -345,9 +348,9 @@ tab_model(m2intq2, m2intq2_sensitivity,show.stat=T,
           title = "(\\#tab:tab-model) Linear Regression Model")
 ```
 
-An analysis of variance was conducted on the model that excluded the three outlying values. This analysis indicated that frequency of emoji use was a significant predictor of the emotional valence score (*p*<0.001), and the interaction between age and emoji category was also found to be a significant predictor (*p*<0.001). This model explained 46% (adjusted *R^2^*) of the variance within the data.
+An analysis of variance was conducted on the model that excluded the three outlying values. This analysis indicated that frequency of emoji use was a significant predictor of the emotional valence score (*F*(1,227) = 172.89, *p*<0.001), and the interaction between age and emoji category was also found to be a significant predictor (*F*(2,227) = 12.26, *p*<0.001). Age alone was not a significant predictor (*F*(1,227) = 1.22, *p* = 0.27), nor was emoji category alone (*F*(2,227) = 1.81, *p* = 0.17). This model explained 46% (adjusted *R^2^*) of the variance within the data.
 
-Prior to removing the three values that were shown to have undue influence on the model fit, we fit a model including all values present in the dataset. The two models are compared in \@ref(tab:tab-model). When the three influential values were removed, the interaction between all three categories of emoji and age reached significance (*p~slightly_smiling~* <0.001, *p~thumbs_up~* <0.001, *p~loudly_crying~* <0.001). These interactions are plotted in \@ref(fig:q2-interaction-plot). Additionally, the refitted model explained 14% more of the variance in the data. 
+Prior to removing the three values that were shown to have undue influence on the model fit, we fit a model including all values present in the dataset. The two models are compared in \@ref(tab:tab-model). When the three influential values were removed, the interaction between all three categories of emoji and age reached significance (*p~slightly_smiling~* <0.001, *p~thumbs_up~* <0.001, *p~loudly_crying~* <0.001). Therefore, this model indicates that the estimated score for someone of age 35 who has been presented with the loudly crying face [`r emoji::emoji("loudly crying face")`], the estimated emotional valence is 0.6 standard deviations below the mean. For every year increase in the participant's age, their emotional valence score will decrease by an estimated 0.03 standard deviations, while every one unit increase in emoji use frequency will result in an estimated 0.12 SD increase. As we have established that there is a significant interaction in age and emoji category, we can also state that for every year increase, the emotional valence score will increase by an estimated 0.04 standard deviations more in the slightly smiling face group [`r emoji::emoji("slightly smiling face")`] compared to the loudly crying face group [`r emoji::emoji("loudly crying face")`], and 0.03 standard deviations more in the thumbs up group [`r emoji::emoji("thumbs up")`] compared to the loudly crying face group. These interactions are plotted in \@ref(fig:q2-interaction-plot). 
 
 ```{r q2-interaction-plot, fig.cap="The interaction of Age and Emoji Category on the EVS"}
 # plot interactions 
@@ -356,7 +359,7 @@ p2
 ```
 
 ## Conclusion
-
+Our research in this area was done to determine how emotional valence is affected by the frequency of emoji use, the age of participants, and the category of emoji. The results of our model after reducing the data indicated that the strongest predictor of emotional valence was the frequency of emoji use, followed by the interaction between emoji category and age. Age alone was not a significant predictor of the emotional valence score. 
 
 # Accuracy of Emoji Interpretation
 
@@ -606,7 +609,7 @@ emoji_qq1 <- emoji_clean|>
 par(mfrow = c(1, 2)) #combining plots in one line 
 
 qqnorm(
-       main = "Normal Q-Q Plot: Apple",
+       main = "A) Normal Q-Q Plot: Apple",
        emoji_qq1$freq_emu)
 qqline(emoji_qq1$freq_emu)
 
@@ -614,7 +617,7 @@ emoji_qq2 <- emoji_clean|>
   filter(opsys=="Android")
 
 qqnorm(
-  main = "Normal Q-Q Plot: Android",
+  main = "B) Normal Q-Q Plot: Android",
   emoji_qq2$freq_emu)
 qqline(emoji_qq2$freq_emu)
 ```
@@ -632,13 +635,13 @@ kable(contrasts(emoji_clean$em_cat), col.names = c("E1", "E2"),
   kable_styling(htmltable_class = "lightable-classic", full_width = T)
 ```
 
-```{r residuals-vs-fitted}
+```{r ass-for-q2, fig.cap="Assumptions for Linear Regression Model"}
 par(mfrow = c(2, 2))
 
-plot(m2intq2, which = 1)
-plot(m2intq2, which = 2)
-plot(m2intq2, which = 3)
-plot(m2intq2, which = 4)
+plot(m2intq2, which = 1, main = "A")
+plot(m2intq2, which = 2, main = "B")
+plot(m2intq2, which = 3, main = "C")
+plot(m2intq2, which = 4, main = "D")
 ```
 
 ```{r q3-residuals}
@@ -666,8 +669,8 @@ summary(influence.measures(m2intq2))
 
 ```{r q3-stand-dev-res-plot, fig.cap= "Standardised Deviance Residuals for Logistic Regression Model"}
 par(mfrow = c(1, 2))
-plot(rstandard(m1q3, type = 'deviance'),ylab = 'Standardised Deviance Residuals')
-plot(m1q3, which=4)
+plot(rstandard(m1q3, type = 'deviance'),ylab = 'Standardised Deviance Residuals', main = "A")
+plot(m1q3, which=4, main = "B")
 ```
 
 ```{r vif-q3}
@@ -866,3 +869,9 @@ For each emoji category, we found no significant difference between the observed
 ## again probably to delete - includes android proportion
 
 For each emoji category, we found no significant difference between the observed proportions of Apple and Android users, and a hypothesised set of equal proportions. For loudly crying face emoji [`r emoji::emoji("loudly crying face")`], $\chi^2$ (`r q1_chisq_cry$parameter`) = `r round(q1_chisq_cry$statistic, 2)`, *p* `r print_p(q1_chisq_cry$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Loudly crying face"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Loudly crying face")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "Loudly crying face")$prop` %). For the slightly smiling face  emoji [`r emoji::emoji("slightly smiling face")`],  $\chi^2$ (`r q1_chisq_smile$parameter`) = `r round(q1_chisq_smile$statistic, 2)`, *p* `r print_p(q1_chisq_smile$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Slightly smiling face"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Slightly smiling face")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "Slightly smiling face")$prop` %). Finally, for the thumbs up Emoji [`r emoji::emoji("thumbs up")`], $\chi^2$ (`r q1_chisq_thumb$parameter`) = `r round(q1_chisq_thumb$statistic, 2)`, *p* `r print_p(q1_chisq_thumb$p.value)` (*n* = `r nrow(filter(emoji_clean, opsys != "Windows" & em_cat == "Thumbs up"))`, *proportion~Apple~* = `r filter(prop, opsys == "Apple" & em_cat == "Thumbs up")$prop` %, *proportion~Android~* = `r filter(prop, opsys == "Android" & em_cat == "Thumbs up")$prop` %). Thus, we found no evidence of imbalance of users of Apple and Android operated phones in each emoji category.
+
+
+##1a deleted
+
+
+Following this, we conducted a Welch two sample t-test to assess whether the mean frequency of emoji use was different between Android (*n* = `r nrow(filter(emoji_clean, opsys == "Android"))` ; *m* = `r round(q1t_test$estimate [1],1)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "Android")$freq_emu), 2)` and Apple users (*n* = `r nrow(filter(emoji_clean, opsys == "Apple"))`; *m* = `r round(q1t_test$estimate[2],2)`; *sd* = `r round(sd(filter(emoji_clean, opsys == "Apple")$freq_emu), 2)`). There was a significant difference in emoji use among Android and Apple users, *t*(`r round(q1t_test$parameter,2)`) = `r round(q1t_test$statistic,2 )`, *p* `r print_p(q1t_test$p.value)`, two-tailed).Therefore, we reject the null hypothesis that there is no difference in emoji use between Apple and Android users. From these two mechanisms, we have concluded that there is a difference between the two operating systems.
