@@ -607,18 +607,6 @@ plot(m2intq2, which = 3, main = "C")
 plot(m2intq2, which = 4, main = "D")
 ```
 
-```{r q3-residuals}
-
-```
-
-```{r q3-scalelocation}
-
-```
-
-```{r q3-cooksdistance}
-
-```
-
 ```{r q2-vif}
 vif_q2 <- vif(m2intq2)[,1:2]
 
